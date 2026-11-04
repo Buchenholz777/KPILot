@@ -1,0 +1,48 @@
+---
+/** Infobereich der Startseite: Was sind KPIs, wichtige Formeln, häufige Fragen. */
+import { TOPICS, topicUrl, displayTitle } from '../data/registry';
+import { HOME_FAQ } from '../data/faq';
+
+const featured = ['conversion', 'roi', 'cac', 'clv'].map((id) => TOPICS.find((t) => t.id === id)!);
+---
+
+<section class="container kpi-info" aria-labelledby="kpi-info-title">
+  <div class="kpi-info-intro prose">
+    <h2 id="kpi-info-title">Was sind KPIs und warum sind sie wichtig?</h2>
+    <p>
+      <strong>KPIs (Key Performance Indicators)</strong> sind Kennzahlen, mit denen du misst, ob dein Unternehmen seine Ziele erreicht. Sie machen sichtbar, was sonst nur ein
+      Bauchgefühl wäre: Lohnt sich die Werbekampagne? Verdienst du an jedem verkauften Produkt genug? Bleiben deine Kunden lange genug, um ihre Gewinnung zu bezahlen?
+    </p>
+    <p>
+      Wer seine KPIs regelmäßig berechnet, erkennt Entwicklungen früher, vergleicht Zeiträume sachlich und trifft Entscheidungen auf Basis von Zahlen. Mit dem KPI Rechner von
+      KPILot berechnest du die wichtigsten Kennzahlen in wenigen Sekunden, jeweils mit Erklärung und nachvollziehbarem Rechenweg.
+    </p>
+  </div>
+
+  <h2 class="kpi-info-h">Wichtige Kennzahlen und ihre Formeln</h2>
+  <ul class="kpi-formulas">
+    {
+      featured.map((t) => (
+        <li class="card">
+          <h3>{displayTitle(t)}</h3>
+          <p>{t.short}</p>
+          <p class="kpi-formula"><code>{t.formula[0]}</code></p>
+          <a href={topicUrl(t)}>{displayTitle(t)} berechnen <span aria-hidden="true">→</span></a>
+        </li>
+      ))
+    }
+  </ul>
+  <p class="kpi-more"><a href="/rechner/">Alle 40 Rechner ansehen</a></p>
+
+  <h2 class="kpi-info-h">Häufige Fragen zu KPIs</h2>
+  <div class="faq prose">
+    {
+      HOME_FAQ.map((f) => (
+        <details>
+          <summary>{f.q}</summary>
+          <p>{f.a}</p>
+        </details>
+      ))
+    }
+  </div>
+</section>

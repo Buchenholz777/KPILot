@@ -4,6 +4,7 @@ import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import ConsentBanner from '../components/ConsentBanner.astro';
 import { favoriteIds, variantMeta, topicMeta } from '../data/index-data';
+import { GOOGLE_SITE_VERIFICATION } from '../config/site';
 
 interface Crumb {
   name: string;
@@ -64,6 +65,11 @@ const krData = JSON.stringify({ ids: favoriteIds(), variants: variantMeta(), top
     <meta property="og:image:alt" content="KPILot – Prozente, Kosten und Kennzahlen einfach verstehen und berechnen" />
     <meta name="twitter:card" content="summary_large_image" />
     {ld.map((j) => <script type="application/ld+json" set:html={JSON.stringify(j)} />)}
+    {
+      Astro.url.pathname === '/' && GOOGLE_SITE_VERIFICATION && (
+        <Fragment set:html={`<!-- Google Search Console Verification -->\n    <meta name="google-site-verification" content="${GOOGLE_SITE_VERIFICATION}" />`} />
+      )
+    }
   </head>
   <body>
     <a class="skip-link" href="#main">Zum Inhalt springen</a>

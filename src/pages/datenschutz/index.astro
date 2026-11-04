@@ -16,10 +16,38 @@ import PageBand from '../../components/PageBand.astro';
     <h2>Was die Website technisch tut</h2>
     <ul class="bullets">
       <li>Die Rechner berechnen alle Eingaben im Browser. Die Anwendung überträgt eingegebene Zahlen nicht an einen Berechnungsserver.</li>
-      <li>Es werden keine Analyse-, Tracking- oder Werbeskripte eingesetzt und keine externen Schriften oder Bilder geladen.</li>
+      <li>
+        Es werden keine Werbeskripte und keine externen Schriften oder Bilder geladen. Google Analytics wird nur eingesetzt, wenn du ausdrücklich zustimmst (siehe unten).
+      </li>
       <li>
         Favoriten (Rechner-IDs) und ausdrücklich gespeicherte Rechnungen werden im lokalen Speicher des Browsers (localStorage) abgelegt, übernommene Werte und Suchzustand im
         Sitzungsspeicher (sessionStorage). Diese Daten verlassen das Gerät nicht und können unter „Über KPILot“ gelöscht werden.
+      </li>
+      <li>Deine Entscheidung zur Nutzungsmessung wird im lokalen Speicher des Browsers abgelegt (Schlüssel „kr.consent.v1“), damit wir nicht bei jedem Besuch erneut fragen.</li>
+    </ul>
+    <h2>Nutzungsmessung mit Google Analytics (nur mit Einwilligung)</h2>
+    <p>
+      Wenn du im Hinweis „Darf KPILot die Nutzung messen?“ auf „Akzeptieren“ klickst, binden wir Google Analytics 4 ein, einen Dienst der Google Ireland Limited, Gordon House,
+      Barrow Street, Dublin 4, Irland. Vorher wird kein Skript von Google geladen und kein Analyse-Cookie gesetzt.
+    </p>
+    <ul class="bullets">
+      <li><strong>Zweck:</strong> Wir sehen in zusammengefasster Form, welche Seiten und Rechner aufgerufen werden, um die Website zu verbessern.</li>
+      <li>
+        <strong>Verarbeitete Daten:</strong> u. a. aufgerufene Seiten, Zeitpunkt, ungefähre Region, Gerät, Browser und Herkunftsseite. Dazu setzt Google Cookies („_ga“,
+        „_ga_…“). Deine eingegebenen Zahlen werden nicht an Google übertragen.
+      </li>
+      <li>
+        <strong>Rechtsgrundlage:</strong> deine Einwilligung (Art. 6 Abs. 1 lit. a DSGVO, § 25 Abs. 1 TDDDG).
+      </li>
+      <li>
+        <strong>Übermittlung in Drittländer:</strong> Eine Übermittlung an Google LLC in den USA ist möglich. [Grundlage ergänzen, z. B. EU-US Data Privacy Framework, und
+        rechtlich prüfen.]
+      </li>
+      <li><strong>Speicherdauer:</strong> [In Google Analytics eingestellte Aufbewahrungsdauer eintragen, z. B. 2 oder 14 Monate.]</li>
+      <li>
+        <strong>Widerruf:</strong> Du kannst deine Einwilligung jederzeit mit Wirkung für die Zukunft widerrufen. Klicke dazu
+        <button type="button" class="btn btn-secondary" data-consent-open>Cookie-Einstellungen ändern</button>
+        oder unten auf der Seite auf „Cookie-Einstellungen“ und wähle „Ablehnen“. Dann werden die Analyse-Cookies dieser Website gelöscht.
       </li>
     </ul>
     <h2>Hosting</h2>

@@ -1,0 +1,24 @@
+---
+/** Einwilligungsabfrage für Google Analytics. Ohne Zustimmung wird nichts von Google geladen. */
+---
+
+<section class="consent" aria-labelledby="consent-title" data-consent hidden>
+  <div class="consent-inner">
+    <div class="consent-text">
+      <h2 id="consent-title">Darf KPILot die Nutzung messen?</h2>
+      <p>
+        Mit deiner Zustimmung setzen wir Google Analytics ein, um zu verstehen, welche Rechner genutzt werden. Dabei werden Cookies gesetzt und Nutzungsdaten an Google (auch in
+        die USA) übertragen. Ohne Zustimmung funktioniert alles genauso. Du kannst deine Wahl jederzeit im Fußbereich unter „Cookie-Einstellungen“ ändern.{' '}
+        <a href="/datenschutz/">Mehr in den Datenschutzhinweisen</a>
+      </p>
+    </div>
+    <div class="consent-actions">
+      <button type="button" class="btn btn-secondary" data-consent-choice="denied">Ablehnen</button>
+      <button type="button" class="btn btn-secondary" data-consent-choice="granted">Akzeptieren</button>
+    </div>
+  </div>
+</section>
+
+<script>
+  import '../scripts/consent';
+</script>

@@ -1759,3 +1759,73 @@ dialog h2 {
     padding: 0 11px;
   }
 }
+
+/* ---------- Einwilligung (Google Analytics) ---------- */
+.footer-linkbtn {
+  padding: 5px 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: #d7deeb;
+  cursor: pointer;
+  text-align: left;
+}
+.footer-linkbtn:hover {
+  color: var(--color-on-brand);
+  text-decoration: underline;
+}
+.consent {
+  position: fixed;
+  inset: auto var(--space-3) var(--space-3);
+  z-index: 55;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+.consent[hidden] {
+  display: none;
+}
+.consent-inner {
+  pointer-events: auto;
+  width: min(100%, 56rem);
+  display: flex;
+  gap: var(--space-4);
+  align-items: center;
+  padding: var(--space-4) var(--space-5);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: var(--shadow-pop);
+}
+.consent h2 {
+  margin: 0 0 var(--space-1);
+  font-size: var(--text-base);
+}
+.consent p {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+.consent a {
+  color: var(--color-accent-text);
+}
+.consent-actions {
+  display: flex;
+  gap: var(--space-2);
+  flex: none;
+}
+.consent-actions .btn {
+  min-width: 8.5rem;
+}
+@media (max-width: 40rem) {
+  .consent-inner {
+    flex-direction: column;
+    align-items: stretch;
+    padding: var(--space-4);
+  }
+  .consent-actions .btn {
+    flex: 1;
+    min-width: 0;
+  }
+}

@@ -2,6 +2,7 @@
 import '../styles/global.css';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
+import ConsentBanner from '../components/ConsentBanner.astro';
 import { favoriteIds, variantMeta, topicMeta } from '../data/index-data';
 
 interface Crumb {
@@ -63,14 +64,6 @@ const krData = JSON.stringify({ ids: favoriteIds(), variants: variantMeta(), top
     <meta property="og:image:alt" content="KPILot – Prozente, Kosten und Kennzahlen einfach verstehen und berechnen" />
     <meta name="twitter:card" content="summary_large_image" />
     {ld.map((j) => <script type="application/ld+json" set:html={JSON.stringify(j)} />)}
-    <!-- Google tag (gtag.js) -->
-    <script is:inline async src="https://www.googletagmanager.com/gtag/js?id=G-18P8698CFK"></script>
-    <script is:inline>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-18P8698CFK');
-    </script>
   </head>
   <body>
     <a class="skip-link" href="#main">Zum Inhalt springen</a>
@@ -79,6 +72,7 @@ const krData = JSON.stringify({ ids: favoriteIds(), variants: variantMeta(), top
       <slot />
     </main>
     <Footer />
+    <ConsentBanner />
     <div class="toast" role="status" aria-live="polite" data-toast hidden></div>
     <script type="application/json" id="kr-data" set:html={krData} />
     <script>

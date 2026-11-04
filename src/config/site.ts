@@ -3,3 +3,5 @@ export const SITE_NAME = "KPILot";
 export const SITE_CLAIM = "Orientierung durch Kennzahlen";
 export const SITE_DESCRIPTION =
   "Prozente, Kosten und Kennzahlen einfach verstehen und berechnen.";
+/** Google-Analytics-4-Mess-ID. Wird erst nach Einwilligung geladen (src/scripts/consent.ts). */
+export const GA_ID = "G-18P8698CFK";

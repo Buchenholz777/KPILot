@@ -8,6 +8,7 @@
  *  kr.saved.v1       localStorage   { v: 1, items: SavedCalc[] }
  *  kr.transfer       sessionStorage Werteübernahme (nur aktuelle Sitzung)
  *  kr.catalog        sessionStorage Suche + Kategorie der Übersicht (ohne Zahlen)
+ *  kr.consent.v1     localStorage   { v: 1, analytics: "granted" | "denied", at }
  */
 
 export const FAV_KEY = "kr.favorites.v1";
@@ -80,6 +81,26 @@ function writeJson(
 }
 
 export const storageAvailable = () => local() !== null;
+
+/* ---------------- Einwilligung (Google Analytics) ---------------- */
+
+export const CONSENT_KEY = "kr.consent.v1";
+export type Consent = "granted" | "denied";
+
+/** Gespeicherte Entscheidung oder null, wenn noch keine getroffen wurde. */
+export function getConsent(): Consent | null {
+  const d = readJson<{ v: number; analytics: unknown }>(local(), CONSENT_KEY);
+  return d?.v === 1 && (d.analytics === "granted" || d.analytics === "denied")
+    ? d.analytics
+    : null;
+}
+export function setConsent(c: Consent): boolean {
+  return writeJson(local(), CONSENT_KEY, {
+    v: 1,
+    analytics: c,
+    at: Date.now(),
+  });
+}
 
 /* ---------------- Favoriten ---------------- */
 

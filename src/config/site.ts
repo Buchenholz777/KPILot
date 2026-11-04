@@ -9,4 +9,4 @@ export const GA_ID = "G-18P8698CFK";
  * Google Search Console: HTML-Tag-Bestätigung. Code aus der Search Console hier eintragen
  * (nur der Wert von content="…"). Wird nur auf der Startseite ausgegeben.
  */
-export const GOOGLE_SITE_VERIFICATION = "DEIN_VERIFICATION_CODE_HIER";
+export const GOOGLE_SITE_VERIFICATION = "WnWi2g8bySGmhbG5OSBO1wMdy6v3m2pLWw3Rj6KhQmY";

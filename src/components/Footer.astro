@@ -1,0 +1,35 @@
+---
+import { CATEGORIES } from '../data/categories';
+import { SITE_NAME, SITE_CLAIM, SITE_DESCRIPTION } from '../config/site';
+import Logo from './Logo.astro';
+---
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <p class="footer-brand"><Logo variant="dark" height={40} /><span class="brand-claim">{SITE_CLAIM}</span></p>
+        <p>{SITE_DESCRIPTION}</p>
+      </div>
+      <nav aria-label="Kategorien">
+        <h2>Kategorien</h2>
+        <ul>{CATEGORIES.map((c) => <li><a href={`/kategorie/${c.slug}/`}>{c.title}</a></li>)}</ul>
+      </nav>
+      <nav aria-label="Weitere Seiten">
+        <h2>Mehr</h2>
+        <ul>
+          <li><a href="/rechner/">Alle 40 Rechner</a></li>
+          <li><a href="/favoriten/">Meine Favoriten</a></li>
+          <li><a href="/gespeichert/">Gespeicherte Rechnungen</a></li>
+          <li><a href="/ueber/">Über {SITE_NAME} &amp; Berechnungsmethoden</a></li>
+          <li><a href="/impressum/">Impressum</a></li>
+          <li><a href="/datenschutz/">Datenschutz</a></li>
+        </ul>
+      </nav>
+    </div>
+    <p class="footer-note">
+      Die eingegebenen Zahlen werden im Browser berechnet und durch die Anwendung nicht an einen Berechnungsserver übertragen. Favoriten und
+      gespeicherte Rechnungen bleiben auf diesem Gerät in diesem Browser. Die Rechner ersetzen keine Steuer-, Rechts- oder Finanzberatung.
+    </p>
+  </div>
+</footer>

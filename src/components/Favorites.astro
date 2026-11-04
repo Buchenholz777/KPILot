@@ -1,0 +1,59 @@
+---
+import Icon from './Icon.astro';
+import TileTemplates from './TileTemplates.astro';
+interface Props {
+  /** Überschrift des Bereichs. */
+  heading?: string;
+  /** row: kompakte Leiste mit Links (Startseite) · grid: vollständige Kacheln (Favoritenseite) */
+  layout?: 'row' | 'grid';
+}
+const { heading = 'Meine Favoriten', layout = 'grid' } = Astro.props;
+---
+
+{
+  layout === 'row' ? (
+    <section class="favs-row" aria-labelledby="favs-h">
+      <h2 id="favs-h" tabindex="-1">
+        <Icon name="star" />
+        {heading}
+      </h2>
+      <ul class="fav-links" data-fav-links />
+      <p class="favs-hint" data-fav-empty>
+        Mit dem Stern auf einer Kachel merkst du dir Rechner – sie erscheinen dann hier.
+      </p>
+      <a class="favs-manage" href="/favoriten/" data-fav-manage hidden>
+        Alle Favoriten
+      </a>
+    </section>
+  ) : (
+    <section class="favs-section" aria-labelledby="favs-h">
+      <div class="favs-head">
+        <h2 id="favs-h" tabindex="-1">
+          <Icon name="star" />
+          {heading}
+        </h2>
+        <p class="favs-empty notice" data-fav-empty>
+          Noch keine Favoriten. Markiere häufig benötigte Rechner mit dem Stern auf der Kachel oder der Rechnerseite – dann findest du sie hier wieder.
+        </p>
+      </div>
+      <div class="grid" data-fav-grid />
+      <noscript>
+        <p class="small muted">Favoriten benötigen JavaScript und den Browserspeicher.</p>
+      </noscript>
+      <TileTemplates />
+    </section>
+  )
+}
+
+<style>
+  .favs-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-4);
+    margin-bottom: var(--space-4);
+  }
+  .favs-head h2 {
+    margin: 0;
+  }
+</style>

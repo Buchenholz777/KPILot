@@ -1,0 +1,103 @@
+---
+import Base from '../../layouts/Base.astro';
+import PageBand from '../../components/PageBand.astro';
+import { TOPICS } from '../../data/registry';
+
+const crumbs = [
+  { name: 'Start', href: '/' },
+  { name: 'Über KPILot', href: '/ueber/' },
+];
+const sources = [
+  ...new Map(
+    TOPICS.flatMap((t) => t.sources ?? [])
+      .concat([
+        { label: 'W3C WAI: Button-Pattern (ARIA Authoring Practices)', url: 'https://www.w3.org/WAI/ARIA/apg/patterns/button/' },
+        { label: 'W3C WAI: Komplexe Bilder beschreiben', url: 'https://www.w3.org/WAI/tutorials/images/complex/' },
+      ])
+      .map((s) => [s.url, s]),
+  ).values(),
+];
+---
+
+<Base
+  title="Über KPILot und die Berechnungsmethoden"
+  description="Wie KPILot rechnet: Genauigkeit, Rundung, Zahlenformate, Modellannahmen, Quellen und was mit deinen Daten im Browser passiert."
+  crumbs={crumbs}
+>
+  <PageBand
+    crumbs={crumbs}
+    title="Über KPILot"
+    lead="KPILot ist ein kuratierter Grundkatalog aus 40 Rechnern für Prozentrechnung, Kosten- und Leistungsrechnung und wichtige Kennzahlen – für Alltag, kleine Unternehmen, Produkt, Marketing, Vertrieb, Controlling und Ausbildung."
+  />
+  <div class="container page-body">
+  <div class="card content-card prose">
+
+    <h2>So wird gerechnet</h2>
+    <ul class="bullets">
+      <li>Alle Berechnungen laufen deterministisch in deinem Browser. Es werden keine KI-Dienste und kein Berechnungsserver verwendet.</li>
+      <li>Gerechnet wird mit Dezimalarithmetik (decimal.js) mit 40 signifikanten Stellen – ohne binäre Gleitkommafehler und ohne Zwischenrundungen.</li>
+      <li>Gerundet wird erst für die Anzeige: Geldbeträge auf zwei Nachkommastellen, Prozente in der Regel auf bis zu zwei. Benötigte ganze Stückzahlen werden aufgerundet und mit den ungerundeten Werten geprüft.</li>
+      <li>Sehr kleine Ergebnisse ungleich null werden nicht als „0“ angezeigt, sondern mit mehr Stellen oder als „&lt; 0,01 €“.</li>
+      <li>Fehlende Angaben werden nie als 0 angenommen. Nicht definierte Fälle (z. B. Division durch 0) werden erklärt statt mit „unendlich“ ausgegeben.</li>
+    </ul>
+
+    <h2>Zahlen eingeben</h2>
+    <p>Erlaubt sind z. B. <code>1234</code>, <code>1234,56</code> und <code>1.234,56</code>. Ein eindeutiger Dezimalpunkt wie <code>1234.5</code> wird ebenfalls verstanden. Mehrdeutige Eingaben wie <code>1.234</code> werden nicht geraten – du bekommst einen Hinweis.</p>
+
+    <h2>Modelle und Grenzen</h2>
+    <p>
+      Die Rechner verwenden bewusst einfache, offen beschriebene Modelle. Sie ersetzen keinen Jahresabschluss nach HGB oder IFRS und keine Steuer-, Rechts- oder Finanzberatung. Jede
+      Rechnerseite nennt die verwendete Definition, Annahmen und typische Missverständnisse. Pauschale „gut/schlecht“-Bewertungen ohne Branchenkontext gibt es nicht.
+    </p>
+
+    <h2 id="daten">Deine Daten</h2>
+    <p>Die eingegebenen Zahlen werden im Browser berechnet und durch die Anwendung nicht an einen Berechnungsserver übertragen. Es gibt keine Analyse- oder Werbeskripte.</p>
+    <p>
+      Favoriten (nur die IDs der Rechner) und ausdrücklich gespeicherte Rechnungen liegen im lokalen Speicher deines Browsers (localStorage). Übernommene Werte zwischen Rechnern und der
+      Zustand von Suche und Filter liegen nur für die aktuelle Sitzung im Sitzungsspeicher (sessionStorage). Es gibt keine Synchronisation zwischen Geräten.
+    </p>
+    <div class="card content-card" data-clear-root>
+      <h3>Alle lokal gespeicherten Daten löschen</h3>
+      <p class="small">Entfernt Favoriten, gespeicherte Rechnungen und Sitzungsdaten dieser Website aus diesem Browser.</p>
+      <button type="button" class="btn btn-danger" data-clear-open>Alle lokalen Daten löschen …</button>
+      <dialog data-clear-dialog aria-labelledby="clear-h">
+        <form method="dialog">
+          <h2 id="clear-h">Wirklich alles löschen?</h2>
+          <p>Favoriten und gespeicherte Rechnungen werden aus diesem Browser entfernt. Das lässt sich nicht rückgängig machen.</p>
+          <div class="form-actions">
+            <button value="confirm" class="btn btn-danger">Ja, alles löschen</button>
+            <button value="cancel" class="btn btn-secondary">Abbrechen</button>
+          </div>
+        </form>
+      </dialog>
+    </div>
+
+    <h2>Fachliche Referenzen</h2>
+    <ul class="bullets">
+      {
+        sources.map((s) => (
+          <li>
+            <a href={s.url} rel="noopener" target="_blank">
+              {s.label}
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+    <p class="small muted">Weitere Definitionen folgen gängiger betriebswirtschaftlicher Lehrbuchpraxis; die jeweils verwendete Modellvariante steht auf der Rechnerseite.</p>
+  </div>
+  </div>
+</Base>
+
+<script>
+  import { clearAll } from '../../lib/storage';
+  import { toast } from '../../scripts/ui';
+  const dlg = document.querySelector<HTMLDialogElement>('[data-clear-dialog]')!;
+  document.querySelector('[data-clear-open]')!.addEventListener('click', () => dlg.showModal());
+  dlg.addEventListener('close', () => {
+    if (dlg.returnValue !== 'confirm') return;
+    const ok = clearAll();
+    document.dispatchEvent(new Event('kr:favorites'));
+    toast(ok ? 'Alle lokalen Daten dieser Website wurden gelöscht.' : 'Löschen ist fehlgeschlagen.');
+  });
+</script>

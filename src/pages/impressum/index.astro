@@ -1,0 +1,22 @@
+---
+import Base from '../../layouts/Base.astro';
+import PageBand from '../../components/PageBand.astro';
+---
+
+<Base title="Impressum (Entwurf) | KPILot" description="Impressum – Entwurf, Betreiberangaben fehlen noch." noindex>
+  <PageBand title="Impressum" crumbs={[{ name: 'Start', href: '/' }, { name: 'Impressum', href: '/impressum/' }]} />
+  <div class="container page-body">
+  <div class="card content-card prose">
+    <p class="notice notice-warn">
+      <strong>Entwurf:</strong> Die Betreiberangaben sind noch nicht eingetragen. Bitte vor der Veröffentlichung vollständig ausfüllen und rechtlich prüfen lassen.
+    </p>
+    <h2>Angaben zum Anbieter</h2>
+    <p>[Alexander Bandel]<br />[Graf-Dietrich-Weg 11]<br />[33034 Brakel]<br />[Germany]</p>
+    <h2>Kontakt</h2>
+    <p>E-Mail: alex.bundle2@gmail.com<br />Telefon: [optional]</p>
+    <h2>Weitere Pflichtangaben (falls zutreffend)</h2>
+    <p>[Rechtsform, Vertretungsberechtigte, Registergericht und Registernummer, Umsatzsteuer-Identifikationsnummer, inhaltlich Verantwortliche/r]</p>
+  </div>
+  </div>
+</Base>
+    

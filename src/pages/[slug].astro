@@ -1,0 +1,172 @@
+---
+import type { GetStaticPaths } from 'astro';
+import Base from '../layouts/Base.astro';
+import PageBand from '../components/PageBand.astro';
+import Calculator from '../components/Calculator.astro';
+import FavButton from '../components/FavButton.astro';
+import CategoryIcon from '../components/CategoryIcon.astro';
+import { TOPICS, TOPIC_BY_ID, topicUrl, displayTitle } from '../data/registry';
+import { CATEGORY_BY_ID } from '../data/categories';
+import { getCalc } from '../calc/all';
+import { runExample } from '../calc/engine';
+import { formatValue } from '../lib/number';
+import { illustrationPath } from '../illustrations';
+import type { Topic } from '../data/types';
+
+export const getStaticPaths = (() => TOPICS.map((t) => ({ params: { slug: t.slug }, props: { topic: t } }))) satisfies GetStaticPaths;
+const { topic: t } = Astro.props as { topic: Topic };
+const cat = CATEGORY_BY_ID[t.category];
+const calc = getCalc(t.id);
+const name = displayTitle(t);
+const crumbs = [
+  { name: 'Start', href: '/' },
+  { name: cat.title, href: `/kategorie/${cat.slug}/` },
+  { name, href: topicUrl(t) },
+];
+const COST_ASSUMPTIONS = ['kosten'].includes(t.category)
+  ? ['Nettobeträge ohne automatische Umsatzsteuer.', 'Ein einheitlicher Betrachtungszeitraum für alle Beträge und Mengen.']
+  : t.category === 'marketing'
+    ? ['Zähler und Nenner betreffen denselben Zeitraum und dieselbe Messung.']
+    : [];
+
+const examples = calc.variants.map((v) => {
+  const r = runExample(v);
+  const inputs = v.fields
+    .filter((f) => typeof v.example[f.key] === 'string' && v.example[f.key] !== '')
+    .map((f) => {
+      const raw = v.example[f.key] as string;
+      return f.type === 'select' ? `${f.label}: ${f.options?.find((o) => o.value === raw)?.label}` : `${f.label}: ${raw}${f.unit ? ` ${f.unit}` : ''}`;
+    });
+  if (v.rows) {
+    const rows = v.example[v.rows.key] as string[][];
+    rows.forEach((row, i) => inputs.push(`Zeile ${i + 1}: ${row.map((c, ci) => `${v.rows!.columns[ci].label} ${c}${v.rows!.columns[ci].unit ? ` ${v.rows!.columns[ci].unit}` : ''}`).join(', ')}`));
+  }
+  return { v, r, inputs };
+});
+---
+
+<Base title={`${t.seoTitle} | KPILot`} description={t.seoDescription} crumbs={crumbs}>
+  <PageBand crumbs={crumbs} title={name} overlap cat={t.category}>
+    <p class="cat-label" slot="before"><CategoryIcon id={t.category} /> {cat.title}</p>
+    {t.fullTerm && <p class="full-term" slot="sub">{t.fullTerm}</p>}
+    <FavButton id={t.id} name={name} labeled slot="actions" />
+  </PageBand>
+  <div class="container" data-cat={t.category}>
+    <div class="detail-top">
+      <section class="card intro-card" aria-labelledby="kurz">
+        <h2 class="eyebrow" id="kurz">Kurz erklärt</h2>
+        <p class="intro-text">{t.intro}</p>
+        <p class="jump"><a href="#rechner">Direkt zum Rechner ↓</a></p>
+        <figure class="figure">
+          <img src={illustrationPath(t.id, true)} width="640" height="360" alt={t.image.alt} decoding="async" fetchpriority="high" />
+          <figcaption>{t.image.caption}</figcaption>
+        </figure>
+        <details class="img-desc">
+          <summary>Bildbeschreibung lesen</summary>
+          <p>{t.image.description}</p>
+        </details>
+      </section>
+
+      <Calculator id={t.id} />
+    </div>
+
+    <div class="detail-sections">
+      <section class="card content-card" aria-labelledby="formel">
+        <h2 id="formel">Formel</h2>
+        <ul class="formula">{t.formula.map((f) => <li>{f}</li>)}</ul>
+        <dl class="vars">
+          {
+            t.variables.map(([k, v]) => (
+              <>
+                <dt>{k}</dt>
+                <dd>{v}</dd>
+              </>
+            ))
+          }
+        </dl>
+      </section>
+
+      <section class="card content-card" aria-labelledby="beispiel">
+        <h2 id="beispiel">Beispiel und Rechenweg</h2>
+        <p class="small muted">Diese Zahlen sind ein dokumentiertes Beispiel – dieselben Werte setzt „Beispiel einsetzen“ ein, und sie stimmen mit dem Bild überein.</p>
+        {
+          examples.map(({ v, r, inputs }) => (
+            <div class="example-block">
+              {calc.variants.length > 1 && <h3>{v.favLabel}</h3>}
+              <ul class="example-inputs">
+                {inputs.map((i) => (
+                  <li>{i}</li>
+                ))}
+              </ul>
+              {r.status === 'ok' && (
+                <>
+                  <ol class="steps">
+                    {r.steps.map((s) => (
+                      <li>{s}</li>
+                    ))}
+                  </ol>
+                  <p>
+                    <strong>
+                      {r.main.label}: {formatValue(r.main.value, r.main.format, r.main.unit, r.main.signed)}
+                    </strong>{' '}
+                    – {r.meaning}
+                  </p>
+                </>
+              )}
+            </div>
+          ))
+        }
+      </section>
+
+      <section class="card content-card" aria-labelledby="lesen">
+        <h2 id="lesen">So liest du das Ergebnis</h2>
+        <p>{t.interpretation}</p>
+      </section>
+
+      <section class="card content-card" aria-labelledby="miss">
+        <h2 id="miss">Typische Missverständnisse</h2>
+        <ul class="bullets">{t.misconceptions.map((m) => <li>{m}</li>)}</ul>
+      </section>
+
+      <section class="card content-card" aria-labelledby="annahmen">
+        <h2 id="annahmen">Modellannahmen</h2>
+        <ul class="bullets">{[...t.assumptions, ...COST_ASSUMPTIONS].map((a) => <li>{a}</li>)}</ul>
+        {
+          t.sources && (
+            <p class="small muted">
+              Fachliche Quelle:{' '}
+              {t.sources.map((s, i) => (
+                <>
+                  {i > 0 && ' · '}
+                  <a href={s.url} rel="noopener" target="_blank">
+                    {s.label}
+                  </a>
+                </>
+              ))}
+              . Das Modell hier ist bewusst vereinfacht.
+            </p>
+          )
+        }
+      </section>
+
+      <section class="card content-card" aria-labelledby="verwandt">
+        <h2 id="verwandt">Verwandte Rechner</h2>
+        <ul class="related-list">
+          {
+            t.related.map((id) => {
+              const r = TOPIC_BY_ID[id];
+              return (
+                <li>
+                  <a href={topicUrl(r)}>
+                    <strong>{displayTitle(r)}</strong>
+                    <span>{r.short}</span>
+                  </a>
+                </li>
+              );
+            })
+          }
+        </ul>
+      </section>
+    </div>
+  </div>
+</Base>

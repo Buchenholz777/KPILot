@@ -1,0 +1,256 @@
+---
+import { TOPICS } from '../data/registry';
+import { CATEGORIES } from '../data/categories';
+import { buildSearchIndex } from '../data/index-data';
+import Tile from './Tile.astro';
+import Icon from './Icon.astro';
+import CategoryIcon from './CategoryIcon.astro';
+import BandLines from './BandLines.astro';
+
+interface Props {
+  /** home: zeigt ohne Suche/Filter nur „Empfohlen“; all: kompletter Katalog. */
+  mode: 'home' | 'all';
+  headingId?: string;
+}
+const { mode, headingId = 'katalog-h' } = Astro.props;
+const index = JSON.stringify(buildSearchIndex());
+const firstVisible = new Set((mode === 'home' ? TOPICS.filter((t) => t.recommended) : TOPICS).slice(0, 6).map((t) => t.id));
+const qId = `q-${mode}`;
+---
+
+<div class="catalog" data-catalog data-mode={mode}>
+  <section class="band band-search" aria-label="Einführung und Suche">
+    <BandLines />
+    <div class="container hero-compact">
+      <div class="hero-intro">
+        <slot name="intro" />
+      </div>
+      <div>
+        <form class="search-box" role="search" data-search-form onsubmit="return false">
+          <label for={qId}>Rechner suchen</label>
+          <div class="search-field">
+            <Icon name="search" />
+            <input
+              id={qId}
+              type="search"
+              name="q"
+              autocomplete="off"
+              enterkeyhint="search"
+              spellcheck="false"
+              placeholder="z. B. Gewinnschwelle, Marge, Cashflow, CPC …"
+              aria-describedby={`${qId}-hint`}
+              data-search
+            />
+            <button type="button" class="search-clear" data-clear aria-label="Suche leeren" hidden><Icon name="x" /></button>
+          </div>
+          <p class="visually-hidden" id={`${qId}-hint`}>Sucht immer in allen 40 Rechnern – auch nach Abkürzungen und Alltagsfragen.</p>
+          <a class="search-jump" href={`#${headingId}`} data-jump hidden></a>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <div class="container catalog-body">
+    <slot name="between" />
+
+    <div class="cat-select">
+      <label for={`cat-${mode}`}>Kategorie</label>
+      <div class="input-wrap">
+        <select id={`cat-${mode}`} data-cat-select>
+          <option value="alle">Alle Kategorien</option>
+          {CATEGORIES.map((c) => <option value={c.id}>{c.title}</option>)}
+        </select>
+      </div>
+    </div>
+    <fieldset class="chips" data-chips>
+      <legend>Kategorie</legend>
+      <button type="button" class="chip" data-cat-btn="alle" aria-pressed="true"><Icon name="check" class="chip-check" />Alle</button>
+      {
+        CATEGORIES.map((c) => (
+          <button type="button" class="chip" data-cat-btn={c.id} data-cat={c.id} aria-pressed="false">
+            <CategoryIcon id={c.id} />
+            {c.title}
+          </button>
+        ))
+      }
+    </fieldset>
+
+    <div class="catalog-head">
+      <h2 id={headingId} data-catalog-heading>{mode === 'home' ? 'Empfohlen' : 'Alle Rechner'}</h2>
+      <div class="catalog-status" role="status" aria-live="polite" data-status>
+        <span data-count><strong>{mode === 'home' ? 'Eine Auswahl häufig hilfreicher Themen' : `${TOPICS.length} Rechner`}</strong></span>
+        <span class="scope" data-scope hidden></span>
+        <button type="button" class="btn btn-ghost" data-widen hidden>In allen Kategorien suchen</button>
+        <button type="button" class="btn btn-ghost" data-reset hidden><Icon name="x" />Zurücksetzen</button>
+      </div>
+    </div>
+
+    <div class="grid" data-grid>
+      {
+        TOPICS.map((t) => (
+          <div class="grid-item" data-item={t.id} data-cat={t.category} hidden={mode === 'home' && !t.recommended ? true : undefined}>
+            <Tile topic={t} eager={firstVisible.has(t.id)} />
+          </div>
+        ))
+      }
+    </div>
+
+    <div class="card no-results" data-empty hidden>
+      <h3>Keine passenden Rechner gefunden</h3>
+      <p class="muted" data-empty-text>Versuche einen anderen Begriff, z. B. eine Abkürzung wie „ROI“ oder eine Frage wie „Was bleibt vom Umsatz?“.</p>
+      <button type="button" class="btn btn-primary" data-empty-allcats hidden>In allen Kategorien suchen</button>
+    </div>
+
+    {
+      mode === 'home' && (
+        <p class="catalog-more" data-more>
+          <a class="btn btn-secondary" href="/rechner/">
+            Alle 40 Rechner anzeigen <Icon name="arrow" />
+          </a>
+        </p>
+      )
+    }
+  </div>
+  <script type="application/json" data-search-index set:html={index} />
+</div>
+
+<style>
+  .grid-item {
+    display: contents;
+  }
+  .grid-item[hidden] {
+    display: none;
+  }
+</style>
+
+<script>
+  import type { SearchEntry } from '../lib/search';
+  import { computeView, initialState, onCategory, onClear, onQueryChange, restore, ALL, type CatalogState } from '../lib/catalog-state';
+  import { getCatalogState, setCatalogState } from '../lib/storage';
+
+  const esc = (s: string) => s.replace(/[<>&"]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' })[c]!);
+
+  for (const root of document.querySelectorAll<HTMLElement>('[data-catalog]')) {
+    const mode = root.dataset.mode as 'home' | 'all';
+    const entries = JSON.parse(root.querySelector('[data-search-index]')!.textContent!) as SearchEntry[];
+    const chips = [...root.querySelectorAll<HTMLButtonElement>('[data-cat-btn]')];
+    const titles = Object.fromEntries(chips.map((b) => [b.dataset.catBtn!, b.textContent!.trim()]));
+    const recommended = new Set([...root.querySelectorAll<HTMLElement>('.tile[data-recommended]')].map((t) => t.dataset.id!));
+    const input = root.querySelector<HTMLInputElement>('[data-search]')!;
+    const clearBtn = root.querySelector<HTMLButtonElement>('[data-clear]')!;
+    const items = new Map([...root.querySelectorAll<HTMLElement>('[data-item]')].map((el) => [el.dataset.item!, el]));
+    const grid = root.querySelector<HTMLElement>('[data-grid]')!;
+    const countEl = root.querySelector<HTMLElement>('[data-count]')!;
+    const scopeEl = root.querySelector<HTMLElement>('[data-scope]')!;
+    const widenBtn = root.querySelector<HTMLButtonElement>('[data-widen]')!;
+    const resetBtn = root.querySelector<HTMLButtonElement>('[data-reset]')!;
+    const empty = root.querySelector<HTMLElement>('[data-empty]')!;
+    const emptyText = root.querySelector<HTMLElement>('[data-empty-text]')!;
+    const emptyAll = root.querySelector<HTMLButtonElement>('[data-empty-allcats]')!;
+    const heading = root.querySelector<HTMLElement>('[data-catalog-heading]')!;
+    const more = root.querySelector<HTMLElement>('[data-more]');
+    const jump = root.querySelector<HTMLAnchorElement>('[data-jump]');
+    const catSelect = root.querySelector<HTMLSelectElement>('[data-cat-select]');
+    // Kompakte Auswahlliste (schmale Bildschirme) – gleiche Regel B wie die Kategorie-Buttons
+    catSelect?.addEventListener('change', () => {
+      state = onCategory(state, catSelect.value);
+      render();
+    });
+
+    let state: CatalogState = restore(getCatalogState(), Object.keys(titles));
+    input.value = state.q;
+
+    function render(persist = true) {
+      const q = state.q.trim();
+      const v = computeView(state, entries, { mode, recommended });
+      chips.forEach((c) => c.setAttribute('aria-pressed', String(c.dataset.catBtn === state.cat)));
+      if (catSelect) catSelect.value = state.cat;
+
+      const order = new Set(v.visible);
+      for (const [id, el] of items) el.hidden = !order.has(id);
+      // Reihenfolge nach Relevanz auch für Tastatur und Screenreader
+      (q ? v.visible : entries.map((e) => e.id)).forEach((id) => grid.appendChild(items.get(id)!));
+
+      const catName = state.cat === ALL ? '' : titles[state.cat];
+      heading.textContent = v.homeDefault ? 'Empfohlen' : q ? 'Suchergebnisse' : state.cat === ALL ? 'Alle Rechner' : catName;
+      const n = v.visible.length;
+      countEl.innerHTML = v.homeDefault
+        ? '<strong>Eine Auswahl häufig hilfreicher Themen</strong>'
+        : q
+          ? `<strong>${n} ${n === 1 ? 'Treffer' : 'Treffer'}</strong> für „${esc(q)}“`
+          : `<strong>${n} Rechner</strong>`;
+
+      // Suchumfang sichtbar machen
+      scopeEl.hidden = v.homeDefault;
+      if (v.narrowed) {
+        scopeEl.dataset.narrowed = '';
+        scopeEl.textContent = `Eingegrenzt auf „${catName}“ · ${n} von ${v.globalCount} Treffern`;
+      } else {
+        delete scopeEl.dataset.narrowed;
+        scopeEl.textContent = q ? 'Suchumfang: alle Kategorien' : state.cat === ALL ? 'Alle Kategorien' : `Kategorie: ${catName}`;
+      }
+      widenBtn.hidden = !v.narrowed || n === 0;
+      resetBtn.hidden = !q && state.cat === ALL;
+      clearBtn.hidden = !state.q;
+
+      empty.hidden = n > 0;
+      if (!n) {
+        const elsewhere = v.narrowed ? v.globalCount : 0;
+        emptyAll.hidden = !elsewhere;
+        emptyText.textContent = elsewhere
+          ? `In „${catName}“ gibt es keinen Treffer für „${q}“ – in allen Kategorien zusammen aber ${elsewhere}.`
+          : 'Versuche einen anderen Begriff, z. B. eine Abkürzung wie „ROI“ oder eine Frage wie „Was bleibt vom Umsatz?“.';
+      }
+      if (more) more.hidden = !v.homeDefault;
+      if (jump) {
+        jump.hidden = !q;
+        jump.textContent = n ? `${n} Treffer anzeigen ↓` : 'Keine Treffer – Hinweise anzeigen ↓';
+      }
+      if (persist) setCatalogState(state);
+    }
+
+    let timer: number | undefined;
+    // A: jede Texteingabe (auch Einfügen, Löschen) sucht global
+    input.addEventListener('input', () => {
+      state = onQueryChange(state, input.value);
+      chips.forEach((c) => c.setAttribute('aria-pressed', String(c.dataset.catBtn === state.cat)));
+      if (catSelect) catSelect.value = state.cat;
+      window.clearTimeout(timer);
+      timer = window.setTimeout(render, 110);
+    });
+    root.querySelector('[data-search-form]')!.addEventListener('submit', (e) => {
+      e.preventDefault();
+      render();
+    });
+    // B: bewusste Kategorieauswahl grenzt ein
+    chips.forEach((c) =>
+      c.addEventListener('click', () => {
+        state = onCategory(state, c.dataset.catBtn!);
+        render();
+      }),
+    );
+    const widen = () => {
+      state = onCategory(state, ALL);
+      render();
+    };
+    widenBtn.addEventListener('click', widen);
+    emptyAll.addEventListener('click', widen);
+    // C: Leeren / Zurücksetzen
+    const clear = () => {
+      state = onClear();
+      input.value = '';
+      render();
+      input.focus();
+    };
+    clearBtn.addEventListener('click', clear);
+    resetBtn.addEventListener('click', clear);
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && input.value) {
+        e.preventDefault();
+        clear();
+      }
+    });
+    render(false);
+    void initialState;
+  }
+</script>

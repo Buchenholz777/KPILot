@@ -1,0 +1,70 @@
+---
+import type { GetStaticPaths } from 'astro';
+import Base from '../../layouts/Base.astro';
+import PageBand from '../../components/PageBand.astro';
+import Tile from '../../components/Tile.astro';
+import CategoryIcon from '../../components/CategoryIcon.astro';
+import { CATEGORIES } from '../../data/categories';
+import { topicsInCategory, topicUrl, displayTitle } from '../../data/registry';
+import type { Category } from '../../data/types';
+
+export const getStaticPaths = (() => CATEGORIES.map((c) => ({ params: { slug: c.slug }, props: { cat: c } }))) satisfies GetStaticPaths;
+const { cat } = Astro.props as { cat: Category };
+const topics = topicsInCategory(cat.id);
+const crumbs = [
+  { name: 'Start', href: '/' },
+  { name: 'Alle Rechner', href: '/rechner/' },
+  { name: cat.title, href: `/kategorie/${cat.slug}/` },
+];
+---
+
+<Base
+  title={`${cat.title}: ${topics.length} Rechner mit Erklärung | KPILot`}
+  description={`${cat.title}: ${topics.map((t) => t.abbr ?? t.title).join(', ')} – verständlich erklärt und direkt berechnen.`.slice(0, 158)}
+  crumbs={crumbs}
+>
+  <PageBand crumbs={crumbs} title={cat.title} lead={cat.intro} cat={cat.id}>
+    <p class="cat-label" slot="before"><CategoryIcon id={cat.id} /> Kategorie · {topics.length} Rechner</p>
+  </PageBand>
+  <div class="container" data-cat={cat.id}>
+
+    <section class="section" aria-labelledby="which">
+      <h2 id="which">Welcher Rechner passt zu welcher Frage?</h2>
+      <div class="card content-card">
+        <ul class="match-list">
+          {
+            topics.map((t) => (
+              <li>
+                <span>{t.question}</span>
+                <a href={topicUrl(t)}>{displayTitle(t)}</a>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+    </section>
+
+    {
+      cat.confusions.length > 0 && (
+        <section class="section" aria-labelledby="conf">
+          <h2 id="conf">Häufig verwechselt</h2>
+          <div class="confusions">
+            {cat.confusions.map((c) => (
+              <div class="card confusion">
+                <h3>
+                  {c.a} ≠ {c.b}
+                </h3>
+                <p>{c.text}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+      )
+    }
+
+    <section class="section" aria-labelledby="tiles">
+      <h2 id="tiles">Alle Rechner in „{cat.title}“</h2>
+      <div class="grid">{topics.map((t, i) => <Tile topic={t} eager={i < 3} />)}</div>
+    </section>
+  </div>
+</Base>

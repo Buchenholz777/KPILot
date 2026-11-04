@@ -1,0 +1,31 @@
+---
+import Breadcrumb from './Breadcrumb.astro';
+import BandLines from './BandLines.astro';
+/** Kompakter dunkler Titelbereich für Unterseiten. */
+interface Props {
+  crumbs?: { name: string; href: string }[];
+  title: string;
+  lead?: string;
+  /** Mehr Abstand nach unten, wenn Karten überlappen sollen (Detailseite). */
+  overlap?: boolean;
+  cat?: string;
+}
+const { crumbs, title, lead, overlap = false, cat } = Astro.props;
+---
+
+<section class:list={['band', 'band-compact']} style={overlap ? 'padding-bottom: calc(var(--space-6) + var(--space-7))' : undefined} data-cat={cat}>
+  <BandLines />
+  <div class="container">
+    {crumbs && <Breadcrumb items={crumbs} />}
+    <slot name="before" />
+    <div class="detail-head">
+      <div>
+        <h1>{title}</h1>
+        <slot name="sub" />
+      </div>
+      <slot name="actions" />
+    </div>
+    {lead && <p class="lead" style="margin-top: var(--space-2)">{lead}</p>}
+    <slot />
+  </div>
+</section>

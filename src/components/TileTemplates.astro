@@ -1,0 +1,7 @@
+---
+import Tile from './Tile.astro';
+import { TOPICS } from '../data/registry';
+/** Alle Kacheln als <template> – Quelle für die Favoritenansicht (wird nicht dargestellt, lädt keine Bilder). */
+---
+
+<template id="kr-tiles">{TOPICS.map((t) => <Tile topic={t} />)}</template>

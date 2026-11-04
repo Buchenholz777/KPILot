@@ -1,0 +1,133 @@
+/*
+ * KPILot – Design-Tokens (einzige Quelle für Farben, Typografie, Abstände, Formen, Tiefe)
+ *
+ * Kontraste: `npm run check:contrast` (scripts/contrast.mjs) berechnet alle relevanten Paare nach WCAG –
+ * Text ≥ 4,5:1, Bedienelement-Konturen und Zustände ≥ 3:1. Bei Farbänderungen dort ergänzen und erneut prüfen.
+ * Beispiele: Text #12213A/#FFF 16,1:1 · Sekundärtext #485872/#EEF2F8 6,4:1 · Platzhalter 5,2:1 ·
+ * Eingaberahmen #7D8BA3/#EEF2F8 3,07:1 · #B6C2D9 auf Markenfläche 9,9:1.
+ * Kartenrahmen (#CBD5E3) und Schatten sind dekorativ; Karten sind zusätzlich durch Weiß gegen Blaugrau getrennt.
+ */
+:root {
+  /* Flächen */
+  --color-bg: #eef2f8;
+  --color-surface: #ffffff;
+  --color-surface-muted: #f5f7fb;
+  --color-surface-sunken: #e8edf5;
+  --color-border: #cbd5e3;
+  --color-border-strong: #aebacb;
+  --color-border-control: #7d8ba3;
+
+  /* Markenbereich (dunkel) */
+  --color-brand: #0b1730;
+  --color-brand-2: #102246;
+  --color-on-brand: #ffffff;
+  --color-on-brand-muted: #b6c2d9;
+  --color-on-brand-accent: #a5b4fc;
+  --color-on-brand-line: rgb(255 255 255 / 0.12);
+  --color-on-brand-hover: rgb(255 255 255 / 0.08);
+
+  /* Text */
+  --color-text: #12213a;
+  --color-text-muted: #485872;
+  --color-placeholder: #5f6e87;
+  --color-text-inverse: #ffffff;
+
+  /* Aktion und Akzent */
+  --color-accent: #4338ca;
+  --color-accent-hover: #3730a3;
+  --color-accent-text: #3730a3;
+  --color-accent-soft: #eceafd;
+  --color-accent-line: #c7c3f7;
+  --color-teal: #0f766e;
+  --color-teal-soft: #ddf3f0;
+
+  /* Zustände */
+  --color-success: #0f766e;
+  --color-success-soft: #ddf3f0;
+  --color-danger: #b42318;
+  --color-danger-soft: #fdecea;
+  --color-warning: #8a4b00;
+  --color-warning-soft: #fff4e0;
+  --color-focus: #4338ca;
+  --color-focus-on-brand: #a5b4fc;
+  --color-star: #b45309;
+  --color-star-soft: #fff3dc;
+  --color-star-line: #e2a54a;
+
+  /* Kategorieakzente – immer zusammen mit Text und eigenem Symbol */
+  --cat-prozent: #4338ca;
+  --cat-kosten: #0f766e;
+  --cat-finanzen: #0b5cad;
+  --cat-marketing: #b4235a;
+  --cat-produkt: #7a3fc0;
+  --cat-controlling: #9a4d00;
+
+  /* Typografie */
+  --font-sans:
+    "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system,
+    "Helvetica Neue", Roboto, Arial, sans-serif;
+  --font-display:
+    "Segoe UI Variable Display", "Segoe UI", system-ui, -apple-system,
+    "Helvetica Neue", Roboto, Arial, sans-serif;
+  --font-mono:
+    ui-monospace, "Cascadia Mono", "SFMono-Regular", Consolas, monospace;
+  --text-xs: 0.8125rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-md: 1.125rem;
+  --text-lg: 1.3125rem;
+  --text-xl: 1.625rem;
+  --text-2xl: clamp(1.75rem, 1.25rem + 2vw, 2.625rem);
+  --text-hero: clamp(1.875rem, 1.2rem + 2.6vw, 3rem);
+  --leading-tight: 1.18;
+  --leading-normal: 1.55;
+  --tracking-tight: -0.022em;
+  --weight-normal: 400;
+  --weight-medium: 560;
+  --weight-bold: 680;
+
+  /* Abstände (4er-Raster) */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+  --space-8: 4rem;
+  --gutter: clamp(1rem, 0.5rem + 2.2vw, 2rem);
+  --content-max: 76rem;
+  --prose-max: 46rem;
+  --section-gap: clamp(2rem, 1.4rem + 2vw, 3rem);
+
+  /* Formen */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-pill: 999px;
+
+  /* Tiefe */
+  --shadow-xs: 0 1px 2px rgb(18 33 58 / 0.06);
+  --shadow-card:
+    0 1px 2px rgb(18 33 58 / 0.06), 0 6px 16px -6px rgb(18 33 58 / 0.12);
+  --shadow-card-hover:
+    0 2px 4px rgb(18 33 58 / 0.06), 0 16px 32px -10px rgb(18 33 58 / 0.22);
+  --shadow-pop: 0 12px 40px -12px rgb(11 23 48 / 0.45);
+  --focus-ring: 0 0 0 2px #ffffff, 0 0 0 5px var(--color-focus);
+  --focus-ring-on-brand:
+    0 0 0 2px var(--color-brand), 0 0 0 5px var(--color-focus-on-brand);
+
+  /* Bedienung */
+  --touch: 44px;
+  --header-h: 64px;
+  --transition: 160ms cubic-bezier(0.2, 0.7, 0.2, 1);
+  --lift: translateY(-2px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --transition: 0ms;
+    --lift: none;
+  }
+}

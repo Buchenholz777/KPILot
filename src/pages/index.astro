@@ -1,0 +1,23 @@
+---
+import Base from '../layouts/Base.astro';
+import Catalog from '../components/Catalog.astro';
+import Favorites from '../components/Favorites.astro';
+import { SITE_NAME, SITE_DESCRIPTION } from '../config/site';
+
+const site = Astro.site;
+const websiteLd = site ? [{ '@context': 'https://schema.org', '@type': 'WebSite', name: SITE_NAME, url: site.href, inLanguage: 'de-DE', description: SITE_DESCRIPTION }] : [];
+---
+
+<Base
+  title={`${SITE_NAME} – Prozente, Kosten und Kennzahlen einfach berechnen`}
+  description="40 verständliche Rechner für Prozentrechnung, Kostenrechnung und betriebswirtschaftliche Kennzahlen – mit kurzer Erklärung, Bild und Rechenweg. Kostenlos, im Browser berechnet."
+  jsonLd={websiteLd}
+>
+  <Catalog mode="home">
+    <Fragment slot="intro">
+      <h1 class="hero-title">Kennzahlen <span class="accent">einfach berechnen</span></h1>
+      <p class="hero-sub">40 Rechner mit Erklärung und Rechenweg</p>
+    </Fragment>
+    <Favorites slot="between" layout="row" />
+  </Catalog>
+</Base>

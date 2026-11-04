@@ -1,0 +1,22 @@
+---
+import Base from '../../layouts/Base.astro';
+import PageBand from '../../components/PageBand.astro';
+import Favorites from '../../components/Favorites.astro';
+import { SITE_NAME } from '../../config/site';
+const crumbs = [
+  { name: 'Start', href: '/' },
+  { name: 'Meine Favoriten', href: '/favoriten/' },
+];
+---
+
+<Base title={`Meine Favoriten | ${SITE_NAME}`} description="Deine gemerkten Rechner – lokal in diesem Browser gespeichert." noindex>
+  <PageBand
+    crumbs={crumbs}
+    title="Meine Favoriten"
+    lead="Deine Favoriten und gespeicherten Rechnungen bleiben auf diesem Gerät in diesem Browser. Es gibt kein Konto und keine Synchronisation."
+  />
+  <div class="container page-body">
+    <Favorites heading="Gemerkte Rechner" layout="grid" />
+    <p><a class="btn btn-secondary" href="/rechner/">Weitere Rechner entdecken</a> <a class="btn btn-ghost" href="/gespeichert/">Gespeicherte Rechnungen</a></p>
+  </div>
+</Base>

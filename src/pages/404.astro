@@ -1,0 +1,30 @@
+---
+import Base from '../layouts/Base.astro';
+import PageBand from '../components/PageBand.astro';
+import { CATEGORIES } from '../data/categories';
+import { SITE_NAME } from '../config/site';
+---
+
+<Base title={`Seite nicht gefunden | ${SITE_NAME}`} description="Diese Seite gibt es nicht. Finde den passenden Rechner über die Suche oder die Kategorien." noindex>
+  <PageBand title="Diese Seite gibt es nicht" lead="Vielleicht hat sich die Adresse geändert. So findest du den passenden Rechner:">
+    <p style="margin-top: var(--space-4); display: flex; flex-wrap: wrap; gap: var(--space-2)">
+      <a class="btn btn-primary" href="/rechner/">Alle Rechner durchsuchen</a>
+      <a class="btn btn-secondary" href="/">Zur Startseite</a>
+    </p>
+  </PageBand>
+  <div class="container page-body">
+    <h2>Kategorien</h2>
+    <ul class="related-list">
+      {
+        CATEGORIES.map((c) => (
+          <li>
+            <a href={`/kategorie/${c.slug}/`}>
+              <strong>{c.title}</strong>
+              <span>{c.short}</span>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</Base>

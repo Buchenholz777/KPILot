@@ -1,0 +1,15 @@
+﻿// Cloudflare Workers Static Assets – reines statisches Hosting ohne Worker-Skript.
+// Anleitung: README.md → „Veröffentlichen auf Cloudflare“.
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "kpilot",
+  // Beim ersten Deploy auf das aktuelle Datum setzen
+  "compatibility_date": "2026-11-04",
+  "assets": {
+    "directory": "./dist",
+    // echte 404-Statuscodes mit der eigenen 404.html
+    "not_found_handling": "404-page",
+    // /pfad/index.html wird als /pfad/ ausgeliefert – passend zu den Canonicals
+    "html_handling": "auto-trailing-slash",
+  },
+}

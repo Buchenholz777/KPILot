@@ -1,0 +1,80 @@
+---
+import '../styles/global.css';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { favoriteIds, variantMeta, topicMeta } from '../data/index-data';
+
+interface Crumb {
+  name: string;
+  href: string;
+}
+interface Props {
+  title: string;
+  description: string;
+  /** Persönliche Ansichten und Entwürfe nicht indexieren. */
+  noindex?: boolean;
+  crumbs?: Crumb[];
+  /** Zusätzliche JSON-LD-Objekte (nur mit bekannter Domain). */
+  jsonLd?: Record<string, unknown>[];
+}
+const { title, description, noindex = false, crumbs = [], jsonLd = [] } = Astro.props;
+
+const site = Astro.site; // nur gesetzt, wenn SITE_URL bekannt ist
+const preview = !site;
+const canonical = site ? new URL(Astro.url.pathname, site).href : undefined;
+const robots = preview || noindex ? 'noindex, follow' : 'index, follow';
+const ogImage = site ? new URL('/og-image.png', site).href : '/og-image.png';
+const ld: Record<string, unknown>[] = [];
+if (site && !noindex) {
+  ld.push({ '@context': 'https://schema.org', '@type': 'WebPage', name: title, description, url: canonical, inLanguage: 'de-DE', isPartOf: { '@type': 'WebSite', name: 'KPILot', url: site.href } });
+  if (crumbs.length)
+    ld.push({
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: crumbs.map((c, i) => ({ '@type': 'ListItem', position: i + 1, name: c.name, item: new URL(c.href, site).href })),
+    });
+  ld.push(...jsonLd);
+}
+const krData = JSON.stringify({ ids: favoriteIds(), variants: variantMeta(), topics: topicMeta() });
+---
+
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="robots" content={robots} />
+    {canonical && <link rel="canonical" href={canonical} />}
+    <link rel="icon" href="/favicon.ico" sizes="32x32" />
+    <link rel="icon" href="/brand/kpilot-icon-512.png" type="image/png" sizes="512x512" />
+    <link rel="apple-touch-icon" href="/brand/kpilot-icon-180.png" />
+    <meta name="theme-color" content="#0B1730" />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="de_DE" />
+    <meta property="og:site_name" content="KPILot" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    {canonical && <meta property="og:url" content={canonical} />}
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="KPILot – Prozente, Kosten und Kennzahlen einfach verstehen und berechnen" />
+    <meta name="twitter:card" content="summary_large_image" />
+    {ld.map((j) => <script type="application/ld+json" set:html={JSON.stringify(j)} />)}
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Zum Inhalt springen</a>
+    <Header />
+    <main id="main" tabindex="-1">
+      <slot />
+    </main>
+    <Footer />
+    <div class="toast" role="status" aria-live="polite" data-toast hidden></div>
+    <script type="application/json" id="kr-data" set:html={krData} />
+    <script>
+      import '../scripts/favorites';
+    </script>
+  </body>
+</html>

@@ -1,0 +1,21 @@
+---
+import { SITE_NAME } from '../config/site';
+/**
+ * KPILot-Logo (Emblem aus Rakete und steigenden Balken + Wortmarke).
+ * Quelle: kpilot-logo-v2.png; Varianten erzeugt mit scripts/brand-assets.ps1.
+ *   variant="dark"  → für dunkle Markenflächen (Navy → Weiß, Akzente aufgehellt)
+ *   variant="light" → Original für helle Flächen
+ * Das Bild trägt den Markennamen als Alternativtext, sofern es nicht dekorativ ist.
+ */
+interface Props {
+  variant?: 'dark' | 'light';
+  /** Darstellungshöhe in px; Seitenverhältnis 592 : 160. */
+  height?: number;
+  decorative?: boolean;
+}
+const { variant = 'dark', height = 36, decorative = false } = Astro.props;
+const src = variant === 'dark' ? '/brand/kpilot-logo-dark.png' : '/brand/kpilot-logo.png';
+const width = Math.round((height * 592) / 160);
+---
+
+<img class="logo" src={src} width={width} height={height} alt={decorative ? '' : SITE_NAME} decoding="async" />

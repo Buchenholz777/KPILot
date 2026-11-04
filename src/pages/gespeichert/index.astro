@@ -1,0 +1,70 @@
+---
+import Base from '../../layouts/Base.astro';
+import PageBand from '../../components/PageBand.astro';
+import { TOPICS, topicUrl, displayTitle } from '../../data/registry';
+import { CALCS } from '../../calc/all';
+
+const crumbs = [
+  { name: 'Start', href: '/' },
+  { name: 'Gespeicherte Rechnungen', href: '/gespeichert/' },
+];
+const meta = JSON.stringify(
+  Object.fromEntries(
+    TOPICS.map((t) => [t.id, { title: displayTitle(t), url: topicUrl(t), schema: CALCS[t.id].schema, variants: Object.fromEntries(CALCS[t.id].variants.map((v) => [v.id, v.label])) }]),
+  ),
+);
+---
+
+<Base title="Gespeicherte Rechnungen | KPILot" description="Deine ausdrücklich gespeicherten Rechnungen – lokal in diesem Browser." noindex>
+  <PageBand
+    crumbs={crumbs}
+    title="Gespeicherte Rechnungen"
+    lead="Hier stehen Rechnungen, die du mit „Rechnung speichern“ abgelegt hast – mit deinen Eingaben. Sie bleiben auf diesem Gerät in diesem Browser."
+  />
+  <div class="container page-body">
+    <div data-saved-root>
+      <ul class="saved-list" data-saved-list></ul>
+      <p class="notice" data-saved-empty hidden>Noch keine gespeicherten Rechnungen. Öffne einen Rechner, rechne und klicke auf „Rechnung speichern“.</p>
+      <p class="notice notice-warn" data-saved-nostorage hidden>Dein Browser erlaubt hier keine lokale Speicherung. Rechnen funktioniert trotzdem, Speichern aber nicht.</p>
+    </div>
+    <noscript><p class="notice">Gespeicherte Rechnungen benötigen JavaScript.</p></noscript>
+    <script type="application/json" id="kr-calcs" set:html={meta} />
+  </div>
+</Base>
+
+<script>
+  import { getSaved, removeSaved, storageAvailable } from '../../lib/storage';
+  import { esc, readJson, toast } from '../../scripts/ui';
+
+  type Meta = Record<string, { title: string; url: string; schema: number; variants: Record<string, string> }>;
+  const meta = readJson<Meta>('kr-calcs') ?? {};
+  const list = document.querySelector<HTMLElement>('[data-saved-list]')!;
+  const empty = document.querySelector<HTMLElement>('[data-saved-empty]')!;
+  const noStore = document.querySelector<HTMLElement>('[data-saved-nostorage]')!;
+
+  function render() {
+    noStore.hidden = storageAvailable();
+    const items = getSaved();
+    empty.hidden = items.length > 0 || !storageAvailable();
+    list.innerHTML = items
+      .map((s) => {
+        const m = meta[s.calcId];
+        const variant = m?.variants[s.variantId];
+        const date = new Date(s.savedAt);
+        const when = isNaN(date.getTime()) ? '' : date.toLocaleString('de-DE', { dateStyle: 'medium', timeStyle: 'short' });
+        const problem = !m ? 'Rechner nicht mehr vorhanden' : !variant ? 'Rechenmodus nicht mehr vorhanden' : s.schema !== m.schema ? 'aus älterer Version – Werte bitte prüfen' : '';
+        return `<li class="card saved-item"><div><h2>${esc(s.name)}</h2><p class="small muted">${esc(m?.title ?? s.calcId)}${variant && Object.keys(m.variants).length > 1 ? ` · ${esc(variant)}` : ''}${when ? ` · ${esc(when)}` : ''}${problem ? ` · <strong>${esc(problem)}</strong>` : ''}</p></div>
+        <div class="saved-actions">${m && variant ? `<a class="btn btn-primary" href="${m.url}#gespeichert=${encodeURIComponent(s.id)}">Öffnen</a>` : ''}<button type="button" class="btn btn-danger" data-del="${esc(s.id)}" aria-label="„${esc(s.name)}“ löschen">Löschen</button></div></li>`;
+      })
+      .join('');
+  }
+  list.addEventListener('click', (e) => {
+    const b = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-del]');
+    if (!b) return;
+    const ok = removeSaved(b.dataset.del!);
+    toast(ok ? 'Rechnung gelöscht.' : 'Löschen ist fehlgeschlagen.');
+    render();
+    (list.querySelector('[data-del]') as HTMLElement | null)?.focus();
+  });
+  render();
+</script>

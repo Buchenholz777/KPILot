@@ -1,0 +1,38 @@
+---
+import Icon from './Icon.astro';
+/**
+ * Echter Button mit stabilem zugänglichem Namen und aria-pressed.
+ * Der Zustand wird im Browser aus dem lokalen Speicher gesetzt (scripts/favorites.ts).
+ */
+interface Props {
+  id: string;
+  /** Name für den zugänglichen Namen, z. B. „Break-even-Rechner“. */
+  name: string;
+  labeled?: boolean;
+  class?: string;
+  /** Zusatztext bei beschrifteten Buttons, z. B. „Diesen Modus merken“. */
+  offText?: string;
+  onText?: string;
+}
+const { id, name, labeled = false, class: cls = '', offText = 'Als Favorit merken', onText = 'Favorit' } = Astro.props;
+---
+
+<button
+  type="button"
+  class:list={['fav', { 'fav-labeled': labeled }, cls]}
+  data-fav-id={id}
+  aria-pressed="false"
+  aria-label={labeled ? undefined : `Favorit: ${name}`}
+  title={labeled ? undefined : `Favorit: ${name}`}
+>
+  <Icon name="star" />
+  {
+    labeled && (
+      <span>
+        <span class="visually-hidden">Favorit: {name} – </span>
+        <span class="fav-off">{offText}</span>
+        <span class="fav-on">{onText}</span>
+      </span>
+    )
+  }
+</button>

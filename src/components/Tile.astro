@@ -1,0 +1,37 @@
+---
+import type { Topic } from '../data/types';
+import { CATEGORY_BY_ID } from '../data/categories';
+import { topicUrl } from '../data/registry';
+import { illustrationPath } from '../illustrations';
+import CategoryIcon from './CategoryIcon.astro';
+import FavButton from './FavButton.astro';
+import Icon from './Icon.astro';
+
+interface Props {
+  topic: Topic;
+  /** Erste sichtbare Kacheln ohne Lazy Loading. */
+  eager?: boolean;
+  headingLevel?: 2 | 3;
+}
+const { topic: t, eager = false, headingLevel = 3 } = Astro.props;
+const cat = CATEGORY_BY_ID[t.category];
+const H = `h${headingLevel}` as 'h2' | 'h3';
+const showAbbr = t.abbr && !t.title.includes(t.abbr);
+---
+
+<article class="tile" data-id={t.id} data-cat={t.category} data-recommended={t.recommended ? '' : undefined}>
+  <div class="tile-media">
+    <img src={illustrationPath(t.id, false)} width="320" height="180" alt={t.image.alt} loading={eager ? 'eager' : 'lazy'} decoding="async" />
+    <FavButton id={t.id} name={`${t.title}${showAbbr ? ` (${t.abbr})` : ''}`} class="tile-fav" />
+  </div>
+  <div class="tile-body">
+    <p class="cat-label"><CategoryIcon id={t.category} /> {cat.title}</p>
+    <H class="tile-title">
+      <a class="tile-link" href={topicUrl(t)}><span data-tile-title>{t.title}</span></a>{showAbbr && <span class="abbr">{t.abbr}</span>}
+    </H>
+    <p class="tile-variant" data-tile-variant hidden></p>
+    <p class="tile-short">{t.short}</p>
+    <p class="tile-question"><span class="visually-hidden">Typische Frage: </span>„{t.question}“</p>
+    <span class="tile-foot" aria-hidden="true">Rechner öffnen <Icon name="arrow" /></span>
+  </div>
+</article>

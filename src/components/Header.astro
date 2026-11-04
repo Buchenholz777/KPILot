@@ -1,0 +1,27 @@
+---
+import Logo from './Logo.astro';
+import Icon from './Icon.astro';
+import { SITE_NAME, SITE_CLAIM } from '../config/site';
+const path = Astro.url.pathname;
+const cur = (p: string) => (path === p ? 'page' : undefined);
+---
+
+<header class="site-header">
+  <div class="container header-inner">
+    <a href="/" class="brand" aria-label={`${SITE_NAME} – ${SITE_CLAIM}, zur Startseite`}>
+      <Logo variant="dark" height={34} decorative />
+      <span class="brand-claim">{SITE_CLAIM}</span>
+    </a>
+    <nav class="main-nav" aria-label="Hauptnavigation">
+      <ul>
+        <li><a href="/rechner/" aria-current={cur('/rechner/')}><Icon name="grid" /><span class="nav-label nav-label-first"><span class="nav-long">Alle </span>Rechner</span></a></li>
+        <li class="nav-optional"><a href="/gespeichert/" aria-current={cur('/gespeichert/')}><Icon name="save" />Gespeichert</a></li>
+        <li>
+          <a href="/favoriten/" class="nav-fav" aria-current={cur('/favoriten/')}>
+            <Icon name="star" /><span class="nav-label"><span class="nav-long">Meine </span>Favoriten</span><span class="count" data-fav-count hidden></span>
+          </a>
+        </li>
+      </ul>
+    </nav>
+  </div>
+</header>

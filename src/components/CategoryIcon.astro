@@ -1,0 +1,19 @@
+---
+import type { CategoryId } from '../data/types';
+/** Eigenes Symbol je Kategorie – Kategorien sind so auch ohne Farbe unterscheidbar. */
+interface Props {
+  id: CategoryId;
+}
+const { id } = Astro.props;
+const s = 'fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"';
+const icons: Record<CategoryId, string> = {
+  prozent: `<circle cx="7.5" cy="7.5" r="2.5" ${s}/><circle cx="16.5" cy="16.5" r="2.5" ${s}/><path d="M18 6L6 18" ${s}/>`,
+  kosten: `<path d="M4 7h16v10H4z" ${s}/><path d="M14.5 10.2a3 3 0 1 0 0 3.6M8 11.3h4.5M8 12.9h4.5" ${s}/>`,
+  finanzen: `<path d="M4 20h16M6 17v-5M10 17V8M14 17v-6M18 17V5" ${s}/>`,
+  marketing: `<path d="M4 10v4l3 .5L15 19V5L7 9.5z" ${s}/><path d="M18 9.5a3 3 0 0 1 0 5" ${s}/>`,
+  produkt: `<circle cx="9" cy="8.5" r="3" ${s}/><path d="M3.5 19a5.5 5.5 0 0 1 11 0M16 6.5a3 3 0 0 1 0 5M18 19a5.5 5.5 0 0 0-2.5-4.6" ${s}/>`,
+  controlling: `<circle cx="12" cy="12" r="8" ${s}/><circle cx="12" cy="12" r="4" ${s}/><path d="M12 12l5-5" ${s}/>`,
+};
+---
+
+<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false" set:html={icons[id]} />

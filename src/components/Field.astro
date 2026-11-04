@@ -1,0 +1,54 @@
+---
+import type { FieldDef } from '../calc/types';
+interface Props {
+  f: FieldDef;
+  prefix: string;
+}
+const { f, prefix } = Astro.props;
+const id = `${prefix}-${f.key}`;
+const helpId = f.help ? `${id}-help` : '';
+const unitId = f.unit ? `${id}-unit` : '';
+const errId = `${id}-err`;
+const describedBy = [unitId, helpId, errId].filter(Boolean).join(' ');
+const inputmode = f.min === 'any' ? 'text' : f.integer ? 'numeric' : 'decimal';
+const optional = f.optional && !/optional/i.test(f.label);
+---
+
+<div class="field" data-field={f.key}>
+  <label for={id}>{f.label}{optional && <span class="muted"> (optional)</span>}</label>
+  <div class="input-wrap">
+    {
+      f.type === 'select' ? (
+        <select id={id} name={f.key} aria-describedby={describedBy}>
+          {f.options!.map((o) => (
+            <option value={o.value} selected={o.value === f.defaultValue}>
+              {o.label}
+            </option>
+          ))}
+        </select>
+      ) : (
+        <input
+          id={id}
+          name={f.key}
+          type="text"
+          inputmode={inputmode}
+          autocomplete="off"
+          spellcheck="false"
+          maxlength="24"
+          aria-describedby={describedBy}
+          data-num
+          data-integer={f.integer ? '' : undefined}
+        />
+      )
+    }
+    {
+      f.unit && (
+        <span class="unit" id={unitId}>
+          {f.unit}
+        </span>
+      )
+    }
+  </div>
+  {f.help && <p class="help" id={helpId}>{f.help}</p>}
+  <p class="field-error" id={errId} data-error hidden></p>
+</div>

@@ -1,0 +1,216 @@
+---
+import { getCalc } from '../calc/all';
+import { TOPIC_BY_ID, topicUrl, displayTitle } from '../data/registry';
+import Field from './Field.astro';
+import FavButton from './FavButton.astro';
+import Icon from './Icon.astro';
+
+interface Props {
+  id: string;
+}
+const { id } = Astro.props;
+const calc = getCalc(id);
+const topic = TOPIC_BY_ID[id];
+const multi = calc.variants.length > 1;
+const scenVariant = calc.scenario ? calc.variants.find((v) => v.id === calc.scenario!.variantId) : undefined;
+const transfers = (calc.transfers ?? []).map((t) => ({ ...t, url: topicUrl(t.target), targetTitle: displayTitle(TOPIC_BY_ID[t.target]) }));
+const rowCount = (min: number) => Math.max(min, 2);
+---
+
+<section class="calc card" id="rechner" data-calc={id} data-title={displayTitle(topic)} aria-labelledby="calc-h">
+  <div class="calc-head">
+    <h2 id="calc-h">Rechner</h2>
+    <span class="badge">Startet leer · rechnet automatisch</span>
+  </div>
+
+  <div class="calc-notice notice notice-info" data-notice role="status" hidden></div>
+
+  {
+    multi && (
+      <>
+        <fieldset class="variants">
+          <legend>Was möchtest du berechnen?</legend>
+          {calc.variants.map((v, i) => (
+            <button type="button" class="variant-btn" data-variant-btn={v.id} aria-pressed={i === 0 ? 'true' : 'false'}>
+              {v.label}
+            </button>
+          ))}
+        </fieldset>
+        <div class="variant-fav-row">
+          {calc.variants.map((v, i) => (
+            <span data-variant-fav={v.id} hidden={i > 0 ? true : undefined}>
+              <FavButton id={`${id}#${v.id}`} name={v.favLabel} labeled offText="Diesen Modus als Favorit merken" onText="Dieser Modus ist ein Favorit" />
+            </span>
+          ))}
+        </div>
+      </>
+    )
+  }
+
+  {
+    calc.variants.map((v, i) => (
+      <form class="calc-form" data-form={v.id} hidden={i > 0 ? true : undefined} novalidate aria-label={multi ? v.favLabel : `${topic.title} berechnen`}>
+        {v.question && <p class="calc-question">{v.question}</p>}
+        {v.fields.length > 0 && (
+          <div class="fields">
+            {v.fields.map((f) => (
+              <Field f={f} prefix={`${id}-${v.id}`} />
+            ))}
+          </div>
+        )}
+        {v.rows && (
+          <div class="field rows-field" data-rows={v.rows.key} data-min={v.rows.minRows} data-max={v.rows.maxRows}>
+            <div class="table-scroll">
+              <table class="rows-table">
+                <caption class="visually-hidden">{v.rows.label}</caption>
+                <thead>
+                  <tr>
+                    {v.rows.columns.map((c) => (
+                      <th scope="col">
+                        {c.label}
+                        {c.unit && <span class="muted"> ({c.unit})</span>}
+                      </th>
+                    ))}
+                    <th scope="col">
+                      <span class="visually-hidden">Zeile entfernen</span>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody data-rows-body>
+                  {Array.from({ length: rowCount(v.rows.minRows) }, (_, ri) => (
+                    <tr>
+                      {v.rows!.columns.map((c, ci) => (
+                        <td>
+                          <div class="input-wrap">
+                            <input
+                              type="text"
+                              inputmode={c.min === 'any' ? 'text' : c.integer ? 'numeric' : 'decimal'}
+                              autocomplete="off"
+                              spellcheck="false"
+                              maxlength="24"
+                              data-col={ci}
+                              aria-label={`${c.label}, Zeile ${ri + 1}`}
+                            />
+                          </div>
+                          <p class="field-error" data-cell-error hidden />
+                        </td>
+                      ))}
+                      <td>
+                        <button type="button" class="icon-btn" data-remove-row aria-label={`Zeile ${ri + 1} entfernen`}>
+                          <Icon name="trash" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {v.rows.columns.some((c) => c.help) && (
+              <p class="help">
+                {v.rows.columns
+                  .filter((c) => c.help)
+                  .map((c) => `${c.label}: ${c.help}`)
+                  .join(' · ')}
+              </p>
+            )}
+            <button type="button" class="btn btn-ghost" data-add-row>
+              <Icon name="plus" />
+              {v.rows.addLabel}
+            </button>
+            <p class="field-error" data-rows-error hidden />
+          </div>
+        )}
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">
+            <Icon name="calc" />
+            Berechnen
+          </button>
+          <button type="button" class="btn btn-secondary" data-action="example">
+            <Icon name="example" />
+            Beispiel einsetzen
+          </button>
+          <button type="button" class="btn btn-ghost" data-action="reset">
+            <Icon name="reset" />
+            Zurücksetzen
+          </button>
+        </div>
+      </form>
+    ))
+  }
+
+  <div class="result" data-result data-state="empty">
+    <p class="result-missing">Gib deine Werte ein oder setze das Beispiel ein – das Ergebnis erscheint automatisch.</p>
+  </div>
+  <div class="visually-hidden" aria-live="polite" data-announce></div>
+
+  <div class="calc-tools" data-tools hidden>
+    <button type="button" class="btn btn-secondary" data-tool="copy"><Icon name="copy" />Ergebnis kopieren</button>
+    <button type="button" class="btn btn-secondary" data-tool="save"><Icon name="save" />Rechnung speichern</button>
+    <button type="button" class="btn btn-secondary" data-tool="print"><Icon name="print" />Drucken</button>
+  </div>
+
+  {
+    transfers.length > 0 && (
+      <div class="transfers" data-transfers hidden>
+        <h3>Werte weiterverwenden</h3>
+        <ul>
+          {transfers.map((t) => (
+            <li>
+              <button type="button" class="btn btn-secondary" data-transfer={t.target} data-transfer-url={t.url}>
+                {t.label}
+                <Icon name="arrow" />
+              </button>
+            </li>
+          ))}
+        </ul>
+        <p class="help">Übernommen werden nur Werte mit gleicher Bedeutung. Fehlende Angaben trägst du im Zielrechner selbst ein.</p>
+      </div>
+    )
+  }
+
+  {
+    scenVariant && (
+      <details class="scenario" data-scenario={scenVariant.id}>
+        <summary>Zwei Szenarien vergleichen (A/B)</summary>
+        <p class="small muted">Vergleiche deine eigenen Annahmen nebeneinander, z. B. einen anderen Preis oder andere Fixkosten. Das ist kein Beispiel, sondern deine Rechnung.</p>
+        <button type="button" class="btn btn-secondary" data-scn-copy>
+          Aktuelle Eingaben in A und B übernehmen
+        </button>
+        <div class="scenario-grid">
+          {['A', 'B'].map((s) => (
+            <form class="scenario-col" data-scn={s} novalidate aria-label={`Szenario ${s}`} onsubmit="return false">
+              <h4>Szenario {s}</h4>
+              <div class="fields">
+                {scenVariant.fields.map((f) => (
+                  <Field f={f} prefix={`scn${s}-${id}`} />
+                ))}
+              </div>
+            </form>
+          ))}
+        </div>
+        <div data-scn-result aria-live="polite" />
+      </details>
+    )
+  }
+
+  <p class="privacy-note">Deine Zahlen werden nur in diesem Browser berechnet und nicht an einen Berechnungsserver übertragen.</p>
+
+  <dialog data-save-dialog aria-labelledby="save-h">
+    <form method="dialog" data-save-form>
+      <h2 id="save-h">Rechnung speichern</h2>
+      <p class="small muted">Gespeicherte Rechnungen bleiben auf diesem Gerät in diesem Browser. Du findest sie unter „Gespeichert“.</p>
+      <div class="field">
+        <label for="save-name">Name der Rechnung</label>
+        <div class="input-wrap"><input id="save-name" name="name" maxlength="60" autocomplete="off" /></div>
+      </div>
+      <div class="form-actions">
+        <button value="save" class="btn btn-primary">Speichern</button>
+        <button value="cancel" class="btn btn-secondary" formnovalidate>Abbrechen</button>
+      </div>
+    </form>
+  </dialog>
+</section>
+
+<script>
+  import '../scripts/calculator';
+</script>

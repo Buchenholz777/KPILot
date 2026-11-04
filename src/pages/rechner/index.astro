@@ -1,0 +1,43 @@
+---
+import Base from '../../layouts/Base.astro';
+import Catalog from '../../components/Catalog.astro';
+import Breadcrumb from '../../components/Breadcrumb.astro';
+import { CATEGORIES } from '../../data/categories';
+import { SITE_NAME } from '../../config/site';
+
+const crumbs = [
+  { name: 'Start', href: '/' },
+  { name: 'Alle Rechner', href: '/rechner/' },
+];
+---
+
+<Base
+  title={`Alle 40 Rechner – Prozent, Kosten, Finanzen, Marketing | ${SITE_NAME}`}
+  description={`Alle Rechner von ${SITE_NAME} durchsuchen und nach sechs Kategorien filtern: Prozentrechnung, Kostenrechnung, Finanzkennzahlen, Marketing-KPIs, Kundenkennzahlen und Controlling.`}
+  crumbs={crumbs}
+>
+  <Catalog mode="all">
+    <Fragment slot="intro">
+      <Breadcrumb items={crumbs} />
+      <h1 class="hero-title">Alle Rechner</h1>
+      <p class="hero-sub">40 Themen in 6 Kategorien</p>
+    </Fragment>
+  </Catalog>
+  <div class="container">
+    <section class="section" aria-labelledby="cat-overview">
+      <h2 id="cat-overview">Kategorien im Überblick</h2>
+      <ul class="related-list">
+        {
+          CATEGORIES.map((c) => (
+            <li>
+              <a href={`/kategorie/${c.slug}/`}>
+                <strong>{c.title}</strong>
+                <span>{c.short}</span>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </section>
+  </div>
+</Base>

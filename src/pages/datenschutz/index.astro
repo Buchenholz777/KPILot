@@ -1,0 +1,34 @@
+---
+import Base from '../../layouts/Base.astro';
+import PageBand from '../../components/PageBand.astro';
+---
+
+<Base title="Datenschutz (Entwurf) | KPILot" description="Datenschutzhinweise – Entwurf, Angaben fehlen noch." noindex>
+  <PageBand title="Datenschutzhinweise" crumbs={[{ name: 'Start', href: '/' }, { name: 'Datenschutzhinweise', href: '/datenschutz/' }]} />
+  <div class="container page-body">
+  <div class="card content-card prose">
+    <p class="notice notice-warn">
+      <strong>Entwurf:</strong> Dieser Text beschreibt die technische Funktionsweise der Website. Verantwortliche Stelle, Hosting-Anbieter und Rechtsgrundlagen müssen vor der
+      Veröffentlichung ergänzt und rechtlich geprüft werden. Er ist keine Zusicherung rechtlicher Konformität.
+    </p>
+    <h2>Verantwortliche Stelle</h2>
+    <p>[Name, Anschrift, E-Mail – wie im Impressum]</p>
+    <h2>Was die Website technisch tut</h2>
+    <ul class="bullets">
+      <li>Die Rechner berechnen alle Eingaben im Browser. Die Anwendung überträgt eingegebene Zahlen nicht an einen Berechnungsserver.</li>
+      <li>Es werden keine Analyse-, Tracking- oder Werbeskripte eingesetzt und keine externen Schriften oder Bilder geladen.</li>
+      <li>
+        Favoriten (Rechner-IDs) und ausdrücklich gespeicherte Rechnungen werden im lokalen Speicher des Browsers (localStorage) abgelegt, übernommene Werte und Suchzustand im
+        Sitzungsspeicher (sessionStorage). Diese Daten verlassen das Gerät nicht und können unter „Über KPILot“ gelöscht werden.
+      </li>
+    </ul>
+    <h2>Hosting</h2>
+    <p>
+      [Hosting-Anbieter eintragen, z. B. Cloudflare. Beim Abruf jeder Website verarbeitet der Hosting-Anbieter technisch notwendige Verbindungsdaten wie IP-Adresse und Zeitpunkt.
+      Art, Umfang, Speicherdauer und Rechtsgrundlage gemäß Anbieterangaben ergänzen.]
+    </p>
+    <h2>Deine Rechte</h2>
+    <p>[Auskunft, Berichtigung, Löschung, Einschränkung, Widerspruch, Beschwerde bei einer Aufsichtsbehörde – mit zuständiger Behörde ergänzen.]</p>
+  </div>
+  </div>
+</Base>

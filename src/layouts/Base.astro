@@ -63,6 +63,14 @@ const krData = JSON.stringify({ ids: favoriteIds(), variants: variantMeta(), top
     <meta property="og:image:alt" content="KPILot – Prozente, Kosten und Kennzahlen einfach verstehen und berechnen" />
     <meta name="twitter:card" content="summary_large_image" />
     {ld.map((j) => <script type="application/ld+json" set:html={JSON.stringify(j)} />)}
+    <!-- Google tag (gtag.js) -->
+    <script is:inline async src="https://www.googletagmanager.com/gtag/js?id=G-18P8698CFK"></script>
+    <script is:inline>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-18P8698CFK');
+    </script>
   </head>
   <body>
     <a class="skip-link" href="#main">Zum Inhalt springen</a>

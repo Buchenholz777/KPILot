@@ -138,13 +138,13 @@ Der Zielrechner zeigt, was übernommen wurde, was noch fehlt und ob der Zeitraum
 
 ## Domain, SEO und Hosting
 
-- **Domain** zentral über die Umgebungsvariable `SITE_URL`:
+- **Domain:** `https://www.my-kpilot.de` (`PRODUCTION_URL` in `astro.config.mjs`). Der Cloudflare-Pages-Build des Branches `main` nutzt sie automatisch. Lokal oder für Tests lässt sie sich mit der Umgebungsvariable `SITE_URL` setzen:
   ```bash
   SITE_URL=https://www.deine-domain.de npm run build
   ```
   (PowerShell: `$env:SITE_URL='https://www.deine-domain.de'; npm run build`)
-- **Ohne `SITE_URL` (Vorschaumodus):** alle Seiten `noindex`, keine Canonicals, kein JSON-LD mit Domain, leere Sitemap. Es gibt keine erfundene Domain.
-- **Mit `SITE_URL`:** 49 indexierbare Seiten (Start, Katalog, Über, 6 Kategorien, 40 Rechner) mit Canonical, Open Graph, JSON-LD (WebSite, WebPage, BreadcrumbList) und Sitemap. Favoriten, Gespeichert, Impressum, Datenschutz und 404 bleiben `noindex`.
+- **Ohne Domain (Vorschaumodus: lokale Builds ohne `SITE_URL`, Cloudflare-Vorschau-Branches):** alle Seiten `noindex`, keine Canonicals, kein JSON-LD mit Domain, leere Sitemap.
+- **Mit Domain:** 49 indexierbare Seiten (Start, Katalog, Über, 6 Kategorien, 40 Rechner) mit Canonical, Open Graph, JSON-LD (WebSite, WebPage, BreadcrumbList) und Sitemap. Favoriten, Gespeichert, Impressum, Datenschutz und 404 bleiben `noindex`.
 - `robots.txt` erlaubt das Crawling, damit `noindex` gelesen wird, und nennt in Produktion die Sitemap.
 
 ### Veröffentlichen auf Cloudflare Pages
@@ -156,7 +156,7 @@ Einstellungen im Pages-Projekt (Einstellungen → Build):
 - Framework-Voreinstellung: Astro (oder keine)
 - Build-Befehl: `npm run build`
 - Build-Ausgabeverzeichnis: `dist`
-- Umgebungsvariable `SITE_URL=https://www.deine-domain.de`, sobald die Domain feststeht (ohne sie bleibt die Seite noindex)
+- Keine Umgebungsvariable nötig: Builds von `main` verwenden automatisch `https://www.my-kpilot.de`
 
 Manuell ohne GitHub: `npx wrangler login`, dann `npm run deploy`. Die eigene Domain verbindest du unter Workers und Pages → kpilot → Benutzerdefinierte Domains. Das Build in `dist/` ist portabel und läuft auch auf jedem anderen statischen Hoster.
 

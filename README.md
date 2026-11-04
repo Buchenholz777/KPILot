@@ -50,7 +50,7 @@ src/
 tests/                  Vitest-Tests mit unabhängig festgelegten Erwartungswerten
 scripts/check-site.mjs  Prüfung des Builds
 docs/                   Formeln, Modellannahmen, Vorlagen, Quellen, Checklisten, Prüfprotokoll
-wrangler.jsonc          Cloudflare Workers Static Assets
+wrangler.jsonc          Cloudflare Pages (Ausgabe dist/)
 ```
 
 ## Design-System
@@ -147,18 +147,18 @@ Der Zielrechner zeigt, was übernommen wurde, was noch fehlt und ob der Zeitraum
 - **Mit `SITE_URL`:** 49 indexierbare Seiten (Start, Katalog, Über, 6 Kategorien, 40 Rechner) mit Canonical, Open Graph, JSON-LD (WebSite, WebPage, BreadcrumbList) und Sitemap. Favoriten, Gespeichert, Impressum, Datenschutz und 404 bleiben `noindex`.
 - `robots.txt` erlaubt das Crawling, damit `noindex` gelesen wird, und nennt in Produktion die Sitemap.
 
-### Veröffentlichen auf Cloudflare (Workers Static Assets)
+### Veröffentlichen auf Cloudflare Pages
 
-`wrangler.jsonc` liefert `dist/` aus, mit echtem 404-Status über `404.html` und `/pfad/` passend zu den Canonicals.
+Das Pages-Projekt `kpilot` ist mit dem GitHub-Repository verbunden und baut bei jedem Push auf `main` neu. `wrangler.jsonc` legt `dist/` als Ausgabeordner fest, `.node-version` die Node-Version im Build. Pages liefert `404.html` mit echtem 404-Status aus und `/pfad/` passend zu den Canonicals.
 
-```bash
-npx wrangler login
-SITE_URL=https://www.deine-domain.de npm run build
-npm run check:site
-npx wrangler deploy
-```
+Einstellungen im Pages-Projekt (Einstellungen → Build):
 
-Danach in Cloudflare die eigene Domain verbinden (Workers → klarrechnen → Settings → Domains & Routes). Vor dem ersten Deploy `compatibility_date` in `wrangler.jsonc` auf das aktuelle Datum setzen. Das Build in `dist/` ist portabel und läuft auch auf jedem anderen statischen Hoster.
+- Framework-Voreinstellung: Astro (oder keine)
+- Build-Befehl: `npm run build`
+- Build-Ausgabeverzeichnis: `dist`
+- Umgebungsvariable `SITE_URL=https://www.deine-domain.de`, sobald die Domain feststeht (ohne sie bleibt die Seite noindex)
+
+Manuell ohne GitHub: `npx wrangler login`, dann `npm run deploy`. Die eigene Domain verbindest du unter Workers und Pages → kpilot → Benutzerdefinierte Domains. Das Build in `dist/` ist portabel und läuft auch auf jedem anderen statischen Hoster.
 
 ### Google Search Console
 

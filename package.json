@@ -15,7 +15,7 @@
     "check:site": "node scripts/check-site.mjs",
     "check:contrast": "node scripts/contrast.mjs",
     "docs": "vitest run --config vitest.docs.config.ts",
-    "deploy": "npm run build && npx wrangler deploy"
+    "deploy": "npm run build && npx wrangler pages deploy"
   },
   "dependencies": {
     "astro": "^7.4.5",

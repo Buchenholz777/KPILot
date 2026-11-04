@@ -15,10 +15,9 @@ Im Projekt ist bewusst nichts erfunden. Einzutragen in `src/pages/impressum/inde
 
 ## Technische Schritte
 
-- [ ] `compatibility_date` in `wrangler.jsonc` auf das aktuelle Datum setzen
 - [ ] `SITE_URL=https://… npm run build`
 - [ ] `npm test`, `npm run check`, `npm run check:site` ohne Fehler (Modus „Produktion“, 49 indexierbare Seiten)
-- [ ] `npx wrangler login` und `npx wrangler deploy`
+- [ ] Im Pages-Projekt `kpilot` die Umgebungsvariable `SITE_URL` setzen und neu bereitstellen (Build-Befehl `npm run build`, Ausgabe `dist`)
 - [ ] Domain in Cloudflare verbinden, HTTPS prüfen
 - [ ] Stichprobe live: Startseite, ein Rechner, `/sitemap.xml`, `/robots.txt`, eine nicht existierende URL (muss Status 404 liefern)
 - [ ] Social-Vorschau prüfen (`/og-image.png`)

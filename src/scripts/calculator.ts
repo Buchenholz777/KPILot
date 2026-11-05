@@ -10,7 +10,8 @@ import type {
 } from "../calc/types";
 import { formatValue, formatDecimal } from "../lib/number";
 import { D } from "../lib/decimal";
-import { addSaved, getSaved, setTransfer, takeTransfer } from "../lib/storage";
+import { setTransfer, takeTransfer } from "../lib/storage";
+import { addSaved, getSaved } from "../lib/workspace";
 import { esc, toast } from "./ui";
 
 type Ok = Extract<CalcResult, { status: "ok" }>;

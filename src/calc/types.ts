@@ -52,6 +52,8 @@ export interface Out {
   format: ValueFormat;
   unit?: string;
   signed?: boolean;
+  /** Gehört zur Detailebene (aufklappbar) statt zur Einordnung direkt am Ergebnis. */
+  detail?: boolean;
 }
 
 export interface ChartPoint {

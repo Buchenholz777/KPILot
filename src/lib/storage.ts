@@ -5,7 +5,11 @@
  *
  * Schlüssel:
  *  kr.favorites.v1   localStorage   { v: 1, ids: string[] }   (Rechner-ID oder „rechnerId#variantenId“)
- *  kr.saved.v1       localStorage   { v: 1, items: SavedCalc[] }
+ *  kr.saved.v1       localStorage   ALT (v1): { v: 1, items } – wird beim ersten Lesen nach kr.workspace.v2 migriert und bleibt unverändert als Sicherung liegen
+ *  kr.workspace.v2   localStorage   { v: 2, items, projects, trash } – siehe workspace.ts
+ *  kr.recent.v1      localStorage   { v: 1, items: [{ id, at }] } – zuletzt genutzte Rechner (nur Kennung und Zeitpunkt)
+ *  kr.prefs.v1       localStorage   { v: 1, catalogView } – lokale Einstellungen
+ *  kr.flow.v1        sessionStorage Entwurf des Ablaufs „Preis und Wirtschaftlichkeit“
  *  kr.transfer       sessionStorage Werteübernahme (nur aktuelle Sitzung)
  *  kr.catalog        sessionStorage Suche + Kategorie der Übersicht (ohne Zahlen)
  *  kr.consent.v1     localStorage   { v: 1, analytics: "granted" | "denied", at }
@@ -13,6 +17,10 @@
 
 export const FAV_KEY = "kr.favorites.v1";
 export const SAVED_KEY = "kr.saved.v1";
+export const WORKSPACE_KEY = "kr.workspace.v2";
+export const RECENT_KEY = "kr.recent.v1";
+export const PREFS_KEY = "kr.prefs.v1";
+export const FLOW_KEY = "kr.flow.v1";
 export const TRANSFER_KEY = "kr.transfer";
 export const CATALOG_KEY = "kr.catalog";
 /** Ältere Schlüssel, aus denen Favoriten übernommen werden. */
@@ -57,7 +65,10 @@ const local = () =>
 const session = () =>
   sessionOverride !== undefined ? sessionOverride : store("session");
 
-function readJson<T>(s: StorageLike | null, key: string): T | null {
+export const localStore = local;
+export const sessionStore = session;
+
+export function readJson<T>(s: StorageLike | null, key: string): T | null {
   if (!s) return null;
   try {
     const raw = s.getItem(key);
@@ -66,7 +77,7 @@ function readJson<T>(s: StorageLike | null, key: string): T | null {
     return null;
   }
 }
-function writeJson(
+export function writeJson(
   s: StorageLike | null,
   key: string,
   value: unknown,
@@ -162,65 +173,21 @@ export function toggleFavorite(id: string): {
   return { ids: next, saved: setFavorites(next), active };
 }
 
-/* ---------------- Gespeicherte Rechnungen ---------------- */
-
-export interface SavedCalc {
-  id: string;
-  name: string;
-  calcId: string;
-  variantId: string;
-  schema: number;
-  savedAt: string;
-  /** Rohwerte wie im Formular, inklusive Auswahlfeldern (Einheiten, Zeitraum). */
-  inputs: Record<string, string | string[][]>;
-}
-
-const validSaved = (x: unknown): x is SavedCalc => {
-  const o = x as SavedCalc;
-  return (
-    !!o &&
-    typeof o.id === "string" &&
-    typeof o.name === "string" &&
-    typeof o.calcId === "string" &&
-    typeof o.variantId === "string" &&
-    typeof o.schema === "number" &&
-    !!o.inputs &&
-    typeof o.inputs === "object"
-  );
-};
-
-export function getSaved(): SavedCalc[] {
-  const data = readJson<{ v: number; items: unknown }>(local(), SAVED_KEY);
-  return data && Array.isArray(data.items) ? data.items.filter(validSaved) : [];
-}
-
-export function addSaved(
-  item: Omit<SavedCalc, "id" | "savedAt">,
-): SavedCalc | null {
-  const full: SavedCalc = {
-    ...item,
-    name: item.name.slice(0, 60),
-    id: `s${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`,
-    savedAt: new Date().toISOString(),
-  };
-  const items = [full, ...getSaved()].slice(0, 100);
-  return writeJson(local(), SAVED_KEY, { v: 1, items }) ? full : null;
-}
-
-export function removeSaved(id: string): boolean {
-  return writeJson(local(), SAVED_KEY, {
-    v: 1,
-    items: getSaved().filter((x) => x.id !== id),
-  });
-}
-
 /** Löscht alle lokal gespeicherten Daten dieser Website. */
 export function clearAll(): boolean {
   const l = local(),
     s = session();
   try {
-    for (const k of [FAV_KEY, SAVED_KEY, ...LEGACY_FAV_KEYS]) l?.removeItem(k);
-    for (const k of [TRANSFER_KEY, CATALOG_KEY]) s?.removeItem(k);
+    for (const k of [
+      FAV_KEY,
+      SAVED_KEY,
+      WORKSPACE_KEY,
+      RECENT_KEY,
+      PREFS_KEY,
+      ...LEGACY_FAV_KEYS,
+    ])
+      l?.removeItem(k);
+    for (const k of [TRANSFER_KEY, CATALOG_KEY, FLOW_KEY]) s?.removeItem(k);
     return true;
   } catch {
     return false;

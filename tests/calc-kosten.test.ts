@@ -36,7 +36,7 @@ describe("Break-even", () => {
   it("F 3.000: 150 Stück, Ergebnis 0, Gewinn ab 151", () => {
     const r = be("3000");
     expect(r.main.value.toString()).toBe("150");
-    expect(extra(r, "Mindeststückzahl")).toBe("150");
+    expect(extra(r, "Theoretische Gewinnschwelle")).toBe("150");
     expect(extra(r, "Ergebnis bei dieser")).toBe("0");
     expect(extra(r, "Positiver Gewinn ab")).toBe("151");
     // Gewinn bei 151 Stück = 20
@@ -44,14 +44,15 @@ describe("Break-even", () => {
   });
   it("F 3.010: theoretisch 150,5, benötigt 151, Gewinn 10", () => {
     const r = be("3010");
-    expect(r.main.value.toString()).toBe("150.5");
-    expect(extra(r, "Mindeststückzahl")).toBe("151");
+    expect(r.main.value.toString()).toBe("151");
+    expect(extra(r, "Theoretische Gewinnschwelle")).toBe("150.5");
+    expect(r.main.value.toString()).toBe("151");
     expect(extra(r, "Gewinn bei dieser")).toBe("10");
   });
   it("Mindeststückzahl erreicht Kostendeckung, eins weniger nicht", () => {
     for (const F of ["3000", "3010", "2999,99", "1", "123456,78"]) {
       const r = be(F);
-      const q = D(extra(r, "Mindeststückzahl"));
+      const q = D(r.main.value.toString());
       const f = D(F.replace(",", "."));
       expect(D(20).mul(q).sub(f).gte(0)).toBe(true);
       if (q.gt(0)) expect(D(20).mul(q.sub(1)).sub(f).lt(0)).toBe(true);
@@ -64,7 +65,7 @@ describe("Break-even", () => {
       F: "300,0000000003",
       zeitraum: "monat",
     });
-    expect(extra(r, "Mindeststückzahl")).toBe("101");
+    expect((r.main.value.toString())).toBe("101");
   });
   it("Randfälle", () => {
     expect(

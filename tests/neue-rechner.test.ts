@@ -107,9 +107,9 @@ describe("Werbewirtschaftlichkeit und Mindest-ROAS", () => {
   });
   it("Alternative Quote zeigt die Veränderung", () => {
     const r = okCalc("roas", "wirtschaftlichkeit", { ...w, alt: "25" });
-    expect(extra(r, "Beitrag nach Werbung bei")).toBe("0");
-    expect(extra(r, "Veränderung")).toBe("-100");
-    expect(extra(r, "Mindest-ROAS bei")).toBe("4");
+    expect(extra(r, "Alternative Quote: Beitrag nach")).toBe("0");
+    expect(extra(r, "Alternative minus aktuelle")).toBe("-100");
+    expect(extra(r, "Alternative Quote: Mindest-ROAS")).toBe("4");
   });
   it("Quote über 100 % ist unzulässig", () => {
     expect(calc("roas", "wirtschaftlichkeit", { ...w, quote: "120" })).toBeNull();
@@ -152,5 +152,71 @@ describe("Beispiele", () => {
   it("neue Modi haben berechenbare Beispiele", () => {
     for (const [id, v] of [["rabatt-absatz", "prozent"], ["rabatt-absatz", "neuer-preis"], ["roas", "wirtschaftlichkeit"]] as const)
       expect(runExample(getVariant(id, v)).status).toBe("ok");
+  });
+});
+
+describe("Einheit der Menge (Stück, Stunde, …)", () => {
+  const raw = { p: "65", v: "5", F: "4800", zeitraum: "monat", einheit: "stunde" };
+  it("Stundenfall: 80 abrechenbare Stunden, 60 € je abrechenbarer Stunde, keine „Stück“-Begriffe", () => {
+    const r = okCalc("break-even", undefined, raw);
+    expect(r.main.value.toString()).toBe("80");
+    const texts = JSON.stringify([r.main.label, r.main.unit, r.extra?.map((e) => [e.label, e.unit]), r.meaning, r.steps]);
+    expect(texts).toContain("80 abrechenbare Stunden");
+    expect(texts).not.toMatch(/Stück/);
+    const d = okCalc("deckungsbeitrag", undefined, { p: "65", v: "5", einheit: "stunde" });
+    expect(d.main.unit).toBe("je abrechenbarer Stunde");
+    expect(d.main.value.toString()).toBe("60");
+    const g = okCalc("gewinn", "menge", { ...raw, q: "100" });
+    expect(g.main.value.toString()).toBe("1200");
+    expect(g.meaning).toContain("100 abrechenbare Stunden");
+  });
+  it("Standard bleibt „Stück“; alte gespeicherte Werte ohne Einheit rechnen unverändert", () => {
+    const r = okCalc("break-even", undefined, { p: "50", v: "30", F: "3000", zeitraum: "monat" });
+    expect(r.main.unit).toBe("Stück");
+    expect(r.meaning).toContain("150 Stück");
+  });
+  it("Zahlen sind für jede Einheit identisch (nur Bezeichnungen ändern sich)", () => {
+    for (const u of ["stueck", "stunde", "auftrag", "paket", "einheit"]) {
+      const r = okCalc("break-even", undefined, { p: "50", v: "30", F: "3001", zeitraum: "monat", einheit: u });
+      expect(r.main.value.toString()).toBe("151");
+      expect(extra(r, "Theoretische Gewinnschwelle")).toBe("150.05");
+    }
+  });
+  it("Ergebnisgrafik nutzt die Einheit in Achsen, Labels und Tabelle", async () => {
+    const { buildCharts, loadChartBuilders } = await import("../src/calc/charts");
+    const { validate } = await import("../src/calc/engine");
+    const v = getVariant("break-even");
+    const val = validate(v, raw);
+    const result = (await import("../src/calc/engine")).run(v, raw).result!;
+    const o = buildCharts(await loadChartBuilders("kosten"), "break-even", "standard", val.inputs, result);
+    const j = JSON.stringify(o.charts[0], (_k, x) => (typeof x === "function" ? undefined : x));
+    expect(j).toContain("80 abrechenbare Stunden");
+    expect(j).not.toMatch(/Stück/);
+  });
+});
+
+describe("ROAS-Vergleich: 3.600 € Umsatz, 900 € Werbekosten, 30 % gegenüber 20 % Alternative", () => {
+  const raw = { umsatz: "3600", kosten: "900", quote: "30", alt: "20" };
+  it("Gegenüberstellung mit allen verbindlichen Werten, sichtbar (nicht im Detailbereich)", () => {
+    const r = okCalc("roas", "wirtschaftlichkeit", raw);
+    expect(r.comparison!.rows).toEqual([
+      ["Deckungsbeitrag vor Werbung", "1.080,00 €", "720,00 €"],
+      ["Werbekosten", "900,00 €", "900,00 €"],
+      ["Beitrag nach Werbung", "+180,00 €", "−180,00 €"],
+      ["ROAS (tatsächlich)", "4,0-fach", "4,0-fach"],
+      ["Mindest-ROAS", "3,3333-fach", "5,0-fach"],
+    ]);
+    expect(r.comparison!.head).toEqual(["Größe", "Aktuell: 30 %", "Alternative: 20 %"]);
+    expect(r.comparison!.summary).toMatch(/Alternative minus aktuelle Berechnung: −360,00 €/);
+    expect(r.comparison!.summary).toMatch(/sinkt der Beitrag nach Werbung um 360,00 €/);
+    const visible = (r.extra ?? []).filter((e) => !e.detail).map((e) => e.label);
+    expect(visible).toContain("Alternative Quote: Beitrag nach Werbekosten");
+    expect(visible).toContain("Alternative minus aktuelle Berechnung");
+    expect(extra(r, "Alternative minus aktuelle")).toBe("-360");
+  });
+  it("ohne Alternative gibt es keine erfundene zweite Berechnung", () => {
+    const r = okCalc("roas", "wirtschaftlichkeit", { ...raw, alt: "" });
+    expect(r.comparison).toBeUndefined();
+    expect((r.extra ?? []).some((e) => e.label.startsWith("Alternative"))).toBe(false);
   });
 });

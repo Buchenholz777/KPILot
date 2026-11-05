@@ -2,6 +2,7 @@ import type { Builder } from "./kit";
 import type { CalcResult, Inputs } from "../types";
 import type { ChartOutcome } from "../chart-types";
 import { none } from "./kit";
+import { localizeDeep, unitOf } from "../units";
 
 /** Kategorie je Rechner → Datei. Lädt im Browser nur die Aufbereitung der aktuellen Kategorie. */
 const loaders: Record<string, () => Promise<Record<string, Builder>>> = {
@@ -25,7 +26,7 @@ export function buildCharts(builders: ChartBuilders, calcId: string, variantId: 
   const b = builders[calcId];
   if (!b || !input) return none("Für diesen Rechner gibt es keine Ergebnisgrafik.");
   try {
-    return b(input, result, variantId);
+    return localizeDeep(b(input, result, variantId), unitOf(input.choices));
   } catch {
     return none("Die Grafik konnte nicht erstellt werden. Die Zahlen oben sind davon nicht betroffen.");
   }

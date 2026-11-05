@@ -146,7 +146,7 @@ export function formatDecimal(
 }
 
 export type ValueFormat =
-  "money" | "percent" | "pp" | "number" | "integer" | "factor" | "score";
+  "money" | "percent" | "pp" | "number" | "integer" | "factor" | "factor4" | "score";
 
 /** Formatiert einen Ergebniswert inklusive Einheit. */
 export function formatValue(
@@ -177,6 +177,12 @@ export function formatValue(
     case "factor": {
       const oneDecimal = value.toDecimalPlaces(1).eq(value.toDecimalPlaces(2));
       s = `${formatDecimal(value, oneDecimal ? { fixed: 1 } : { max: 2 })}-fach`;
+      break;
+    }
+    case "factor4": {
+      // Faktor mit bis zu 4 Nachkommastellen (z. B. Mindest-ROAS 3,3333-fach), glatte Werte mit einer Stelle (5,0-fach)
+      const r4 = value.toDecimalPlaces(4);
+      s = `${formatDecimal(value, r4.eq(value.toDecimalPlaces(1)) ? { fixed: 1 } : { max: 4 })}-fach`;
       break;
     }
     case "integer":

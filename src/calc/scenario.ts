@@ -13,6 +13,8 @@ import { formatValue, parseNumber } from "../lib/number";
 import type { CalcResult, FieldDef, Out, RawInputs, VariantDef } from "./types";
 
 export const PERIOD_KEY = "zeitraum";
+/** Felder, die für beide Szenarien gemeinsam gelten. */
+export const SHARED_KEYS = ["zeitraum", "einheit"];
 
 export interface ScenarioRow {
   label: string;
@@ -42,6 +44,8 @@ export interface ScenarioComparison {
   periodA?: string;
   periodB?: string;
   periodsMatch: boolean;
+  /** Gleiche Mengeneinheit in beiden Szenarien (nur relevant, wenn das Modell eine Einheit kennt). */
+  unitsMatch: boolean;
 }
 
 const fmt = (o: Out) => formatValue(o.value, o.format, o.unit, o.signed);
@@ -83,6 +87,9 @@ export function compareScenarios(
   const pa = periodLabel(v, rawA),
     pb = periodLabel(v, rawB);
   const periodsMatch = pa === pb;
+  const ua = v.fields.some((f) => f.key === "einheit") ? String(rawA.einheit || "stueck") : "";
+  const ub = v.fields.some((f) => f.key === "einheit") ? String(rawB.einheit || "stueck") : "";
+  const unitsMatch = ua === ub;
   const diffIn = differingInputs(v, rawA, rawB);
   const base: ScenarioComparison = {
     state: "empty",
@@ -93,8 +100,11 @@ export function compareScenarios(
     periodA: pa,
     periodB: pb,
     periodsMatch,
+    unitsMatch,
   };
   if (!a && !b) return base;
+  if (!unitsMatch)
+    base.warnings.push("Die Szenarien verwenden unterschiedliche Mengeneinheiten. Eine Differenz wäre nicht aussagekräftig und wird deshalb nicht gebildet – wähle eine gemeinsame Einheit.");
   if (!periodsMatch)
     base.warnings.push(
       `Die Szenarien beziehen sich auf unterschiedliche Zeiträume (A: ${pa}, B: ${pb}). Eine Differenz wäre nicht aussagekräftig und wird deshalb nicht gebildet. Wähle einen gemeinsamen Betrachtungszeitraum und trage die Werte dafür ein – KPILot rechnet nicht automatisch um, weil das eine gleichmäßige Verteilung ohne Saisoneffekte unterstellen würde.`,
@@ -139,8 +149,8 @@ export function compareScenarios(
         oa.format !== "factor" &&
         // gleiche Kennzahl: gleiche Bezeichnung oder beide vorzeichenbehafteter Geldwert (Gewinn/Verlust)
         (oa.label === ob.label || (oa.signed && ob.signed));
-      if (!periodsMatch)
-        row.diffNote = "Zeiträume verschieden – keine Differenz";
+      if (!periodsMatch || !unitsMatch)
+        row.diffNote = !periodsMatch ? "Zeiträume verschieden – keine Differenz" : "Einheiten verschieden – keine Differenz";
       else if (!comparable) row.diffNote = "nicht vergleichbar";
       else
         row.diff = formatValue(

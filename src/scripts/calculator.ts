@@ -9,7 +9,8 @@ import type {
   RawInputs,
   VariantDef,
 } from "../calc/types";
-import { compareScenarios, PERIOD_KEY } from "../calc/scenario";
+import { compareScenarios, PERIOD_KEY, SHARED_KEYS } from "../calc/scenario";
+import { localize, unitOf } from "../calc/units";
 import { formatValue, parseNumber } from "../lib/number";
 import { setTransfer, takeTransfer } from "../lib/storage";
 import {
@@ -65,6 +66,8 @@ async function init(root: HTMLElement) {
   /** Aktuell geöffnete gespeicherte Berechnung (für „Änderungen speichern“). */
   let opened: { id: string; name: string; inputs: RawInputs; variantId: string } | null = null;
   let exampleActive = false;
+  /** Zuletzt übernommene Werte: Der Hinweis wird bei jeder Änderung neu bewertet (fehlt noch etwas, oder ist alles vorhanden?). */
+  let incoming: { fromTitle: string; fromCase: boolean; describe: string; keys: string[]; variantId: string } | null = null;
   const touched = new Set<string>();
   let variant: VariantDef = def.variants[0];
   let last: {
@@ -196,10 +199,28 @@ async function init(root: HTMLElement) {
     }
   }
 
+  /**
+   * Passt Beschriftungen, Einheiten und Hilfetexte an die gewählte Mengeneinheit an („je Stück“ → „je abrechenbarer Stunde“).
+   * Ursprungstexte bleiben gemerkt, damit ein Wechsel zurück den Originaltext wiederherstellt.
+   */
+  const origText = new WeakMap<Text, string>();
+  function applyUnitText(scope: HTMLElement) {
+    const sel = scope.querySelector<HTMLSelectElement>('select[name="einheit"]');
+    if (!sel) return;
+    const u = unitOf({ einheit: sel.value });
+    scope.querySelectorAll<HTMLElement>(".field label, .field .unit, .field .help, .calc-question").forEach((el) => {
+      const w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+      for (let n = w.nextNode() as Text | null; n; n = w.nextNode() as Text | null) {
+        if (!origText.has(n)) origText.set(n, n.data);
+        n.data = localize(origText.get(n)!, u);
+      }
+    });
+  }
+  const currentUnit = () => unitOf({ einheit: String(last.raw.einheit ?? "") });
   const fieldLabel = (v: VariantDef, key: string) => {
     if (key.startsWith("rows:"))
       return v.rows ? `mindestens ${v.rows.minRows} vollständige Zeile` : key;
-    return v.fields.find((f) => f.key === key)?.label ?? key;
+    return localize(v.fields.find((f) => f.key === key)?.label ?? key, currentUnit());
   };
 
   /* ---------- Berechnen und darstellen ---------- */
@@ -210,6 +231,7 @@ async function init(root: HTMLElement) {
     const raw = readRaw(form, variant);
     const { validation, result } = run(variant, raw);
     last = { raw, result, inputs: validation.inputs };
+    applyUnitText(form);
     const errors: Record<string, string> = { ...validation.fieldErrors };
     if (result && "fieldErrors" in result && result.fieldErrors) {
       for (const [k, m] of Object.entries(result.fieldErrors)) {
@@ -219,6 +241,7 @@ async function init(root: HTMLElement) {
     }
     showFieldErrors(form, variant, errors, !!opts.showAll);
     updateSaveStatus();
+    renderIncomingNotice(validation);
 
     if (!result) {
       const hasErrors = Object.keys(validation.fieldErrors).length > 0;
@@ -284,6 +307,29 @@ async function init(root: HTMLElement) {
     else announceTimer = window.setTimeout(() => announce(summary), 1400);
   }
 
+  /** Übernahmehinweis passend zum aktuellen Eingabestand (aktualisiert sich nach jeder Ergänzung). */
+  function renderIncomingNotice(validation: ReturnType<typeof run>["validation"]) {
+    if (!incoming || incoming.variantId !== variant.id) return;
+    const v = variant;
+    const labels = incoming.keys
+      .map((k) => v.fields.find((x) => x.key === k))
+      .filter((f): f is FieldDef => !!f && f.type !== "select")
+      .map((f) => localize(f.label, currentUnit()));
+    const missing = [...new Set(validation.missing.concat(validation.incomplete))]
+      .filter((k) => !k.startsWith("rows:"))
+      .map((k) => fieldLabel(v, k));
+    const period = v.fields.find((f) => f.key === "zeitraum" || f.key === "periode");
+    const periodNote = period && !incoming.keys.includes(period.key) ? `<p>Bitte den <strong>${esc(period.label)}</strong> prüfen – er wurde nicht übernommen.</p>` : "";
+    const head = incoming.fromCase
+      ? `Werte aus ${esc(incoming.fromTitle)} übernommen. Du kannst sie jetzt anpassen.`
+      : `<strong>Aus „${esc(incoming.fromTitle)}“ übernommen:</strong> ${labels.map(esc).join(", ")}.`;
+    const status = missing.length
+      ? `Noch einzutragen: <strong>${missing.map(esc).join(", ")}</strong> – unbekannte Werte werden nicht als 0 angenommen.`
+      : "Alle benötigten Angaben sind vorhanden.";
+    noticeEl.innerHTML = `<div><p>${head}</p><p data-notice-status>${status}</p>${periodNote}</div>`;
+    noticeEl.hidden = false;
+  }
+
   function announce(text: string) {
     announceEl.textContent = "";
     window.setTimeout(() => (announceEl.textContent = text), 60);
@@ -316,6 +362,13 @@ async function init(root: HTMLElement) {
     return parts.join(" · ");
   }
 
+  /** Bewusst eingegebene Alternative: sichtbare Gegenüberstellung mit eindeutiger Differenz. */
+  function comparisonHtml(r: Ok): string {
+    const c = r.comparison;
+    if (!c) return "";
+    return `<div class="result-compare"><h4 class="result-sub">${esc(c.title)}</h4><div class="table-scroll" tabindex="0" role="region" aria-label="${esc(c.title)} – bei Bedarf horizontal scrollbar"><table class="compare-table"><caption class="visually-hidden">${esc(c.title)}</caption><thead><tr>${c.head.map((h) => `<th scope="col">${esc(h)}</th>`).join("")}</tr></thead><tbody>${c.rows.map((row) => `<tr><th scope="row">${esc(row[0])}</th>${row.slice(1).map((x) => `<td>${esc(x)}</td>`).join("")}</tr>`).join("")}</tbody></table></div><p class="result-compare-sum">${esc(c.summary)}</p></div>`;
+  }
+
   function dl(list: Out[]): string {
     return `<dl class="result-extra">${list.map((o) => `<div><dt>${esc(o.label)}</dt><dd>${esc(fmt(o))}</dd></div>`).join("")}</dl>`;
   }
@@ -336,9 +389,10 @@ async function init(root: HTMLElement) {
           <p class="result-tag">${tag}</p>
           <p class="result-main-label">${esc(r.main.label)}</p>
           <p class="result-main"${r.tone ? ` data-tone="${r.tone}"` : ""}>${esc(fmt(r.main))}</p>
-          <p class="result-meaning">${esc(r.meaning)}</p>
         </div>
         ${chart}
+        <p class="result-meaning">${esc(r.meaning)}</p>
+        ${comparisonHtml(r)}
         <div class="result-l2">
           ${key.length ? `<h4 class="result-sub">Einordnung</h4>${dl(key)}` : ""}
           ${ctx ? `<p class="result-context">${esc(ctx)}</p>` : ""}${notes}
@@ -436,8 +490,7 @@ async function init(root: HTMLElement) {
       writeRaw(nf, nv, values);
       markTransferred(nf, nv, values);
       const missing = nv.fields.filter((x) => !x.optional && x.type !== "select" && !(x.key in values)).map((x) => x.label);
-      noticeEl.innerHTML = `<div><p><strong>Übernommen:</strong> ${esc(a.describe)}.</p>${missing.length ? `<p>Noch einzutragen: <strong>${missing.map(esc).join(", ")}</strong> – unbekannte Werte werden nicht als 0 angenommen.</p>` : ""}</div>`;
-      noticeEl.hidden = false;
+      incoming = { fromTitle: title, fromCase: false, describe: a.describe, keys: Object.keys(values), variantId: a.variantId };
       update({ announce: true });
       const first = nv.fields.find((x) => missing.includes(x.label));
       if (first) (nf.elements.namedItem(first.key) as HTMLElement | null)?.focus();
@@ -510,6 +563,7 @@ async function init(root: HTMLElement) {
       .forEach((s) => (s.hidden = s.dataset.variantFav !== id));
     touched.clear();
     chartSel.clear();
+    incoming = null;
     setExample(false);
     if (updateHash && def.variants.length > 1)
       history.replaceState(null, "", `#${id}`);
@@ -564,6 +618,7 @@ async function init(root: HTMLElement) {
         writeRaw(form, v, {});
         touched.clear();
         chartSel.clear();
+        incoming = null;
         noticeEl.hidden = true;
         opened = null;
         setExample(false);
@@ -603,6 +658,7 @@ async function init(root: HTMLElement) {
       .forEach((el) => el.removeAttribute("data-transferred"));
     touched.clear();
     chartSel.clear();
+    incoming = null;
     opened = null;
     setExample(true);
     track("calc_started", { calc: def.id, variant: v.id });
@@ -629,8 +685,8 @@ async function init(root: HTMLElement) {
         const shown =
           f.type === "select"
             ? (f.options?.find((o) => o.value === v)?.label ?? v)
-            : `${v}${f.unit ? ` ${f.unit}` : ""}`;
-        return `- ${f.label}: ${shown}`;
+            : `${v}${f.unit ? ` ${localize(f.unit, currentUnit())}` : ""}`;
+        return `- ${localize(f.label, currentUnit())}: ${shown}`;
       })
       .filter(Boolean);
     return [
@@ -638,6 +694,10 @@ async function init(root: HTMLElement) {
       `${r.main.label}: ${fmt(r.main)}`,
       ...(r.extra ?? []).filter((o) => !o.detail).map((o) => `${o.label}: ${fmt(o)}`),
       r.meaning,
+      ...(r.comparison
+        ? ["", r.comparison.title + ":", r.comparison.head.join(" | "), ...r.comparison.rows.map((x) => x.join(" | ")), r.comparison.summary]
+        : []),
+      ...scenarioCopyLines(),
       ...(inputs.length ? ["", "Eingaben:", ...inputs] : []),
       ...(exampleActive ? ["", "(Beispielwerte)"] : []),
       "",
@@ -645,6 +705,9 @@ async function init(root: HTMLElement) {
     ].join("\n");
   }
 
+  /** Aktiver A/B-Vergleich: wird vollständig mitkopiert. */
+  let scenarioLines: () => string[] = () => [];
+  const scenarioCopyLines = () => scenarioLines();
   root
     .querySelector('[data-tool="copy"]')!
     .addEventListener("click", async () => {
@@ -820,21 +883,13 @@ async function init(root: HTMLElement) {
           : `${f.label} (${tr.values[k]}${f.unit ? ` ${f.unit}` : ""})`,
       );
     }
+    incoming = { fromTitle: tr.fromTitle, fromCase: tr.from === "praxisfall", describe: tr.describe, keys, variantId: v.id };
     const missing = v.fields
       .filter(
         (f: FieldDef) =>
           !f.optional && f.type !== "select" && !keys.includes(f.key),
       )
       .map((f) => f.label);
-    const period = v.fields.find(
-      (f) => f.key === "zeitraum" || f.key === "periode",
-    );
-    const periodNote =
-      period && !keys.includes(period.key)
-        ? `<p>Bitte den <strong>${esc(period.label)}</strong> prüfen – er wurde nicht übernommen.</p>`
-        : "";
-    noticeEl.innerHTML = `<div><p><strong>Aus „${esc(tr.fromTitle)}“ übernommen:</strong> ${labels.map(esc).join(", ")}.</p>${missing.length ? `<p>Noch einzutragen: <strong>${missing.map(esc).join(", ")}</strong> – unbekannte Werte werden nicht als 0 angenommen.</p>` : ""}${periodNote}</div>`;
-    noticeEl.hidden = false;
     track("calc_started", { calc: def.id, variant: v.id });
     update();
     const firstMissing = v.fields.find((f) => missing.includes(f.label));
@@ -878,14 +933,15 @@ async function init(root: HTMLElement) {
     const sv = def.variants.find((x) => x.id === scn.dataset.scenario)!;
     const formA = scn.querySelector<HTMLFormElement>('[data-scn="A"]')!;
     const formB = scn.querySelector<HTMLFormElement>('[data-scn="B"]')!;
-    const shared = scn.querySelector<HTMLSelectElement>(`select[name="${PERIOD_KEY}"]`);
+    const sharedSel = [...scn.querySelectorAll<HTMLSelectElement>(".scn-shared select")];
+    const scnFieldsOnly = { ...sv, fields: sv.fields.filter((x) => !SHARED_KEYS.includes(x.key)) };
     const outEl = scn.querySelector<HTMLElement>("[data-scn-result]")!;
     const scnChartEl = scn.querySelector<HTMLElement>("[data-scn-chart]")!;
     const nameOf = (f: HTMLFormElement, fallback: string) =>
       (f.elements.namedItem("scnName") as HTMLInputElement).value.trim() || fallback;
     const scnRaw = (f: HTMLFormElement): RawInputs => {
-      const raw = readRaw(f, { ...sv, fields: sv.fields.filter((x) => x.key !== PERIOD_KEY) });
-      if (shared) raw[PERIOD_KEY] = shared.value;
+      const raw = readRaw(f, scnFieldsOnly);
+      for (const sel of sharedSel) raw[sel.name] = sel.value;
       return raw;
     };
     const compare = () => {
@@ -921,6 +977,30 @@ async function init(root: HTMLElement) {
         .join("");
       outEl.innerHTML = `${warn}${same}${period}<div class="table-scroll" tabindex="0" role="region" aria-label="Szenariovergleich – bei Bedarf horizontal scrollbar"><table class="compare-table"><caption>Deine Szenarien im Vergleich</caption><thead><tr><th scope="col">Kennzahl</th><th scope="col">${esc(head(nA, "A"))}${c.periodsMatch ? "" : ` (${esc(c.periodA ?? "")})`}</th><th scope="col">${esc(head(nB, "B"))}${c.periodsMatch ? "" : ` (${esc(c.periodB ?? "")})`}</th><th scope="col">${esc(nB)} − ${esc(nA)}</th></tr></thead><tbody>${rows}</tbody></table></div>`;
       if (c.state === "ok") track("scenario_used", { calc: def.id, variant: sv.id });
+      // Aktiver Vergleich für Kopieren/Drucken: beide Szenarien mit Eingaben, Ergebnissen und Differenz
+      const su = unitOf({ einheit: String(a.einheit ?? "") });
+      const inputsOf = (raw: RawInputs) =>
+        sv.fields
+          .map((f) => {
+            const val = raw[f.key];
+            if (typeof val !== "string" || !val) return "";
+            const shown = f.type === "select" ? (f.options?.find((o) => o.value === val)?.label ?? val) : `${val}${f.unit ? ` ${localize(f.unit, su)}` : ""}`;
+            return `${localize(f.label, su)}: ${shown}`;
+          })
+          .filter(Boolean)
+          .join("; ");
+      scenarioLines = () =>
+        c.state !== "ok"
+          ? []
+          : [
+              "",
+              `Szenariovergleich ${nA} ↔ ${nB}${c.periodsMatch && c.periodA ? ` (gemeinsamer Zeitraum: ${c.periodA})` : ""} – ${title}:`,
+              `${nA}: ${inputsOf(a)}`,
+              `${nB}: ${inputsOf(b)}`,
+              ...c.rows.map((r) => `${r.label}: ${nA} ${r.a} | ${nB} ${r.b} | Differenz (${nB} − ${nA}): ${r.diff ?? r.diffNote ?? "–"}`),
+              ...c.warnings,
+              ...(c.differingLabels.length ? [`Abweichende Eingaben: ${c.differingLabels.join(", ")}`] : []),
+            ];
       // Grafik des Vergleichs: gleiche Skala, nur bei gemeinsamem Zeitraum
       const ra = run(sv, a),
         rb = run(sv, b);
@@ -932,14 +1012,30 @@ async function init(root: HTMLElement) {
       f.addEventListener("input", compare);
       f.addEventListener("change", compare);
     }
-    shared?.addEventListener("change", compare);
+    sharedSel.forEach((sel) =>
+      sel.addEventListener("change", () => {
+        applyUnitText(scn);
+        compare();
+      }),
+    );
     copyToScenarios = () => {
       const raw = variant.id === sv.id ? readRaw(forms.get(sv.id)!, sv) : {};
-      writeRaw(formA, { ...sv, fields: sv.fields.filter((x) => x.key !== PERIOD_KEY) }, raw);
-      writeRaw(formB, { ...sv, fields: sv.fields.filter((x) => x.key !== PERIOD_KEY) }, raw);
-      if (shared && typeof raw[PERIOD_KEY] === "string" && raw[PERIOD_KEY]) shared.value = raw[PERIOD_KEY] as string;
+      writeRaw(formA, scnFieldsOnly, raw);
+      writeRaw(formB, scnFieldsOnly, raw);
+      for (const sel of sharedSel) if (typeof raw[sel.name] === "string" && raw[sel.name]) sel.value = raw[sel.name] as string;
+      applyUnitText(scn);
       compare();
     };
+    scn.querySelector("[data-scn-copytext]")!.addEventListener("click", async () => {
+      const lines = scenarioLines();
+      if (!lines.length) return toast("Es gibt noch keinen vollständigen Vergleich zum Kopieren.");
+      try {
+        await navigator.clipboard.writeText([`${title} – Szenariovergleich`, ...lines, "", `Berechnet mit KPILot (${location.origin}${location.pathname})`].join("\n"));
+        toast("Vergleich in die Zwischenablage kopiert.");
+      } catch {
+        toast("Kopieren wurde vom Browser blockiert.");
+      }
+    });
     scn.querySelector("[data-scn-copy]")!.addEventListener("click", () => {
       copyToScenarios();
       (formB.querySelector("input:not([name=scnName])") as HTMLInputElement | null)?.focus();

@@ -51,7 +51,7 @@ const breakEven: Builder = (i, r) => {
   const tableQs: Decimal[] = [D(0)];
   if (has) {
     const q = qTheo!;
-    const qMin = outOf(r, "Mindeststückzahl")!.value;
+    const qMin = (r as import("./kit").Ok).main.value;
     const from = outOf(r, "Positiver Gewinn ab")!.value;
     const y = pn * num(q);
     chart.markers!.push({ x: num(q), y, kind: "intersection", label: `Schnittpunkt: ${stk(q)} · ${eur(p.mul(q))}` });

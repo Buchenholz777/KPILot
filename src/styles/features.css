@@ -371,8 +371,7 @@ textarea:focus {
 }
 @media print {
   .feedback,
-  .followups,
-  .scenario {
+  .followups {
     display: none !important;
   }
   .calc-grid {
@@ -1162,5 +1161,41 @@ body.print-flow-summary .flow-nav {
   }
   .chart-box {
     break-inside: avoid;
+  }
+}
+
+/* ================= Sichtbarer Vergleich im Ergebnis ================= */
+.result-compare {
+  margin: var(--space-3) 0;
+  padding: var(--space-3);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  min-width: 0;
+}
+.result-compare .compare-table {
+  margin-top: 0;
+}
+.result-compare-sum {
+  margin: var(--space-2) 0 0;
+  font-weight: var(--weight-bold);
+}
+.result-meaning {
+  margin: var(--space-3) 0;
+}
+@media print {
+  .scenario:not([open]) {
+    display: none !important;
+  }
+  .scenario[open] {
+    display: block !important;
+    box-shadow: none;
+    break-inside: avoid;
+  }
+  .scenario[open] .tools-row,
+  .scenario[open] .scenario-grid,
+  .scenario[open] .scn-shared,
+  .scenario[open] > p {
+    display: none !important;
   }
 }

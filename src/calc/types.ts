@@ -56,6 +56,14 @@ export interface Out {
   detail?: boolean;
 }
 
+export interface ResultComparison {
+  title: string;
+  head: string[];
+  rows: string[][];
+  /** Eindeutige Aussage zur Differenz, z. B. „Alternative minus aktuelle Berechnung: −360,00 €“. */
+  summary: string;
+}
+
 export type CalcResult =
   | {
       status: "ok";
@@ -70,6 +78,8 @@ export type CalcResult =
       tone?: "neutral" | "positive" | "negative";
       /** Zwischenwerte, die für Grafiken gebraucht werden (z. B. Beitrag je Tarif). */
       breakdown?: Out[];
+      /** Sichtbare Gegenüberstellung (z. B. aktuelle Quote und bewusst eingegebene Alternative). */
+      comparison?: ResultComparison;
     }
   | {
       status: "undefined" | "impossible" | "ambiguous";

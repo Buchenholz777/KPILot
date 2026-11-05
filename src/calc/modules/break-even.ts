@@ -1,3 +1,4 @@
+import { unitField, UNIT_KEY } from "../units";
 import type { CalcDef, CalcResult, Inputs } from "../types";
 import {
   D,
@@ -113,6 +114,7 @@ const def: CalcDef = {
           help: "Kosten, die unabhängig von der Menge anfallen, z. B. Miete",
         },
         periodField(),
+        unitField(),
       ],
       example: { p: "50", v: "30", F: "3000", zeitraum: "monat" },
       compute: breakEven,
@@ -145,6 +147,7 @@ const def: CalcDef = {
         v: toInput(val(i, "v")),
         F: toInput(val(i, "F")),
         zeitraum: i.choices.zeitraum ?? "monat",
+        [UNIT_KEY]: i.choices[UNIT_KEY] ?? "stueck",
       }),
     },
   ],

@@ -269,7 +269,7 @@ export function evaluate(f: FlowState): FlowSummary {
     s.targetQty = ok(run(gzV, { p: tx(p), v: tx(v), F: tx(F), Z: tx(z), zeitraum: f.zeitraum }).result);
   }
   const cap = known(f.cap);
-  const required = s.targetQty?.main.value ?? find(s.base.breakEven, "Mindeststückzahl")?.value;
+  const required = s.targetQty?.main.value ?? s.base.breakEven?.main.value;
   if (cap && required) {
     s.capacity = {
       required,

@@ -64,6 +64,28 @@ const roas: Builder = (i, r, variantId) => {
   if (r.status !== "ok") return none("Ohne gültige Eingaben gibt es keine Grafik.");
   const db = outOf(r, "Deckungsbeitrag vor")!.value;
   const min = outOf(r, "Mindest-ROAS zur");
+  const altDb = outOf(r, "Alternative Quote: Deckungsbeitrag vor");
+  const altAfter = outOf(r, "Alternative Quote: Beitrag nach");
+  const qNow = val(i, "quote")!,
+    qAlt = val(i, "alt");
+  const compare = altDb && altAfter && qAlt
+    ? bars({
+        title: "Aktuelle Quote und Alternative im Vergleich",
+        panels: [
+          {
+            title: "Euro – gemeinsame Skala mit Nulllinie",
+            bars: [
+              { label: `DB vor Werbung ${pct(qNow)}`, value: num(db), text: eur(db) },
+              { label: `DB vor Werbung ${pct(qAlt)}`, value: num(altDb.value), text: eur(altDb.value) },
+              { label: "Werbekosten", value: num(k), text: eur(k) },
+              { label: `Beitrag nach Werbung ${pct(qNow)}`, value: num(r.main.value), text: eur(r.main.value, true), emphasis: true },
+              { label: `Beitrag nach Werbung ${pct(qAlt)}`, value: num(altAfter.value), text: eur(altAfter.value, true), emphasis: true },
+            ],
+          },
+        ],
+        caption: r.status === "ok" && r.comparison ? r.comparison.summary : "",
+      })
+    : undefined;
   return {
     charts: [
       bridge({
@@ -76,8 +98,9 @@ const roas: Builder = (i, r, variantId) => {
           { label: "Werbekosten", value: -num(k), text: eur(k.neg()), type: "delta" },
           { label: "Beitrag nach Werbung", value: num(r.main.value), text: eur(r.main.value, true), type: "total" },
         ],
-        caption: `Vom Umsatz bleiben nach variablen Kosten ${eur(db)}; nach ${eur(k)} Werbekosten ${eur(r.main.value, true)}${min ? ` (Mindest-ROAS ${formatValue(min.value, "factor")})` : ""}. Das ist ein Beitrag, kein Unternehmensgewinn: Weitere Fixkosten sind nicht gedeckt.`,
+        caption: `Vom Umsatz bleiben nach variablen Kosten ${eur(db)}; nach ${eur(k)} Werbekosten ${eur(r.main.value, true)}${min ? ` (Mindest-ROAS ${formatValue(min.value, "factor4")})` : ""}. Das ist ein Beitrag, kein Unternehmensgewinn: Weitere Fixkosten sind nicht gedeckt.`,
       }),
+      ...(compare ? [compare] : []),
     ],
   };
 };

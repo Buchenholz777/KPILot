@@ -21,8 +21,9 @@ const exV = calc.variants[0];
 const exR = runExample(exV);
 const examplePreview = exR.status === 'ok' ? { label: exR.main.label, value: formatValue(exR.main.value, exR.main.format, exR.main.unit, exR.main.signed) } : undefined;
 const rowCount = (min: number) => Math.max(min, 2);
-const scenFields = scenVariant ? scenVariant.fields.filter((f) => f.key !== 'zeitraum') : [];
-const scenPeriod = scenVariant?.fields.find((f) => f.key === 'zeitraum');
+const SHARED = ['zeitraum', 'einheit'];
+const scenFields = scenVariant ? scenVariant.fields.filter((f) => !SHARED.includes(f.key)) : [];
+const scenShared = scenVariant ? scenVariant.fields.filter((f) => SHARED.includes(f.key)) : [];
 const scenNames = ['Vorsichtig', 'Realistisch', 'Optimistisch'];
 ---
 
@@ -227,15 +228,20 @@ const scenNames = ['Vorsichtig', 'Realistisch', 'Optimistisch'];
           <p class="small muted">
             Vergleiche deine eigenen Annahmen nebeneinander, z. B. einen anderen Preis oder andere Fixkosten. Das ist keine Prognose und enthält keine Marktdaten – die Werte trägst du ein.
           </p>
-          {scenPeriod && (
+          {scenShared.length > 0 && (
             <div class="scn-shared">
-              <Field f={scenPeriod} prefix={`scn-shared-${id}`} compact />
-              <p class="help">Der Zeitraum gilt für beide Szenarien. KPILot rechnet nicht automatisch zwischen Zeiträumen um (das würde gleichmäßige Verteilung ohne Saisoneffekte unterstellen): Trage in beiden Szenarien Werte für diesen Zeitraum ein.</p>
+              {scenShared.map((f) => (
+                <Field f={f} prefix={`scn-shared-${id}`} compact />
+              ))}
+              <p class="help">Zeitraum und Einheit gelten für beide Szenarien. KPILot rechnet nicht automatisch zwischen Zeiträumen um (das würde gleichmäßige Verteilung ohne Saisoneffekte unterstellen): Trage in beiden Szenarien Werte für diesen Zeitraum und diese Einheit ein.</p>
             </div>
           )}
-          <button type="button" class="btn btn-secondary" data-scn-copy>
-            Aktuelle Eingaben in A und B übernehmen
-          </button>
+          <div class="tools-row">
+            <button type="button" class="btn btn-secondary" data-scn-copy>
+              Aktuelle Eingaben in A und B übernehmen
+            </button>
+            <button type="button" class="btn btn-secondary" data-scn-copytext>Vergleich kopieren</button>
+          </div>
           <div class="scenario-grid">
             {['A', 'B'].map((s) => (
               <form class="scenario-col" data-scn={s} novalidate aria-label={`Szenario ${s}`} onsubmit="return false">

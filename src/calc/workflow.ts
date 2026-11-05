@@ -11,7 +11,8 @@ import gewinnDef from "./modules/gewinn";
 import dbDef from "./modules/deckungsbeitrag";
 import zielDef from "./modules/zielpreis";
 import type { CalcResult, Out, RawInputs, VariantDef } from "./types";
-import { D, type Decimal } from "../lib/decimal";
+import { D, Decimal } from "../lib/decimal";
+import { UNITS, UNIT_BY_KEY, UNIT_KEY } from "./units";
 import { formatValue, parseNumber } from "../lib/number";
 
 export const FLOW_ID = "preis-ablauf";
@@ -48,9 +49,10 @@ export interface FlowState {
   z: string;
   /** Optional: verfügbare Kapazität (gleiche Einheit, gleicher Zeitraum). */
   cap: string;
-  /** Optional: gewählte Änderungen in € je Einheit (auch negativ). */
+  /** Optional: gewählte Änderungen (jeweils nur eine Größe, übrige konstant): Preis und variable Kosten in € je Einheit, Absatz in Prozent. */
   priceDelta: string;
   costDelta: string;
+  qDeltaPct: string;
   /** Herkunft je Angabe: p, v, F, q. */
   origin: Partial<Record<"p" | "v" | "F" | "q", Origin>>;
   scenarios: FlowScenario[];
@@ -60,7 +62,7 @@ export interface FlowState {
 export const emptyFlow = (): FlowState => ({
   title: "",
   zeitraum: "monat",
-  unit: "Stück",
+  unit: "stueck",
   costType: "variabel",
   v: "",
   F: "",
@@ -70,6 +72,7 @@ export const emptyFlow = (): FlowState => ({
   cap: "",
   priceDelta: "",
   costDelta: "",
+  qDeltaPct: "",
   origin: {},
   scenarios: [],
   note: "",
@@ -85,6 +88,7 @@ export const exampleFlow = (): FlowState => ({
   q: "200",
   priceDelta: "5",
   costDelta: "2",
+  qDeltaPct: "-10",
   origin: { p: "geschaetzt", q: "geschaetzt", v: "beobachtet", F: "beobachtet" },
   scenarios: [
     { name: "Vorsichtig", p: "", v: "", F: "", q: "150" },
@@ -107,6 +111,7 @@ export function toRaw(f: FlowState): RawInputs {
     cap: f.cap,
     priceDelta: f.priceDelta,
     costDelta: f.costDelta,
+    qDeltaPct: f.qDeltaPct,
     origin: Object.entries(f.origin)
       .map(([k, o]) => `${k}:${o}`)
       .join(","),
@@ -116,14 +121,20 @@ export function toRaw(f: FlowState): RawInputs {
 }
 
 const str = (x: unknown) => (typeof x === "string" ? x : "");
+/** Ältere Entwürfe speicherten die Einheit als Text („Stück“); neue als Schlüssel. */
+export const unitKeyOf = (raw: string): string => {
+  if (UNIT_BY_KEY[raw]) return raw;
+  const hit = UNITS.find((u) => u.label.toLowerCase() === raw.trim().toLowerCase() || u.sg.toLowerCase() === raw.trim().toLowerCase() || u.pl.toLowerCase() === raw.trim().toLowerCase());
+  return hit ? hit.key : raw.trim() ? "einheit" : "stueck";
+};
 export function fromRaw(raw: RawInputs | null | undefined): FlowState {
   const r = raw ?? {};
   const f = emptyFlow();
   f.title = str(r.title).slice(0, 80);
   f.zeitraum = PERIODS.some((p) => p.value === r.zeitraum) ? (r.zeitraum as string) : "monat";
-  f.unit = str(r.unit).slice(0, 30) || "Stück";
+  f.unit = unitKeyOf(str(r.unit));
   f.costType = r.costType === "einstand" || r.costType === "voll" ? r.costType : "variabel";
-  for (const k of ["v", "F", "p", "q", "z", "cap", "priceDelta", "costDelta"] as const) f[k] = str(r[k]).slice(0, 24);
+  for (const k of ["v", "F", "p", "q", "z", "cap", "priceDelta", "costDelta", "qDeltaPct"] as const) f[k] = str(r[k]).slice(0, 24);
   f.note = str(r.note).slice(0, 2000);
   for (const part of str(r.origin).split(",")) {
     const [k, o] = part.split(":");
@@ -191,6 +202,8 @@ export interface CaseResult {
 export interface FlowSummary {
   period: string;
   unit: string;
+  /** Singular der Einheit („abrechenbare Stunde“). */
+  unitSg: string;
   /** Vollkosten statt variabler Kosten: keine Auswertung, damit Fixkosten nicht doppelt zählen. */
   blocked?: string;
   missing: Missing[];
@@ -199,6 +212,8 @@ export interface FlowSummary {
   capacity?: { required: Decimal; available: Decimal; enough: boolean; gap: Decimal; reserve: Decimal };
   priceEffect?: { delta: Decimal; after: CaseResult };
   costEffect?: { delta: Decimal; after: CaseResult };
+  /** Absatzänderung in Prozent (nur der Absatz ändert sich; Preis und Kosten bleiben konstant). */
+  qEffect?: { pct: Decimal; qNew: Decimal; after: CaseResult };
   scenarios: CaseResult[];
   /** Eingabefelder, in denen sich Szenarien von der Basis unterscheiden. */
   differing: Record<string, ("p" | "v" | "F" | "q")[]>;
@@ -207,19 +222,19 @@ export interface FlowSummary {
 
 const LABEL = { p: "Verkaufspreis netto je Einheit", v: "Variable Kosten je Einheit", F: "Fixkosten im Zeitraum", q: "Geplante Absatzmenge" } as const;
 
-function evalCase(name: string, i: { p?: string; v?: string; F?: string; q?: string }, zeitraum: string): CaseResult {
+function evalCase(name: string, i: { p?: string; v?: string; F?: string; q?: string }, zeitraum: string, einheit = "stueck"): CaseResult {
   const c: CaseResult = { name, inputs: i };
   const p = known(i.p ?? ""),
     v = known(i.v ?? ""),
     F = known(i.F ?? ""),
     q = known(i.q ?? "");
   if (p && v) {
-    const r = ok(run(dbV, { p: tx(p), v: tx(v), q: "" }).result);
+    const r = ok(run(dbV, { p: tx(p), v: tx(v), q: "", [UNIT_KEY]: einheit }).result);
     c.dbUnit = r?.main;
     c.dbQuote = find(r, "Deckungsbeitragsquote");
   }
   if (p && v && F) {
-    const res = run(beV, { p: tx(p), v: tx(v), F: tx(F), zeitraum }).result;
+    const res = run(beV, { p: tx(p), v: tx(v), F: tx(F), zeitraum, [UNIT_KEY]: einheit }).result;
     const r = ok(res);
     if (r) {
       c.breakEven = r;
@@ -228,7 +243,7 @@ function evalCase(name: string, i: { p?: string; v?: string; F?: string; q?: str
     } else if (res && "message" in res) c.breakEvenProblem = res.message;
   }
   if (p && v && F && q) {
-    c.profit = ok(run(gwV, { p: tx(p), v: tx(v), F: tx(F), q: tx(q), zeitraum }).result);
+    c.profit = ok(run(gwV, { p: tx(p), v: tx(v), F: tx(F), q: tx(q), zeitraum, [UNIT_KEY]: einheit }).result);
   }
   return c;
 }
@@ -246,7 +261,8 @@ export function evaluate(f: FlowState): FlowSummary {
 
   const s: FlowSummary = {
     period,
-    unit: f.unit || "Stück",
+    unit: (UNIT_BY_KEY[f.unit] ?? UNITS[0]).pl,
+    unitSg: (UNIT_BY_KEY[f.unit] ?? UNITS[0]).per,
     missing,
     base: { name: "Basis", inputs: {} },
     scenarios: [],
@@ -258,7 +274,7 @@ export function evaluate(f: FlowState): FlowSummary {
       "Du hast Vollkosten je Einheit gewählt. Sie enthalten bereits Anteile der Fixkosten – würden sie hier als variable Kosten verwendet, zählten die Fixkosten doppelt. Trage bitte die variablen Kosten je Einheit ein (ohne Fixkostenanteil) und die Fixkosten separat.";
     return s;
   }
-  s.base = evalCase("Basis", { p: f.p, v: f.v, F: f.F, q: f.q }, f.zeitraum);
+  s.base = evalCase("Basis", { p: f.p, v: f.v, F: f.F, q: f.q }, f.zeitraum, f.unit);
 
   // Zielgewinn → Menge, Kapazitätsabgleich
   const z = known(f.z);
@@ -266,7 +282,7 @@ export function evaluate(f: FlowState): FlowSummary {
     v = known(f.v),
     F = known(f.F);
   if (z && p && v && F) {
-    s.targetQty = ok(run(gzV, { p: tx(p), v: tx(v), F: tx(F), Z: tx(z), zeitraum: f.zeitraum }).result);
+    s.targetQty = ok(run(gzV, { p: tx(p), v: tx(v), F: tx(F), Z: tx(z), zeitraum: f.zeitraum, [UNIT_KEY]: f.unit }).result);
   }
   const cap = known(f.cap);
   const required = s.targetQty?.main.value ?? s.base.breakEven?.main.value;
@@ -283,14 +299,21 @@ export function evaluate(f: FlowState): FlowSummary {
   // Ausgewählte Preis-/Kostenänderungen (vom Nutzer gewählt, keine Vorgabe)
   const pd = known(f.priceDelta),
     cd = known(f.costDelta);
-  if (pd && p) s.priceEffect = { delta: pd, after: evalCase("Preisänderung", { p: tx(p.add(pd)), v: f.v, F: f.F, q: f.q }, f.zeitraum) };
-  if (cd && v) s.costEffect = { delta: cd, after: evalCase("Kostenänderung", { p: f.p, v: tx(v.add(cd)), F: f.F, q: f.q }, f.zeitraum) };
+  if (pd && p) s.priceEffect = { delta: pd, after: evalCase("Preisänderung", { p: tx(p.add(pd)), v: f.v, F: f.F, q: f.q }, f.zeitraum, f.unit) };
+  if (cd && v) s.costEffect = { delta: cd, after: evalCase("Kostenänderung", { p: f.p, v: tx(v.add(cd)), F: f.F, q: f.q }, f.zeitraum, f.unit) };
+
+  const qp = known(f.qDeltaPct),
+    q0 = known(f.q);
+  if (qp && q0) {
+    const qNew = q0.mul(D(1).add(qp.div(100))).toDecimalPlaces(0, Decimal.ROUND_HALF_UP);
+    if (qNew.gte(0)) s.qEffect = { pct: qp, qNew, after: evalCase("Absatzänderung", { p: f.p, v: f.v, F: f.F, q: tx(qNew) }, f.zeitraum, f.unit) };
+  }
 
   // Varianten
   f.scenarios.forEach((sc, idx) => {
     const name = sc.name.trim() || `Variante ${idx + 1}`;
     const inp = { p: sc.p || f.p, v: sc.v || f.v, F: sc.F || f.F, q: sc.q || f.q };
-    s.scenarios.push(evalCase(name, inp, f.zeitraum));
+    s.scenarios.push(evalCase(name, inp, f.zeitraum, f.unit));
     s.differing[name] = (["p", "v", "F", "q"] as const).filter((k) => {
       const a = known(inp[k]),
         b = known(f[k]);

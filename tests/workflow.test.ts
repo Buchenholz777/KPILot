@@ -90,3 +90,41 @@ describe("Ablauf Preis & Wirtschaftlichkeit", () => {
     expect(priceForQuote("30", "100").message).toBeDefined();
   });
 });
+
+describe("Sensitivität: jeweils nur eine Größe ändert sich", () => {
+  const f = base({ priceDelta: "5", costDelta: "2", qDeltaPct: "-10" });
+  const s = evaluate(f);
+  it("Basis 1.000 €; nur Preis +5 € → 2.000 € (+1.000 €); nur variable Kosten +2 € → 600 € (−400 €); nur Absatz −10 % auf 180 → 600 € (−400 €)", () => {
+    expect(s.base.profit?.main.value.toString()).toBe("1000");
+    expect(s.priceEffect?.after.profit?.main.value.toString()).toBe("2000");
+    expect(s.costEffect?.after.profit?.main.value.toString()).toBe("600");
+    expect(s.qEffect?.qNew.toString()).toBe("180");
+    expect(s.qEffect?.after.profit?.main.value.toString()).toBe("600");
+  });
+  it("Diagramm: gemeinsame Euro-Skala, Veränderung gegenüber der Basis, Hinweis zur konstanten Menge", async () => {
+    const { sensitivityChart } = await import("../src/calc/charts/flow");
+    const c = sensitivityChart(s)!;
+    expect(c.kind).toBe("hbars");
+    if (c.kind !== "hbars") return;
+    expect(c.rows.map((r) => r.text)).toEqual(["+1.000,00 €", "−400,00 €", "−400,00 €"]);
+    expect(c.rows[0].label).toMatch(/Nur Verkaufspreis \+5,00 € je Stück/);
+    expect(c.rows[2].label).toMatch(/Nur Absatz −10 % \(auf 180 Stück\)/);
+    expect(c.caption).toMatch(/ändert sich nur eine Größe/);
+    expect(c.caption).toMatch(/Absatzmenge unverändert/);
+    expect(c.caption).not.toMatch(/Wahrscheinlichkeit/);
+  });
+  it("negative Ergebnisse bleiben vollständig; Absatz auf unter 0 wird nicht gerechnet", () => {
+    const n = evaluate(base({ p: "20", priceDelta: "-5" }));
+    expect(n.priceEffect?.after.profit?.main.value.toString()).toBe("-6000"); // 15·200 − (3000 + 30·200) = 3000 − 9000
+    expect(evaluate(base({ qDeltaPct: "-150" })).qEffect).toBeUndefined();
+  });
+  it("Abgewandelte Einheit (Stunden) steht in Texten", () => {
+    const h = evaluate(base({ unit: "stunde" }));
+    expect(h.unit).toBe("abrechenbare Stunden");
+    expect(JSON.stringify([h.base.qMin?.unit, h.base.profit?.meaning])).not.toMatch(/Stück/);
+  });
+  it("Varianten-Beispiel: Vorsichtig 0 €, Optimistisch 3.250 € (unverändert)", () => {
+    const e = evaluate(exampleFlow());
+    expect(e.scenarios.map((c) => c.profit?.main.value.toString())).toEqual(["0", "3250"]);
+  });
+});

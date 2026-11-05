@@ -1,6 +1,7 @@
 /** Gemeinsame Bausteine der Diagrammaufbereitung. Rechnet nicht fachlich – formatiert und ordnet vorhandene Ergebnisse. */
 import type { CalcResult, Inputs, Out } from "../types";
 import type {
+  HBarsChart,
   BarItem,
   BarsChart,
   BridgeChart,
@@ -106,4 +107,15 @@ export function niceMax(v: number): number {
   const m = v / e;
   const f = m <= 1 ? 1 : m <= 2 ? 2 : m <= 2.5 ? 2.5 : m <= 5 ? 5 : 10;
   return f * e;
+}
+
+export function hbars(o: { title: string; caption: string; rows: HBarsChart["rows"]; zeroLabel: string; notice?: string }): HBarsChart {
+  const summary = `${o.title}. ${o.rows.map((r) => `${r.label}: ${r.text}`).join("; ")}.`;
+  return {
+    kind: "hbars",
+    ...base(o.title, o.caption, summary, o.rows.map((r) => [r.label, r.text, r.sub ?? ""]), ["Änderung", "Wirkung auf das Ergebnis", "Ergebnis danach"]),
+    rows: o.rows,
+    zeroLabel: o.zeroLabel,
+    notice: o.notice,
+  };
 }

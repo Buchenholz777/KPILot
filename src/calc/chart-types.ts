@@ -102,7 +102,14 @@ export interface ScaleChart extends ChartBase {
   axisFormat: (v: number) => string;
 }
 
-export type ChartSpec = LinesChart | BarsChart | BridgeChart | CompositionChart | MeterChart | ScaleChart;
+export interface HBarsChart extends ChartBase {
+  kind: "hbars";
+  /** Gemeinsame Skala; Nulllinie = Basis. */
+  rows: { label: string; sub?: string; value: number; text: string }[];
+  zeroLabel: string;
+}
+
+export type ChartSpec = HBarsChart | LinesChart | BarsChart | BridgeChart | CompositionChart | MeterChart | ScaleChart;
 
 /** Ergebnis der Diagrammaufbereitung. Leere Liste + `note`: bewusst keine Grafik (mit Begründung). */
 export interface ChartOutcome {

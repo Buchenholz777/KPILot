@@ -9,14 +9,16 @@ const crumbs = [
   { name: 'Praxisfälle', href: '/praxisfaelle/' },
 ];
 const cases = buildCases();
+const N = cases.length;
+const words = ['', 'Ein', 'Zwei', 'Drei', 'Vier', 'Fünf', 'Sechs'];
 ---
 
 <Base
-  title="Praxisfälle: Handel, Dienstleistung, Produktion | KPILot"
-  description="Drei durchgerechnete, ausdrücklich fiktive Fälle mit Ausgangsfrage, Annahmen, Rechnung, Ergebnis, Variantenvergleich und nächstem Prüfschritt – zum Übernehmen in die Rechner."
+  title={`Praxisfälle: ${cases.map((c) => c.sector).join(', ')} | KPILot`}
+  description={`${N} durchgerechnete, ausdrücklich fiktive Fälle mit Ausgangsfrage, Annahmen, Rechnung, Ergebnis, Variantenvergleich und nächstem Prüfschritt – zum Weiterrechnen mit deinen Zahlen.`}
   crumbs={crumbs}
 >
-  <PageBand crumbs={crumbs} title="Praxisfälle" lead="Drei vollständig durchgerechnete Fälle. Alle Annahmen sind ausdrücklich fiktiv; alle Zahlen stammen aus denselben Rechenfunktionen wie die Rechner." />
+  <PageBand crumbs={crumbs} title="Praxisfälle" lead={`${words[N] ?? N} vollständig durchgerechnete Fälle. Alle Annahmen sind ausdrücklich fiktiv; alle Zahlen, Tabellen und Übernahmen entstehen aus denselben Falldaten und Rechenfunktionen wie die Rechner.`} />
   <div class="container page-body">
     <nav aria-label="Fälle" class="case-nav">
       <ul class="empty-links">{cases.map((c) => <li><a href={`#${c.id}`}>{c.sector}: {c.title.split(': ')[1]}</a></li>)}</ul>
@@ -24,9 +26,13 @@ const cases = buildCases();
     {
       cases.map((c) => (
         <article class="card content-card case" id={c.id} aria-labelledby={`${c.id}-h`}>
-          <p class="eyebrow">{c.sector} · fiktives Beispiel</p>
+          <p class="eyebrow">{c.sector} · fiktives Beispiel · Zeitraum: {c.period} · Einheit: {c.unit}</p>
           <h2 id={`${c.id}-h`}>{c.title}</h2>
           <p class="case-question"><strong>Ausgangsfrage:</strong> {c.question}</p>
+          <p class="step-links">
+            <button type="button" class="btn btn-primary" data-case-transfer={JSON.stringify(c.primary)} data-case-url={c.primary.url}>{c.primary.label}</button>
+            <span class="small muted">Alle Werte des Falls werden zusammen übernommen; du kannst sie danach anpassen. Bestehende Entwürfe werden nicht überschrieben, ohne dass du es bestätigst.</span>
+          </p>
           <h3>Annahmen (fiktiv)</h3>
           <ul class="bullets">{c.assumptions.map((a) => <li>{a}</li>)}</ul>
           <h3>Rechnung</h3>
@@ -36,33 +42,41 @@ const cases = buildCases();
                 <h4>{s.title}</h4>
                 <p>{s.text}</p>
                 <ul class="bullets">{s.lines.map((l) => <li>{l}</li>)}</ul>
-                <p class="small"><a href={`${topicUrl(s.calc)}#${s.variant ? `${s.variant}:` : ''}beispiel`}>{displayTitle(TOPIC_BY_ID[s.calc])} öffnen</a></p>
+                <p class="step-links">
+                  <button type="button" class="btn btn-secondary" data-case-transfer={JSON.stringify(s.transfer)} data-case-url={s.transfer.url}>{s.transfer.label}</button>
+                  <span class="small muted">{displayTitle(TOPIC_BY_ID[s.calc])}{s.variant ? ` (Modus: ${s.variant})` : ''}</span>
+                </p>
               </li>
             ))}
           </ol>
           <h3>Ergebnis</h3>
           <p class="home-example-result">{c.result}</p>
-          <h3>Variantenvergleich</h3>
-          <p class="small">{c.compare.title}. Beide Varianten gelten für denselben Zeitraum (Monat).</p>
-          <div class="table-scroll" tabindex="0" role="region" aria-label={`Variantenvergleich ${c.sector}, bei Bedarf horizontal scrollbar`}>
+          <h3>Vergleich</h3>
+          <div class="table-scroll" tabindex="0" role="region" aria-label={`Vergleich ${c.sector}, bei Bedarf horizontal scrollbar`}>
             <table class="compare-table">
               <caption>{c.compare.title}</caption>
-              <thead><tr><th scope="col">Kennzahl</th><th scope="col">{c.compare.names[0]}</th><th scope="col">{c.compare.names[1]}</th><th scope="col">Differenz</th></tr></thead>
+              <thead><tr>{c.compare.head.map((h) => <th scope="col">{h}</th>)}</tr></thead>
               <tbody>
-                {c.compare.comparison.rows.slice(0, 4).map((r) => (
-                  <tr><th scope="row">{r.label}</th><td>{r.a}</td><td>{r.b}</td><td>{r.diff ?? r.diffNote ?? '–'}</td></tr>
+                {c.compare.rows.map((r) => (
+                  <tr><th scope="row">{r[0]}</th>{r.slice(1).map((x) => <td>{x}</td>)}</tr>
                 ))}
               </tbody>
             </table>
           </div>
+          <h3>So deutest du es richtig</h3>
+          <ul class="bullets">{c.notes.map((n) => <li>{n}</li>)}</ul>
           <h3>Nächster sinnvoller Prüfschritt</h3>
           <p>{c.next}</p>
-          <p class="step-links">
-            {c.transfers.map((t, i) => (
-              <button type="button" class="btn btn-secondary" data-case-transfer={JSON.stringify({ target: t.target, values: t.values, describe: t.describe })} data-case-url={topicUrl(t.target)} data-case-from={c.id} aria-describedby={`${c.id}-h`}>{t.label}</button>
-            ))}
-          </p>
-          <p class="small muted">Übernommen werden nur die im Fall genannten fiktiven Werte; du kannst sie im Rechner durch eigene ersetzen.</p>
+          {
+            c.more.length > 0 && (
+              <p class="step-links">
+                {c.more.map((t) => (
+                  <button type="button" class="btn btn-secondary" data-case-transfer={JSON.stringify(t)} data-case-url={t.url}>{t.label}</button>
+                ))}
+              </p>
+            )
+          }
+          <p class="small muted">Übernommen werden nur die Eingaben des Falls (keine Ergebniszahlen); du kannst sie im Rechner durch eigene ersetzen. Änderst du Werte, ist es deine abgewandelte Berechnung.</p>
         </article>
       ))
     }
@@ -73,10 +87,11 @@ const cases = buildCases();
   import { setTransfer } from '../../lib/storage';
   import { track } from '../../lib/analytics';
   import { toast } from '../../scripts/ui';
+  type T = { target: string; url: string; values: Record<string, string>; describe: string; fromTitle: string };
   document.querySelectorAll<HTMLButtonElement>('[data-case-transfer]').forEach((b) =>
     b.addEventListener('click', () => {
-      const t = JSON.parse(b.dataset.caseTransfer!) as { target: string; values: Record<string, string>; describe: string };
-      const ok = setTransfer({ from: 'praxisfall', fromTitle: 'Praxisfall (fiktive Werte)', target: t.target, values: t.values, describe: t.describe });
+      const t = JSON.parse(b.dataset.caseTransfer!) as T;
+      const ok = setTransfer({ from: 'praxisfall', fromTitle: t.fromTitle, target: t.target, values: t.values, describe: t.describe });
       if (!ok) return toast('Die Übernahme braucht den Sitzungsspeicher des Browsers, der hier nicht verfügbar ist.');
       track('values_transferred', { calc: 'praxisfall', variant: t.target });
       location.href = b.dataset.caseUrl!;

@@ -5,6 +5,7 @@
  */
 import type {
   BarsChart,
+  HBarsChart,
   BridgeChart,
   ChartOutcome,
   ChartSpec,
@@ -368,6 +369,35 @@ function renderScale(c: ScaleChart, id: string, W: number) {
   return { svg: shell(W, y + 40, id, c.summary, g), legend: "" };
 }
 
+/* ---------------- Horizontale Balken (Wirkung gegenüber der Basis) ---------------- */
+function renderHBars(c: HBarsChart, id: string, W: number) {
+  const F = FILL(id);
+  const vals = c.rows.map((r) => r.value);
+  const nt = niceTicks(Math.min(0, ...vals), Math.max(0, ...vals), 4);
+  const left = 6,
+    right = Math.min(120, W * 0.3);
+  const w = W - left - right;
+  const X = (v: number) => left + ((v - nt.min) / (nt.max - nt.min)) * w;
+  const rowH = 54,
+    top = 22;
+  let g = text(X(0), 12, c.zeroLabel, { size: 11, anchor: "middle", weight: 700 });
+  c.rows.forEach((r, k) => {
+    const y = top + k * rowH;
+    const x1 = X(0),
+      x2 = X(r.value);
+    g += lines(left, y + 10, wrap(r.label, charsFor(W - 12, 12)), { weight: 700 });
+    g += `<rect x="${Math.min(x1, x2).toFixed(1)}" y="${y + 20}" width="${Math.max(2, Math.abs(x2 - x1)).toFixed(1)}" height="18" fill="${r.value < 0 ? F.rose : F.teal}" stroke="${r.value < 0 ? C.rose : C.teal}" stroke-width="1.6"/>`;
+    const end = Math.max(x1, x2);
+    g += text(end + 6, y + 34, r.text, { weight: 700 });
+    if (r.sub) g += text(left, y + 50, r.sub, { size: 11, fill: C.muted });
+  });
+  const bottom = top + c.rows.length * rowH;
+  g += `<line x1="${X(0).toFixed(1)}" y1="${top - 4}" x2="${X(0).toFixed(1)}" y2="${bottom}" stroke="${C.ink}" stroke-width="1.6"/>`;
+  for (const t of nt.ticks) g += `<line x1="${X(t).toFixed(1)}" y1="${bottom}" x2="${X(t).toFixed(1)}" y2="${bottom + 4}" stroke="${C.ink}"/>` + text(X(t), bottom + 17, `${t > 0 ? "+" : t < 0 ? "−" : ""}${Math.abs(t).toLocaleString("de-DE")} €`, { size: 11, anchor: "middle", fill: C.muted });
+  const legend = `<ul class="chart-legend"><li><svg width="18" height="12" aria-hidden="true"><rect width="18" height="12" fill="${F.teal}" stroke="${C.teal}"/></svg> Ergebnis steigt (+)</li><li><svg width="18" height="12" aria-hidden="true"><rect width="18" height="12" fill="${F.rose}" stroke="${C.rose}"/></svg> Ergebnis sinkt (−)</li></ul>`;
+  return { svg: shell(W, bottom + 26, id, c.summary, g), legend };
+}
+
 /* ---------------- Gesamtausgabe ---------------- */
 export interface RenderOpts {
   width: number;
@@ -397,6 +427,7 @@ function figure(c: ChartSpec, o: RenderOpts): string {
       explore = `<div class="chart-explore" data-explore data-key="${escHtml(c.title)}" data-geo='${escHtml(r.geo)}'><label for="${id}-r">${escHtml(c.explore.label)}</label><input id="${id}-r" type="range" min="0" max="${c.explore.stops.length - 1}" step="1" value="${sel ?? 0}" aria-describedby="${id}-o"><output id="${id}-o" for="${id}-r" aria-live="polite">${cur.lines.map((l) => `<span><b>${escHtml(l.label)}:</b> ${escHtml(l.text)}</span>`).join("")}</output></div>`;
     }
   } else if (c.kind === "bars") r = renderBars(c, id, W);
+  else if (c.kind === "hbars") r = renderHBars(c, id, W);
   else if (c.kind === "bridge") r = renderBridge(c, id, W);
   else if (c.kind === "composition") r = renderComposition(c, id, W);
   else if (c.kind === "meter") r = renderMeter(c, id, W);

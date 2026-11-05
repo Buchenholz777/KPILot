@@ -14,9 +14,12 @@ import {
   type FlowSummary,
 } from "../calc/workflow";
 import { formatValue, parseNumber } from "../lib/number";
-import { FLOW_KEY, setTransfer, sessionStore, readJson, writeJson } from "../lib/storage";
+import { FLOW_KEY, setTransfer, sessionStore, readJson, writeJson, takeTransfer } from "../lib/storage";
 import { addProject, addSaved, getProjects, getSavedItem, updateSaved } from "../lib/workspace";
 import { track } from "../lib/analytics";
+import { renderChartArea } from "./charts";
+import { flowCharts, scenarioChart, sensitivityChart } from "../calc/charts/flow";
+import type { ChartSpec } from "../calc/chart-types";
 import { esc, toast } from "./ui";
 
 import type { Decimal } from "../lib/decimal";
@@ -24,6 +27,11 @@ const numOf = (s: string): Decimal | undefined => {
   const p = parseNumber(s);
   return p.kind === "ok" ? p.value : undefined;
 };
+interface CaseImport {
+  title: string;
+  raw: ReturnType<typeof toRaw>;
+  assumptions: string[];
+}
 const root = document.querySelector<HTMLElement>("[data-flow]");
 if (root) init(root);
 
@@ -43,9 +51,17 @@ function init(root: HTMLElement) {
   let step = 1;
   let isExample = false;
   let opened: { id: string; name: string; raw: string } | null = null;
+  /** Praxisfall als Vorlage: Titel und Ausgangsstand, damit abgewandelte Berechnungen erkennbar sind. */
+  let fromCase: { title: string; base: string; assumptions: string[] } | null = null;
+  const flowGrid = root.querySelector<HTMLElement>("[data-flow-grid]")!;
+  const chartW = () => Math.max(260, Math.min(640, form.clientWidth - 40));
+  const chartHtml = (charts: (ChartSpec | null)[], note?: string) => {
+    const list = charts.filter((c): c is ChartSpec => !!c);
+    return list.length ? renderChartArea({ charts: list }, { width: chartW(), idPrefix: "f" }) : note ? `<p class="chart-empty">${esc(note)}</p>` : "";
+  };
 
   /* ---------- Zustand ↔ Formular ---------- */
-  const textKeys = ["title", "zeitraum", "unit", "costType", "v", "F", "p", "q", "z", "cap", "priceDelta", "costDelta", "note"] as const;
+  const textKeys = ["title", "zeitraum", "unit", "costType", "v", "F", "p", "q", "z", "cap", "priceDelta", "costDelta", "qDeltaPct", "note"] as const;
   function readForm(): FlowState {
     const s: FlowState = { ...state, origin: {}, scenarios: state.scenarios };
     for (const k of textKeys) (s as unknown as Record<string, string>)[k] = el(k).value;
@@ -65,6 +81,7 @@ function init(root: HTMLElement) {
   function showStep(n: number, focus = true) {
     step = Math.min(Math.max(n, 1), sections.length);
     sections.forEach((s, i) => (s.hidden = i + 1 !== step));
+    flowGrid.dataset.step = String(step);
     stepBtns.forEach((b) => b.toggleAttribute("aria-current", Number(b.dataset.goto) === step));
     stepBtns.forEach((b) => {
       if (Number(b.dataset.goto) === step) b.setAttribute("aria-current", "step");
@@ -91,7 +108,7 @@ function init(root: HTMLElement) {
     let r = "";
     if (c.dbUnit) r += row("Deckungsbeitrag je Einheit", outText(c.dbUnit), true);
     if (c.dbQuote) r += row("Deckungsbeitragsquote", outText(c.dbQuote));
-    if (c.qMin) r += row(`Mindestabsatz zur Kostendeckung (${s.period})`, outText(c.qMin), true);
+    if (c.qMin) r += row(`Mindestmenge zur Kostendeckung (${s.period})`, outText(c.qMin), true);
     if (c.profitFrom) r += row("Positiver Gewinn ab", outText(c.profitFrom));
     if (c.profit) r += row(c.profit.main.label + ` (${s.period})`, outText(c.profit.main), true);
     return r;
@@ -134,7 +151,7 @@ function init(root: HTMLElement) {
     if (l3) {
       let h = "";
       if (!s.blocked) {
-        h += s.base.qMin ? dl(row(`Mindestabsatz zur Kostendeckung (${s.period})`, outText(s.base.qMin), true) + (s.base.profitFrom ? row("Positiver Gewinn ab", outText(s.base.profitFrom)) : "")) : problems(s.base) || '<p class="small muted">Für den Mindestabsatz fehlen noch Angaben (siehe Zwischenstand).</p>';
+        h += s.base.qMin ? dl(row(`Mindestmenge zur Kostendeckung (${s.period})`, outText(s.base.qMin), true) + (s.base.profitFrom ? row("Positiver Gewinn ab", outText(s.base.profitFrom)) : "")) : problems(s.base) || '<p class="small muted">Für den Mindestabsatz fehlen noch Angaben (siehe Zwischenstand).</p>';
         if (s.targetQty) h += dl(row(`Menge für ${(numOf(state.z) ? formatValue(numOf(state.z)!, "money") : "gewünschten")} Zielgewinn`, outText(s.targetQty.main), true));
         if (s.capacity)
           h += `<p class="capacity-result" data-tone="${s.capacity.enough ? "positive" : "negative"}" role="status">${s.capacity.enough ? `✓ Die Kapazität reicht: ${formatValue(s.capacity.available, "integer", u(s))} verfügbar, ${formatValue(s.capacity.required, "integer", u(s))} erforderlich (Reserve ${formatValue(s.capacity.reserve, "integer", u(s))}, jeweils ${esc(s.period)}).` : `✗ Die Kapazität reicht nicht: Es fehlen ${formatValue(s.capacity.gap, "integer", u(s))} (${esc(s.period)}).`}</p>`;
@@ -149,22 +166,46 @@ function init(root: HTMLElement) {
     }
     const l4b = live("4b");
     if (l4b) {
-      const eff = (label: string, e: typeof s.priceEffect, unit: string) =>
+      const eff = (label: string, e: { after: CaseResult } | undefined) =>
         e && !s.blocked
-          ? `<div class="effect"><h4>${esc(label)} um ${esc(formatValue(e.delta, "money", unit, true))}</h4>${dl((e.after.qMin ? row("Mindestabsatz", `${outText(e.after.qMin)} (vorher ${outText(s.base.qMin)})`) : "") + (e.after.profit ? row("Ergebnis bei geplanter Menge", `${outText(e.after.profit.main)} (vorher ${outText(s.base.profit?.main)})`) : ""))}${problems(e.after)}</div>`
+          ? `<div class="effect"><h4>${esc(label)}</h4>${dl((e.after.qMin ? row(`Mindestmenge`, `${outText(e.after.qMin)} (vorher ${outText(s.base.qMin)})`) : "") + (e.after.profit ? row("Ergebnis bei geplanter Menge", `${outText(e.after.profit.main)} (vorher ${outText(s.base.profit?.main)})`) : ""))}${problems(e.after)}</div>`
           : "";
-      l4b.innerHTML = eff("Wenn sich der Preis ändert", s.priceEffect, "je Einheit") + eff("Wenn sich die variablen Kosten ändern", s.costEffect, "je Einheit");
+      l4b.innerHTML =
+        (s.blocked ? "" : chartHtml([sensitivityChart(s)])) +
+        eff(`Nur der Verkaufspreis ändert sich um ${s.priceEffect ? formatValue(s.priceEffect.delta, "money", "je " + s.unitSg, true) : ""}`, s.priceEffect) +
+        eff(`Nur die variablen Kosten ändern sich um ${s.costEffect ? formatValue(s.costEffect.delta, "money", "je " + s.unitSg, true) : ""}`, s.costEffect) +
+        eff(`Nur der Absatz ändert sich um ${s.qEffect ? formatValue(s.qEffect.pct, "percent", undefined, true) : ""} (auf ${s.qEffect ? formatValue(s.qEffect.qNew, "integer", u(s)) : ""})`, s.qEffect);
     }
 
-    // Schritt 5: Tabelle
+    // Schritt 5: Tabelle und Grafik
     const l5 = live("5");
-    if (l5) l5.innerHTML = s.blocked ? "" : compareTable(s);
+    if (l5) l5.innerHTML = s.blocked ? "" : compareTable(s) + chartHtml([scenarioChart(s)]);
 
     // Schritt 6: Übersicht
     const l6 = live("6");
     if (l6) l6.innerHTML = summaryHtml(s);
     updateSaveStatus();
+    renderCaseNotice();
     persistDraft();
+  }
+
+  /** Hinweis zur Praxisfall-Vorlage: Herkunft, Annahmen und ob die Berechnung inzwischen abgewandelt wurde. */
+  function renderCaseNotice() {
+    if (pendingCase || !fromCase) return;
+    const changed = JSON.stringify(toRaw(state)) !== fromCase.base;
+    notice.innerHTML = `<div><p>${changed ? `<strong>Abgewandelte Berechnung</strong> auf Basis von ${esc(fromCase.title)} (fiktive Vorlage) – die Zahlen im Fall-Artikel gelten für diese Berechnung nicht mehr.` : `Werte aus ${esc(fromCase.title)} übernommen. Du kannst sie jetzt anpassen.`}</p>${fromCase.assumptions.length ? `<details><summary>Annahmen des Falls (fiktiv)</summary><ul class="bullets small">${fromCase.assumptions.map((a) => `<li>${esc(a)}</li>`).join("")}</ul></details>` : ""}</div>`;
+    notice.hidden = false;
+  }
+  let pendingCase: CaseImport | null = null;
+  function applyCase(c: CaseImport) {
+    state = fromRaw(c.raw);
+    writeForm(state);
+    isExample = false;
+    opened = null; // bestehende gespeicherte Berechnungen werden nie überschrieben: Speichern legt einen neuen Eintrag an
+    fromCase = { title: c.title, base: JSON.stringify(toRaw(state)), assumptions: c.assumptions };
+    pendingCase = null;
+    started = true;
+    showStep(1, false);
   }
 
   function readQuote() {
@@ -199,26 +240,27 @@ function init(root: HTMLElement) {
     const title = state.title.trim() || "Ohne Titel";
     const b = s.base;
     const steps = [...(b.breakEven?.steps ?? []), ...(b.profit?.steps ?? [])];
-    let h = `<div class="summary"><h3>${esc(title)}</h3><p class="small muted">Zeitraum: ${esc(s.period)} · Einheit: ${esc(u(s))} · alle Beträge netto</p>`;
+    // 1. Vorhaben, Zeitraum, Einheit, wichtigste Ergebnisse (ersetzt die Kennzahlen des Zwischenstands)
+    let h = `<div class="summary"><h3>${esc(title)}</h3><p class="small muted">Zeitraum: ${esc(s.period)} · Einheit: ${esc(s.unit)} · alle Beträge netto${fromCase ? ` · Vorlage: ${esc(fromCase.title)}` : ""}</p>`;
     h += dl(
-      row("Verkaufspreis", numOf(state.p) ? formatValue(numOf(state.p)!, "money", "je Einheit") : "noch offen") +
-        row("Deckungsbeitrag je Einheit", outText(b.dbUnit), true) +
-        row("Mindestabsatz zur Kostendeckung", outText(b.qMin), true) +
+      row("Verkaufspreis", numOf(state.p) ? formatValue(numOf(state.p)!, "money", "je " + s.unitSg) : "noch offen") +
+        row("Deckungsbeitrag", outText(b.dbUnit), true) +
+        row("Mindestmenge zur Kostendeckung", outText(b.qMin), true) +
         row("Ergebnis bei geplanter Menge", b.profit ? outText(b.profit.main) : "noch offen (Menge fehlt)", true),
     );
     if (b.breakEvenProblem) h += problems(b);
-    if (s.priceEffect || s.costEffect) {
-      h += "<h4>Ausgewählte Änderungen</h4>";
-      for (const [label, e] of [["Preis", s.priceEffect], ["Variable Kosten", s.costEffect]] as const)
-        if (e) h += `<p class="small">${label} ${esc(formatValue(e.delta, "money", "je Einheit", true))}: Mindestabsatz ${esc(outText(e.after.qMin))}, Ergebnis ${esc(outText(e.after.profit?.main))}.</p>`;
-    }
-    if (s.scenarios.length) h += `<h4>Varianten</h4>${compareTable(s)}`;
+    // 2. Vergleich der Varianten
+    if (s.scenarios.length) h += `<h4>Varianten im Vergleich</h4>${compareTable(s)}`;
+    // 3. Diagramm
+    h += `<h4>Diagramm</h4>${chartHtml(flowCharts(s, numOf(state.F)).charts, "Sobald Basiswerte und Menge vorhanden sind, erscheint hier die Grafik.")}`;
+    // 4. Offene und unsichere Annahmen
     h += "<h4>Offene und unsichere Annahmen</h4>";
     h += missingHtml(s, false);
     if (s.uncertain.length) h += `<ul class="bullets small">${s.uncertain.map((x) => `<li>${esc(x.text)}</li>`).join("")}</ul>`;
-    if (state.note.trim()) h += `<p class="small"><strong>Notiz:</strong> ${esc(state.note.trim())}</p>`;
+    // 5. Notizen
+    h += `<h4>Notizen</h4>${state.note.trim() ? `<p class="small">${esc(state.note.trim())}</p>` : '<p class="small muted">Keine Notiz – du kannst sie unten ergänzen.</p>'}`;
     h += `<details class="result-details"><summary>Rechenwege</summary><ol class="steps">${steps.map((x) => `<li>${esc(x)}</li>`).join("")}</ol></details>`;
-    h += `<details class="result-details"><summary>Modellgrenzen</summary><ul class="bullets small"><li>Preise, variable Kosten und Fixkosten bleiben im Zeitraum konstant; eine gleichartige Leistung.</li><li>Nettobeträge ohne Umsatzsteuer, ganze Einheiten.</li><li>Ein Ergebnis über null bedeutet Gewinn nur in diesem Modell – es ersetzt keinen Jahresabschluss und keine Steuer- oder Finanzberatung.</li><li>Ob die geplante Menge am Markt erreichbar ist, prüft der Ablauf nicht.</li></ul></details></div>`;
+    h += `<details class="result-details"><summary>Modellgrenzen</summary><ul class="bullets small"><li>Preise, variable Kosten und Fixkosten bleiben im Zeitraum konstant; eine gleichartige Leistung.</li><li>Nettobeträge ohne Umsatzsteuer; Mengen werden auf ganze Einheiten gerundet.</li><li>Ein Ergebnis über null bedeutet Gewinn nur in diesem Modell – es ersetzt keinen Jahresabschluss und keine Steuer- oder Finanzberatung.</li><li>Ob die geplante Menge am Markt erreichbar ist, prüft der Ablauf nicht.</li></ul></details></div>`;
     return h;
   }
 
@@ -333,10 +375,16 @@ function init(root: HTMLElement) {
       `Zeitraum: ${s.period} · Einheit: ${s.unit} · netto`,
       `Verkaufspreis: ${state.p || "offen"}`,
       `Deckungsbeitrag je Einheit: ${outText(b.dbUnit)}`,
-      `Mindestabsatz zur Kostendeckung: ${outText(b.qMin)}`,
+      `Mindestmenge zur Kostendeckung: ${outText(b.qMin)}`,
       `Ergebnis bei geplanter Menge: ${b.profit ? outText(b.profit.main) : "offen (Menge fehlt)"}`,
     ];
-    for (const c of s.scenarios) lines.push(`Variante ${c.name}: Mindestabsatz ${outText(c.qMin)}, Ergebnis ${outText(c.profit?.main)}`);
+    for (const c of s.scenarios) lines.push(`Variante ${c.name}: Mindestmenge ${outText(c.qMin)}, Ergebnis ${outText(c.profit?.main)}`);
+    const sd = (label: string, e: { after: CaseResult } | undefined) => {
+      if (e?.after.profit && b.profit) lines.push(`${label}: Ergebnis ${outText(e.after.profit.main)} (Veränderung ${formatValue(e.after.profit.main.value.sub(b.profit.main.value), "money", undefined, true)} gegenüber der Basis; übrige Größen konstant)`);
+    };
+    sd(`Nur Verkaufspreis ${s.priceEffect ? formatValue(s.priceEffect.delta, "money", "je " + s.unitSg, true) : ""}`, s.priceEffect);
+    sd(`Nur variable Kosten ${s.costEffect ? formatValue(s.costEffect.delta, "money", "je " + s.unitSg, true) : ""}`, s.costEffect);
+    sd(`Nur Absatz ${s.qEffect ? formatValue(s.qEffect.pct, "percent", undefined, true) : ""}`, s.qEffect);
     if (s.missing.length) lines.push(`Noch offen: ${s.missing.map((m) => m.label).join(", ")}`);
     if (isExample) lines.push("(Beispielwerte)");
     lines.push("", `Berechnet mit KPILot (${location.origin}${location.pathname})`);
@@ -422,12 +470,23 @@ function init(root: HTMLElement) {
 
   /* ---------- Entwurf in der Sitzung ---------- */
   function persistDraft() {
-    writeJson(sessionStore(), FLOW_KEY, { v: 1, raw: toRaw(state), example: isExample });
+    writeJson(sessionStore(), FLOW_KEY, { v: 1, raw: toRaw(state), example: isExample, case: fromCase });
   }
 
   /* ---------- Start ---------- */
   const hash = decodeURIComponent(location.hash.slice(1));
-  const draft = readJson<{ v: number; raw: Parameters<typeof fromRaw>[0]; example?: boolean }>(sessionStore(), FLOW_KEY);
+  const draft = readJson<{ v: number; raw: Parameters<typeof fromRaw>[0]; example?: boolean; case?: typeof fromCase }>(sessionStore(), FLOW_KEY);
+  const tr = takeTransfer(FLOW_ID);
+  let incomingCase: CaseImport | null = null;
+  if (tr) {
+    try {
+      incomingCase = { title: tr.fromTitle, raw: JSON.parse(tr.values.flow), assumptions: JSON.parse(tr.values.assumptions ?? "[]") as string[] };
+    } catch {
+      incomingCase = null;
+    }
+  }
+  const draftState = draft?.v === 1 ? fromRaw(draft.raw) : null;
+  const hasDraft = !!draftState && !!(draftState.v || draftState.F || draftState.p || draftState.q);
   if (hash.startsWith("gespeichert=")) {
     const item = getSavedItem(hash.slice("gespeichert=".length));
     if (item && item.calcId === FLOW_ID) {
@@ -440,15 +499,34 @@ function init(root: HTMLElement) {
       notice.innerHTML = "<p>Dieser gespeicherte Ablauf wurde in diesem Browser nicht gefunden.</p>";
       notice.hidden = false;
     }
+  } else if (incomingCase && hasDraft) {
+    // vorhandener Entwurf: nichts überschreiben, Nutzer entscheidet
+    state = draftState!;
+    isExample = !!draft?.example;
+    fromCase = draft?.case ?? null;
+    pendingCase = incomingCase;
+    notice.innerHTML = `<div><p><strong>Du hast schon einen Entwurf.</strong> Der Praxisfall „${esc(incomingCase.title)}“ würde ihn ersetzen. Was möchtest du tun?</p><p class="tools-row"><button type="button" class="btn btn-primary" data-case-accept>Fall übernehmen (Entwurf wird ersetzt)</button><button type="button" class="btn btn-secondary" data-case-keep>Aktuellen Entwurf behalten</button></p></div>`;
+    notice.hidden = false;
   } else if (hash === "beispiel") {
     state = exampleFlow();
     isExample = true;
-  } else if (draft?.v === 1) {
-    state = fromRaw(draft.raw);
-    isExample = !!draft.example;
+  } else if (!incomingCase && draftState) {
+    state = draftState;
+    isExample = !!draft?.example;
+    fromCase = draft?.case ?? null;
   }
+  notice.addEventListener("click", (e) => {
+    const t = e.target as HTMLElement;
+    if (t.closest("[data-case-accept]") && pendingCase) applyCase(pendingCase);
+    else if (t.closest("[data-case-keep]")) {
+      pendingCase = null;
+      notice.hidden = true;
+      render();
+    }
+  });
   writeForm(state);
-  showStep(hash === "beispiel" ? 1 : 1, false);
+  if (incomingCase && !hasDraft && !hash.startsWith("gespeichert=")) applyCase(incomingCase);
+  else showStep(1, false);
   void stepTitles;
   void periodLabel;
 }

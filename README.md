@@ -4,7 +4,7 @@
 
 Markenname, Claim und Kurzbeschreibung stehen zentral in `src/config/site.ts`. Der Projektordner heißt aus historischen Gründen weiterhin `klarrechnen`. Lokale Speicherschlüssel (`kr.*`) wurden bewusst nicht umbenannt, damit Favoriten und gespeicherte Rechnungen erhalten bleiben.
 
-Statische, deutschsprachige Website mit 41 Rechnern in sechs Kategorien (die Zahl ergibt sich aus dem Register `src/data/registry.ts`; Anwendungsfälle zählen nicht mit): kurze Erklärung, eigene Erklärillustration, Rechner mit Rechenweg, Ergebnis in drei Ebenen, Folgeaktionen, Favoriten, zuletzt genutzte Rechner, „Meine Berechnungen“ (Vorschau, Notizen, Vorhaben, Papierkorb, Sicherung), Werteübernahme und Szenariovergleich. Dazu fünf Aufgabeneinstiege, der geführte Ablauf „Preis & Wirtschaftlichkeit“, drei Praxisfälle und Lernseiten. Alle Berechnungen laufen deterministisch im Browser. Es gibt keine Datenbank, kein Konto, keine KI-Aufrufe und keine Werbeskripte. Eine Nutzungsmessung mit Google Analytics läuft ausschließlich nach Einwilligung (`docs/MESSKONZEPT.md`).
+Statische, deutschsprachige Website mit 41 Rechnern in sechs Kategorien (die Zahl ergibt sich aus dem Register `src/data/registry.ts`; Anwendungsfälle zählen nicht mit): kurze Erklärung, eigene Erklärillustration, Rechner mit Rechenweg, Ergebnis in drei Ebenen, Folgeaktionen, Favoriten, zuletzt genutzte Rechner, „Meine Berechnungen“ (Vorschau, Notizen, Vorhaben, Papierkorb, Sicherung), Werteübernahme und Szenariovergleich. Dazu fünf Aufgabeneinstiege, der geführte Ablauf „Preis & Wirtschaftlichkeit“, Praxisfälle (aus einer gemeinsamen Falldatenquelle `src/data/cases.ts`) und Lernseiten. Alle Berechnungen laufen deterministisch im Browser. Es gibt keine Datenbank, kein Konto, keine KI-Aufrufe und keine Werbeskripte. Eine Nutzungsmessung mit Google Analytics läuft ausschließlich nach Einwilligung (`docs/MESSKONZEPT.md`).
 
 Technik: Astro 7 (statische Generierung), TypeScript, normales CSS mit Design-Tokens, decimal.js, Vitest.
 
@@ -38,7 +38,7 @@ src/
     all.ts / load.ts    alle Module (Build/Tests) bzw. Einzel-Laden im Browser
   config/operator.ts    Betreiberangaben mit Bestätigungsflags (Impressum, Datenschutz, Rückmeldung)
   data/
-    tasks.ts            fünf Aufgabeneinstiege · cases.ts: drei Praxisfälle · field-guides.ts: Eingabehilfen · home.ts: Reihenfolge der Startauswahl
+    tasks.ts            fünf Aufgabeneinstiege · cases.ts: Praxisfälle (Handel, Dienstleistung, Produktion, Werbung) mit Rechentext, Tabellen und Übernahmen aus denselben Falldaten · field-guides.ts: Eingabehilfen
     topics/*.ts         Texte je Thema: Titel, Kurztext, Nutzerfrage, Synonyme, Bildtexte, Formel …
     categories.ts       die sechs Kategorien inkl. „Häufig verwechselt“
     registry.ts         zentrales Rechnerverzeichnis (Reihenfolge 01–40)

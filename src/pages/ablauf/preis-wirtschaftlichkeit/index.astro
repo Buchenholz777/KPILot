@@ -5,6 +5,7 @@ import Field from '../../../components/Field.astro';
 import Icon from '../../../components/Icon.astro';
 import { fieldGuide } from '../../../data/field-guides';
 import { PERIODS } from '../../../calc/workflow';
+import { UNITS } from '../../../calc/units';
 import { topicUrl } from '../../../data/registry';
 import type { FieldDef } from '../../../calc/types';
 
@@ -28,7 +29,8 @@ const fP = money('p', 'Verkaufspreis netto je Einheit', { unit: '€ je Einheit'
 const fQ: FieldDef = { key: 'q', label: 'Geplante Absatzmenge im Zeitraum', unit: 'Einheiten', min: 'nonneg', integer: true, optional: true, help: 'Wie viele Einheiten du im Zeitraum verkaufen willst. Leer lassen, wenn noch unbekannt – es wird nicht als 0 gerechnet.' };
 const fZ = money('z', 'Gewünschter Gewinn im Zeitraum (optional)', { optional: true, help: 'Daraus ergibt sich die dafür nötige Menge. 0 € wäre nur Kostendeckung.' });
 const fCap: FieldDef = { key: 'cap', label: 'Verfügbare Kapazität im Zeitraum (optional)', unit: 'Einheiten', min: 'nonneg', integer: true, optional: true, help: 'Wie viele Einheiten du im selben Zeitraum höchstens liefern kannst – gleiche Einheit wie oben.' };
-const fPd: FieldDef = { key: 'priceDelta', label: 'Preisänderung (optional)', unit: '€ je Einheit', min: 'any', optional: true, help: 'Dein Gedankenspiel, z. B. 2 für +2 € oder −1,50 für −1,50 €. KPILot gibt hier keinen Wert vor.' };
+const fPd: FieldDef = { key: 'priceDelta', label: 'Änderung des Verkaufspreises (optional)', unit: '€ je Einheit', min: 'any', optional: true, help: 'Absolute Änderung in Euro, z. B. 5 für +5 € oder −1,50. KPILot gibt hier keinen Wert vor.' };
+const fQd: FieldDef = { key: 'qDeltaPct', label: 'Änderung des Absatzes (optional)', unit: '%', min: 'any', optional: true, help: 'Relative Änderung der geplanten Menge, z. B. −10 für 10 % weniger. Das Ergebnis wird auf ganze Einheiten gerundet.' };
 const fCd: FieldDef = { key: 'costDelta', label: 'Änderung der variablen Kosten (optional)', unit: '€ je Einheit', min: 'any', optional: true, help: 'Z. B. teurerer Einkauf: 1,50. Auch negativ möglich.' };
 const origin = (k: string) => ({ k, label: 'Art der Angabe' });
 const g = (k: string) => fieldGuide('break-even', k);
@@ -62,7 +64,7 @@ const g = (k: string) => fieldGuide('break-even', k);
         </ol>
       </nav>
 
-      <div class="flow-grid">
+      <div class="flow-grid" data-flow-grid data-step="1">
         <form class="flow-main card" data-flow-form novalidate onsubmit="return false" aria-label="Ablauf Preis und Wirtschaftlichkeit">
           <!-- 1 Kosten -->
           <section data-step="1" aria-labelledby="st1">
@@ -84,8 +86,12 @@ const g = (k: string) => fieldGuide('break-even', k);
               </div>
               <div class="field">
                 <label for="flow-unit">Einheit oder Leistung</label>
-                <div class="input-wrap"><input id="flow-unit" name="unit" maxlength="30" autocomplete="off" value="Stück" /></div>
-                <p class="help">Was du verkaufst, z. B. „Stück“, „Beratungsstunde“, „Paket“.</p>
+                <div class="input-wrap">
+                  <select id="flow-unit" name="unit">
+                    {UNITS.map((u) => <option value={u.key} selected={u.key === 'stueck'}>{u.label}</option>)}
+                  </select>
+                </div>
+                <p class="help">Was du verkaufst. Bezeichnungen, Einheiten und Grafiken im ganzen Ablauf passen sich an (z. B. „abrechenbare Stunde“); gerechnet wird gleich.</p>
               </div>
               <div class="field">
                 <label for="flow-costType">Welche Kosten gibst du ein?</label>
@@ -146,11 +152,12 @@ const g = (k: string) => fieldGuide('break-even', k);
             <h2 id="st4">4. {STEPS[3].title}</h2>
             <p class="flow-why">{STEPS[3].why}</p>
             <div class="flow-live" data-live="4" aria-live="polite"></div>
-            <h3>Was wäre, wenn …? <span class="muted">(optional)</span></h3>
-            <p class="small muted">Trage eigene Änderungen ein, um ihre Wirkung zu sehen. KPILot schlägt hier keine Prozentwerte vor.</p>
+            <h3>Welche Annahme beeinflusst mein Ergebnis am stärksten?</h3>
+            <p class="small muted">Lege begründete Änderungen fest. Pro Rechnung ändert sich nur <strong>eine</strong> Größe, alle anderen bleiben konstant. Preise und Kosten änderst du in Euro, den Absatz in Prozent. KPILot schlägt hier keine Werte vor.</p>
             <div class="fields">
               <Field f={fPd} prefix="flow" />
               <Field f={fCd} prefix="flow" />
+              <Field f={fQd} prefix="flow" />
             </div>
             <div class="flow-live" data-live="4b" aria-live="polite"></div>
           </section>
@@ -174,11 +181,11 @@ const g = (k: string) => fieldGuide('break-even', k);
           <section data-step="6" aria-labelledby="st6" hidden>
             <h2 id="st6">6. {STEPS[5].title}</h2>
             <p class="flow-why">{STEPS[5].why}</p>
-            <div class="field">
+            <div class="flow-live" data-live="6" aria-live="polite"></div>
+            <div class="field flow-note">
               <label for="flow-note">Notiz zu Annahmen <span class="muted">(optional)</span></label>
               <div class="input-wrap"><textarea id="flow-note" name="note" rows="3" maxlength="2000"></textarea></div>
             </div>
-            <div class="flow-live" data-live="6" aria-live="polite"></div>
             <div class="tools-row" role="group" aria-label="Übersicht nutzen">
               <button type="button" class="btn btn-secondary" data-flow-copy><Icon name="copy" />Kopieren</button>
               <button type="button" class="btn btn-secondary" data-flow-print><Icon name="print" />Drucken / als PDF</button>

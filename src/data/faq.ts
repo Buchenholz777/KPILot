@@ -1,4 +1,5 @@
 import { TOPICS } from './registry';
+import { buildCases } from './cases';
 
 /** Häufige Fragen auf der Startseite (sichtbar und als FAQPage-Daten). */
 export const HOME_FAQ: { q: string; a: string }[] = [
@@ -20,7 +21,7 @@ export const HOME_FAQ: { q: string; a: string }[] = [
 export const HELP_FAQ: { q: string; a: string }[] = [
   {
     q: 'Welche Rechner und Anwendungsfälle bietet KPILot?',
-    a: `${TOPICS.length} Einzelrechner in sechs Kategorien (Prozent, Kosten und Preise, Finanzen, Marketing, Produkt und Kunden, Controlling). Dazu kommen Anwendungsfälle, die mehrere Rechner verbinden und nicht als Einzelrechner zählen: fünf Aufgabeneinstiege, der geführte Ablauf „Preis & Wirtschaftlichkeit“, drei Praxisfälle und Lernseiten.`,
+    a: `${TOPICS.length} Einzelrechner in sechs Kategorien (Prozent, Kosten und Preise, Finanzen, Marketing, Produkt und Kunden, Controlling). Dazu kommen Anwendungsfälle, die mehrere Rechner verbinden und nicht als Einzelrechner zählen: fünf Aufgabeneinstiege, der geführte Ablauf „Preis & Wirtschaftlichkeit“, ${buildCases().length} Praxisfälle und Lernseiten.`,
   },
   {
     q: 'Wie gebe ich Werte ein und wie lese ich das Ergebnis?',

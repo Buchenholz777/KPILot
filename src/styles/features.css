@@ -1199,3 +1199,15 @@ body.print-flow-summary .flow-nav {
     display: none !important;
   }
 }
+
+/* Abschluss des Preisablaufs: Übersicht über die volle Breite, kein doppelter Zwischenstand */
+.flow-grid[data-step="6"] {
+  grid-template-columns: minmax(0, 1fr);
+}
+.flow-grid[data-step="6"] .flow-side {
+  display: none;
+}
+.flow-note {
+  margin-top: var(--space-4);
+  max-width: 48rem;
+}

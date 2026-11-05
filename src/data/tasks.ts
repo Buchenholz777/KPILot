@@ -125,7 +125,7 @@ export const TASKS: Task[] = [
     questions: ["Was ist der Unterschied zwischen Marge und Deckungsbeitrag?", "Welche Kennzahl beantwortet meine Frage?", "Wie gehe ich mit unsicheren Annahmen um?"],
     steps: [
       { title: "Die passende Kennzahl finden", text: "Marge, Deckungsbeitrag, Gewinn und Cashflow im Vergleich: Zweck, Frage, benötigte Werte, Grenzen.", href: "/lernen/welche-kennzahl/", linkLabel: "Auswahlhilfe öffnen" },
-      { title: "Ein durchgerechnetes Beispiel ansehen", text: "Drei vollständige, ausdrücklich fiktive Praxisfälle für Handel, Dienstleistung und Produktion.", href: "/praxisfaelle/", linkLabel: "Praxisfälle ansehen" },
+      { title: "Ein durchgerechnetes Beispiel ansehen", text: "Vollständige, ausdrücklich fiktive Praxisfälle für Handel, Dienstleistung, Produktion und Werbung – zum Weiterrechnen mit deinen Zahlen.", href: "/praxisfaelle/", linkLabel: "Praxisfälle ansehen" },
       { title: "Mit Unsicherheit umgehen", text: "Beobachtete Daten und Schätzungen unterscheiden und Varianten bilden.", href: "/lernen/unsicherheit/", linkLabel: "Zum Lernartikel" },
       { title: "Selbst rechnen", text: "Starte mit dem Deckungsbeitrag – die Beispielwerte zeigen, wie das Ergebnis aussieht.", calc: "deckungsbeitrag" },
       { title: "Alle Rechner durchsuchen", text: "Suche nach einem Begriff, einer Abkürzung oder einer Alltagsfrage.", href: "/rechner/", linkLabel: "Alle Rechner" },

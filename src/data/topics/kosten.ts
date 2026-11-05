@@ -431,4 +431,63 @@ export const kostenTopics: Topic[] = [
     seoDescription:
       "Stundenkostensatz berechnen: Periodenkosten auf abrechenbare Stunden verteilen, mit Hinweisen zu Urlaub, Leerlauf und dem Unterschied zum Verkaufspreis.",
   },
+  {
+    id: "rabatt-absatz",
+    slug: "rabatt-mehrabsatz-rechner",
+    title: "Rabatt: nötiger Mehrabsatz",
+    category: "kosten",
+    recommended: true,
+    short:
+      "Wie viel mehr muss ich verkaufen, damit ein Rabatt denselben Gesamtdeckungsbeitrag bringt?",
+    question: "Wie viel mehr muss ich verkaufen, wenn ich 10 % Rabatt gebe?",
+    intro:
+      "Ein Rabatt senkt den Beitrag, den jedes Stück zur Deckung der Fixkosten leistet. Der Rechner zeigt, um welchen Faktor der Absatz steigen muss, damit der gesamte Deckungsbeitrag gleich bleibt.",
+    synonyms: [
+      "rabatt lohnt sich",
+      "rabatt wirtschaftlich",
+      "mehrabsatz",
+      "absatzfaktor",
+      "preisnachlass",
+      "aktion rabatt",
+      "wie viel mehr verkaufen",
+      "rabattaktion",
+      "preissenkung",
+      "break even rabatt",
+      "gleicher deckungsbeitrag",
+    ],
+    image: {
+      alt: "Bei 10 % Rabatt sinkt der Beitrag je Stück von 20 € auf 10 €. Der Absatz muss sich von 100 auf 200 Stück verdoppeln, also 100 % mehr.",
+      caption:
+        "Beispiel: Preis 100 €, variable Kosten 80 €, 10 % Rabatt → Beitrag 20 € auf 10 €, Absatz 100 auf 200 Stück (+100 %).",
+      description:
+        "Links zwei Säulen: Beitrag je Stück vorher 20 €, nachher 10 € (halb so hoch). Rechts zwei Säulen: Absatz bisher 100 Stück, nötig 200 Stück (doppelt so hoch). Ein Pfeil dazwischen trägt die Beschriftung „+100 %“.",
+    },
+    formula: [
+      "Neuer Preis = Ausgangspreis × (1 − Rabatt / 100)",
+      "d₀ = Ausgangspreis − v · d₁ = neuer Preis − v",
+      "Absatzfaktor = d₀ / d₁ (nur wenn d₀ > 0 und d₁ > 0)",
+      "Mehrabsatz (%) = (Absatzfaktor − 1) × 100 · Neue Menge = Ausgangsmenge × Absatzfaktor",
+    ],
+    variables: [
+      ["v", "variable Kosten je Einheit"],
+      ["d₀, d₁", "Stückdeckungsbeitrag vor und nach dem Rabatt"],
+      ["Absatzfaktor", "Verhältnis der erforderlichen zur bisherigen Menge"],
+    ],
+    interpretation:
+      "Der Faktor zeigt, wie stark der Absatz steigen müsste, damit der Gesamtdeckungsbeitrag nicht sinkt – nicht, ob diese Nachfrage erreichbar ist. Ist der Beitrag nach dem Rabatt null oder negativ, gibt es keine Menge, die den bisherigen Beitrag wieder erreicht.",
+    misconceptions: [
+      "10 % Rabatt verlangen nicht 10 % Mehrabsatz: Weil der Rabatt direkt vom Beitrag abgeht, ist der Effekt oft viel größer (hier 100 %).",
+      "Mehr Umsatz ist nicht mehr Deckungsbeitrag: Bei sinkendem Stückbeitrag wächst der Umsatz schneller als der Beitrag.",
+      "Der Rechner prüft nicht, ob die zusätzliche Nachfrage tatsächlich kommt.",
+    ],
+    assumptions: [
+      "Die variablen Kosten je Einheit bleiben gleich.",
+      "Die Fixkosten sind vor und nach dem Rabatt vergleichbar.",
+      "Nettopreise ohne Umsatzsteuer; Absatz im selben Zeitraum.",
+    ],
+    related: ["rabatt", "deckungsbeitrag", "gewinn", "break-even"],
+    seoTitle: "Rabatt-Rechner: Wie viel Mehrabsatz braucht ein Rabatt?",
+    seoDescription:
+      "Berechne, um wie viel Prozent der Absatz steigen muss, damit ein Rabatt denselben Gesamtdeckungsbeitrag bringt – mit Grafik, Rechenweg und Grenzfällen.",
+  },
 ];

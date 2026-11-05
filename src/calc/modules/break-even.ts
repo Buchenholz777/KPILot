@@ -130,6 +130,22 @@ const def: CalcDef = {
       compute: breakEven,
     },
   ],
+  followUps: [
+    {
+      id: "be-preis-pruefen",
+      when: (_i, r) => r.status === "impossible",
+      text: "Der Preis deckt die variablen Stückkosten nicht.",
+      label: "Preis oder Kostenannahmen prüfen",
+      action: { kind: "focus", fields: ["p", "v"] },
+    },
+    {
+      id: "be-gewinn",
+      when: (_i, r) => r.status === "ok",
+      text: "Kostendeckung ist noch kein Gewinn.",
+      label: "Geplanten Absatz ergänzen und Gewinn bestimmen",
+      action: { kind: "transfer", target: "gewinn" },
+    },
+  ],
   transfers: [
     {
       target: "gewinn",

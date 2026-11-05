@@ -10,10 +10,11 @@ const idx = buildSearchIndex();
 const find = (q: string) => search(q, idx);
 
 describe("Register", () => {
-  it("40 eindeutige IDs und URLs, jede mit Rechenmodul", () => {
-    expect(TOPICS).toHaveLength(40);
-    expect(new Set(TOPICS.map((t) => t.id)).size).toBe(40);
-    expect(new Set(TOPICS.map((t) => t.slug)).size).toBe(40);
+  it("eindeutige IDs und URLs, jede mit Rechenmodul; Katalogzahl ergibt sich aus dem Register", () => {
+    expect(TOPICS).toHaveLength(41);
+    expect(Object.keys(CALCS)).toHaveLength(TOPICS.length);
+    expect(new Set(TOPICS.map((t) => t.id)).size).toBe(TOPICS.length);
+    expect(new Set(TOPICS.map((t) => t.slug)).size).toBe(TOPICS.length);
     for (const t of TOPICS) expect(CALCS[t.id], t.id).toBeDefined();
   });
   it("verwandte Rechner existieren", () => {

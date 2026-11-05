@@ -247,21 +247,28 @@ export const marketingTopics: Topic[] = [
     formula: [
       "ROAS (Faktor) = Werbeumsatz / Werbekosten",
       "ROAS (%) = Faktor × 100",
+      "Werbewirtschaftlichkeit: Deckungsbeitrag vor Werbung = Werbeumsatz × Quote",
+      "Beitrag nach Werbung = Deckungsbeitrag vor Werbung − Werbekosten",
+      "Mindest-ROAS = 1 / Quote (nur bei Quote > 0)",
     ],
     variables: [
       ["Werbeumsatz", "Umsatz, den die Messung der Werbung zuordnet"],
       ["Werbekosten", "Kosten der Werbung im selben Zeitraum"],
+      ["Quote", "Deckungsbeitragsquote vor Werbekosten, als Dezimalzahl (30 % = 0,3): Anteil des Umsatzes nach variablen Kosten"],
     ],
     interpretation:
-      "Ein ROAS von 4 bedeutet 4 € Umsatz je Werbe-Euro – ob das profitabel ist, hängt von Marge und Kosten ab.",
+      "Ein ROAS von 4 bedeutet 4 € Umsatz je Werbe-Euro – ob das profitabel ist, hängt von Marge und Kosten ab. Der Modus „Werbewirtschaftlichkeit“ rechnet das mit deiner Deckungsbeitragsquote durch: Liegt der ROAS unter dem Mindest-ROAS, deckt der Deckungsbeitrag die Werbekosten nicht.",
     misconceptions: [
       "ROAS ist keine Gewinnkennzahl.",
       "Attribution entscheidet, welcher Umsatz der Werbung zugerechnet wird.",
+      "Ein Beitrag nach Werbekosten ist noch kein Gewinn: Weitere Fixkosten sind damit nicht gedeckt.",
+      "Leads, Bestellungen und Neukunden sind verschiedene Bezugsgrößen und nicht ohne Erklärung gleichzusetzen.",
     ],
     assumptions: [
       "Umsatz und Kosten aus demselben Zeitraum und derselben Attribution.",
+      "Werbewirtschaftlichkeit: konstante Deckungsbeitragsquote vor Werbekosten; die variablen Kosten sind darin schon abgezogen, die Werbekosten nicht.",
     ],
-    related: ["roi", "cpa", "conversion", "marge"],
+    related: ["cac", "cpa", "clv", "conversion", "deckungsbeitrag"],
     seoTitle: "ROAS-Rechner: Return on Ad Spend berechnen",
     seoDescription:
       "ROAS berechnen als Faktor und in Prozent: zugeordneter Werbeumsatz durch Werbekosten – mit Bild und klarem Hinweis, dass ROAS kein Gewinn ist.",

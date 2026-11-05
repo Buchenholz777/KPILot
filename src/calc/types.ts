@@ -56,6 +56,18 @@ export interface Out {
   detail?: boolean;
 }
 
+export interface BarsChart {
+  kind: "bars";
+  /** Kurzbeschreibung für Screenreader. */
+  summary: string;
+  panels: {
+    title: string;
+    bars: { label: string; value: number; text: string; emphasis?: boolean }[];
+  }[];
+  /** Tabellenalternative zum Diagramm. */
+  table: { head: string[]; rows: string[][] };
+}
+
 export interface ChartPoint {
   q: number;
   revenue: number;
@@ -74,7 +86,9 @@ export type CalcResult =
       /** Interpretationsgrenzen direkt am Ergebnis. */
       notes?: string[];
       tone?: "neutral" | "positive" | "negative";
-      chart?: { kind: "break-even"; points: ChartPoint[]; breakEven?: number };
+      chart?:
+        | { kind: "break-even"; points: ChartPoint[]; breakEven?: number }
+        | BarsChart;
     }
   | {
       status: "undefined" | "impossible" | "ambiguous";
@@ -115,10 +129,45 @@ export interface TransferDef {
   describe: string;
 }
 
+/** Rückfrage-/Folgeaktion direkt beim Ergebnis („Was kommt als Nächstes?“). */
+export type FollowUpAction =
+  /** Vorhandene Werteübernahme (`transfers`) zum Zielrechner auslösen. */
+  | { kind: "transfer"; target: string }
+  /** In einen anderen Modus derselben Seite wechseln und Werte übernehmen. */
+  | {
+      kind: "variant";
+      variantId: string;
+      values(input: Inputs, result: CalcResult): Record<string, string>;
+      describe: string;
+    }
+  /** Szenariovergleich mit den aktuellen Werten öffnen; die genannten Felder zuerst bearbeiten. */
+  | { kind: "scenario"; focus: string[] }
+  /** Zur genannten Eingabe springen. */
+  | { kind: "focus"; fields: string[] }
+  /** Erforderliche Menge mit verfügbarer Kapazität (gleicher Zeitraum, gleiche Einheit) abgleichen. */
+  | {
+      kind: "capacity";
+      quantity(input: Inputs, result: CalcResult): Decimal | undefined;
+      unit: string;
+    };
+
+export interface FollowUpDef {
+  id: string;
+  /** Nur für diesen Modus (sonst alle). */
+  variantId?: string;
+  when(input: Inputs | undefined, result: CalcResult): boolean;
+  /** Kurzer Satz zur Situation. */
+  text: string;
+  /** Beschriftung der Aktion. */
+  label: string;
+  action: FollowUpAction;
+}
+
 export interface CalcDef {
   id: string;
   variants: VariantDef[];
   transfers?: TransferDef[];
+  followUps?: FollowUpDef[];
   /** Szenariovergleich A/B für die angegebene Variante. */
   scenario?: { variantId: string };
   /** Schema-Version für gespeicherte Rechnungen. */

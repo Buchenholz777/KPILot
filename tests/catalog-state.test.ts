@@ -90,14 +90,14 @@ describe("Leeren und Kategorien ohne Suchtext", () => {
     let s = onCategory(type(initialState(), "roi"), "finanzen");
     s = onClear();
     expect(s).toEqual({ q: "", cat: ALL });
-    expect(view(s).visible).toHaveLength(40);
+    expect(view(s).visible).toHaveLength(entries.length);
     expect(view(s, "home").homeDefault).toBe(true);
   });
   it("Text vollständig löschen → Kategorie Alle (kein versteckter Filter)", () => {
     let s = onCategory(type(initialState(), "roi"), "finanzen");
     s = type(s, "");
     expect(s.cat).toBe(ALL);
-    expect(view(s).visible).toHaveLength(40);
+    expect(view(s).visible).toHaveLength(entries.length);
   });
   it("6. Kategorie ohne Suchtext filtert weiterhin", () => {
     const v = view(onCategory(initialState(), "marketing"));

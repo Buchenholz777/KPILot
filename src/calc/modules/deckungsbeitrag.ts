@@ -83,6 +83,22 @@ const def: CalcDef = {
       },
     },
   ],
+  followUps: [
+    {
+      id: "db-preis-pruefen",
+      when: (_i, r) => r.status === "ok" && r.main.value.lte(0),
+      text: "Der Preis deckt die variablen Stückkosten nicht.",
+      label: "Preis oder Kostenannahmen prüfen",
+      action: { kind: "focus", fields: ["p", "v"] },
+    },
+    {
+      id: "db-break-even",
+      when: (_i, r) => r.status === "ok" && r.main.value.gt(0),
+      text: "Wie viele Stück decken die Fixkosten?",
+      label: "Fixkosten ergänzen: Gewinnschwelle bestimmen",
+      action: { kind: "transfer", target: "break-even" },
+    },
+  ],
   transfers: [
     {
       target: "break-even",

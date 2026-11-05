@@ -57,7 +57,9 @@ const def: CalcDef = {
           );
         } else
           notes.unshift(
-            "Kostenbasis 0 €: Ein Aufschlag in Prozent ist nicht definiert.",
+            p.isZero()
+              ? "Kostenbasis 0 €: Ein Aufschlag in Prozent ist nicht definiert."
+              : "Kostenbasis 0 € bei positivem Verkaufspreis: Die Marge beträgt 100 %. Ein Aufschlag auf Kosten von 0 € ist nicht definiert.",
           );
         if (!marge && !auf)
           return {

@@ -212,7 +212,8 @@ export const kostenTopics: Topic[] = [
       ["Kostenbasis", "z. B. Einstandspreis netto"],
       ["Verkaufspreis", "Nettoverkaufspreis"],
     ],
-    interpretation: "Die Marge kann nie 100 % erreichen, der Aufschlag schon.",
+    interpretation:
+      "Bei positivem Verkaufspreis und positiven Kosten liegt die Marge unter 100 %. Nur bei Kostenbasis 0 € und positivem Verkaufspreis beträgt sie genau 100 %; ein Aufschlag auf Kosten von 0 € ist dann nicht definiert. Ein Aufschlag kann dagegen über 100 % liegen.",
     misconceptions: [
       "20 % Aufschlag ergeben keine 20 % Marge.",
       "Die Rohmarge berücksichtigt Miete, Personal und andere Betriebskosten noch nicht.",

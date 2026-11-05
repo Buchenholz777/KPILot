@@ -1922,3 +1922,9 @@ dialog h2 {
   margin: 0 0 var(--space-4);
   color: var(--color-text-muted);
 }
+
+/* ================= Kennzeichnung unbestätigter Betreiberangaben ================= */
+.fact-flag {
+  color: var(--color-warning);
+  font-weight: var(--weight-medium);
+}

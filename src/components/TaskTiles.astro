@@ -1,0 +1,29 @@
+---
+import { TASKS, taskUrl } from '../data/tasks';
+import Icon from './Icon.astro';
+interface Props {
+  /** Für Analytics: nur die Aufgabenkennung wird gemeldet. */
+  track?: boolean;
+}
+const { track = true } = Astro.props;
+---
+
+<ul class="task-tiles">
+  {
+    TASKS.map((t) => (
+      <li>
+        <a class="task-tile" href={taskUrl(t)} data-task={track ? t.slug : undefined}>
+          <span class="task-icon" aria-hidden="true"><Icon name={t.icon} /></span>
+          <span class="task-title">{t.title}</span>
+          <span class="task-short">{t.short}</span>
+          <span class="task-go" aria-hidden="true">Zur Aufgabe <Icon name="arrow" /></span>
+        </a>
+      </li>
+    ))
+  }
+</ul>
+
+<script>
+  import { track } from '../lib/analytics';
+  document.querySelectorAll<HTMLAnchorElement>('[data-task]').forEach((a) => a.addEventListener('click', () => track('task_selected', { task: a.dataset.task })));
+</script>

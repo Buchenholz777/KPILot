@@ -4,15 +4,17 @@ import { buildSearchIndex, favoriteIds } from "../src/data/index-data";
 import { TOPICS } from "../src/data/registry";
 import { CALCS } from "../src/calc/all";
 import * as st from "../src/lib/storage";
+import * as ws from "../src/lib/workspace";
 
 const idx = buildSearchIndex();
 const find = (q: string) => search(q, idx);
 
 describe("Register", () => {
-  it("40 eindeutige IDs und URLs, jede mit Rechenmodul", () => {
-    expect(TOPICS).toHaveLength(40);
-    expect(new Set(TOPICS.map((t) => t.id)).size).toBe(40);
-    expect(new Set(TOPICS.map((t) => t.slug)).size).toBe(40);
+  it("eindeutige IDs und URLs, jede mit Rechenmodul; Katalogzahl ergibt sich aus dem Register", () => {
+    expect(TOPICS).toHaveLength(41);
+    expect(Object.keys(CALCS)).toHaveLength(TOPICS.length);
+    expect(new Set(TOPICS.map((t) => t.id)).size).toBe(TOPICS.length);
+    expect(new Set(TOPICS.map((t) => t.slug)).size).toBe(TOPICS.length);
     for (const t of TOPICS) expect(CALCS[t.id], t.id).toBeDefined();
   });
   it("verwandte Rechner existieren", () => {
@@ -138,7 +140,7 @@ describe("Favoriten und gespeicherte Rechnungen", () => {
     expect(st.getFavorites()).toEqual([]);
     expect(st.toggleFavorite("marge").saved).toBe(false);
     expect(
-      st.addSaved({
+      ws.addSaved({
         name: "x",
         calcId: "marge",
         variantId: "standard",
@@ -148,16 +150,16 @@ describe("Favoriten und gespeicherte Rechnungen", () => {
     ).toBeNull();
   });
   it("Rechnung speichern, lesen, löschen", () => {
-    const a = st.addSaved({
+    const a = ws.addSaved({
       name: "Sommeraktion",
       calcId: "break-even",
       variantId: "standard",
       schema: 1,
       inputs: { p: "50", v: "30", F: "3000", zeitraum: "monat" },
     })!;
-    expect(st.getSaved()[0].inputs.zeitraum).toBe("monat");
-    expect(st.removeSaved(a.id)).toBe(true);
-    expect(st.getSaved()).toHaveLength(0);
+    expect(ws.getSaved()[0].inputs.zeitraum).toBe("monat");
+    expect(ws.removeSaved(a.id)).toBe(true);
+    expect(ws.getSaved()).toHaveLength(0);
   });
   it("Werteübernahme nur für das richtige Ziel und nur einmal", () => {
     st.setTransfer({
@@ -173,7 +175,7 @@ describe("Favoriten und gespeicherte Rechnungen", () => {
   });
   it("Alles löschen", () => {
     st.toggleFavorite("marge");
-    st.addSaved({
+    ws.addSaved({
       name: "x",
       calcId: "marge",
       variantId: "standard",
@@ -182,6 +184,45 @@ describe("Favoriten und gespeicherte Rechnungen", () => {
     });
     st.clearAll();
     expect(st.getFavorites()).toEqual([]);
-    expect(st.getSaved()).toEqual([]);
+    expect(ws.getSaved()).toEqual([]);
+  });
+});
+
+import { searchWithSuggestion, osaDistance } from "../src/lib/search";
+
+describe("Fehlertolerante Suche", () => {
+  const sug = (q: string) => searchWithSuggestion(q, idx);
+  it("Buchstabendreher: „Deckungsbeitarg“ schlägt Deckungsbeitrag vor und liefert Treffer", () => {
+    const r = sug("Deckungsbeitarg");
+    expect(r.fuzzy).toBe(true);
+    expect(r.suggestion).toBe("Deckungsbeitrag");
+    expect(r.ids[0]).toBe("deckungsbeitrag");
+  });
+  it("weitere naheliegende Tippfehler", () => {
+    expect(sug("Cashflwo").suggestion?.toLowerCase()).toBe("cashflow");
+    expect(sug("Gewinnschwelel").ids[0]).toBe("break-even");
+    expect(sug("Liquiditaet").fuzzy).toBe(false);
+  });
+  it("Alltagsfrage bleibt exakt: Break-even und Gewinn führen", () => {
+    const r = sug("Wie viel muss ich verkaufen");
+    expect(r.fuzzy).toBe(false);
+    expect(r.suggestion).toBeUndefined();
+    expect(r.ids.slice(0, 2).sort()).toEqual(["break-even", "gewinn"]);
+  });
+  it("exakte Treffer werden nie durch Ähnlichkeiten ersetzt oder ergänzt", () => {
+    expect(sug("Marge").fuzzy).toBe(false);
+    expect(sug("Marge").ids).toEqual(find("Marge"));
+  });
+  it("unpassende Eingaben erzeugen keinen Vorschlag", () => {
+    for (const q of ["xyzqwv", "Bananenkuchen", "qq", "Zahnarztpraxis"]) {
+      const r = sug(q);
+      expect(r.ids, q).toEqual([]);
+      expect(r.suggestion, q).toBeUndefined();
+    }
+  });
+  it("Abstand zählt Vertauschung als einen Fehler", () => {
+    expect(osaDistance("beitarg", "beitrag")).toBe(1);
+    expect(osaDistance("abc", "abd")).toBe(1);
+    expect(osaDistance("", "ab")).toBe(2);
   });
 });

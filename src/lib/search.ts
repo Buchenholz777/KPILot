@@ -99,3 +99,123 @@ export function search(query: string, entries: SearchEntry[]): string[] {
   });
   return scored.sort((a, b) => b.score - a.score || a.i - b.i).map((x) => x.id);
 }
+
+/* ---------------- Fehlertolerante Suche ---------------- */
+
+/** Optimal-String-Alignment-Abstand: Einfügen, Löschen, Ersetzen und Vertauschen benachbarter Buchstaben kosten je 1. */
+export function osaDistance(a: string, b: string): number {
+  const n = a.length,
+    m = b.length;
+  if (!n) return m;
+  if (!m) return n;
+  const d: number[][] = Array.from({ length: n + 1 }, (_, i) => {
+    const row = new Array<number>(m + 1).fill(0);
+    row[0] = i;
+    return row;
+  });
+  for (let j = 0; j <= m; j++) d[0][j] = j;
+  for (let i = 1; i <= n; i++) {
+    for (let j = 1; j <= m; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + cost);
+      if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1])
+        d[i][j] = Math.min(d[i][j], d[i - 2][j - 2] + 1);
+    }
+  }
+  return d[n][m];
+}
+
+interface VocabWord {
+  norm: string;
+  display: string;
+  /** Titelwörter vor Synonymen. */
+  rank: number;
+}
+const vocabCache = new WeakMap<SearchEntry[], VocabWord[]>();
+
+function vocabulary(entries: SearchEntry[]): VocabWord[] {
+  const hit = vocabCache.get(entries);
+  if (hit) return hit;
+  const map = new Map<string, VocabWord>();
+  const add = (text: string, rank: number) => {
+    for (const raw of text.split(/[\s·,;:/()?!„“"']+/)) {
+      const display = raw.replace(/^[-–]+|[-–]+$/g, "");
+      const norm = normalize(display);
+      if (norm.length < 5 || norm.includes(" ")) continue;
+      if (STOP.has(norm)) continue;
+      const known = map.get(norm);
+      if (!known || rank < known.rank) map.set(norm, { norm, display, rank });
+    }
+  };
+  for (const e of entries) {
+    add(e.t, 0);
+    add(e.s, 1);
+  }
+  const list = [...map.values()];
+  vocabCache.set(entries, list);
+  return list;
+}
+
+/** Erlaubter Abstand je Wortlänge: kurze Wörter bleiben streng, um falsche Vorschläge zu vermeiden. */
+const maxDistance = (len: number) => (len < 5 ? 0 : len < 10 ? 1 : 2);
+
+function distanceToWord(tok: string, w: string): number {
+  // Tippfehler am Wortanfang eines längeren Wortes („deckungsbeitar“) gelten ebenfalls
+  return Math.min(osaDistance(tok, w), osaDistance(tok, w.slice(0, tok.length)));
+}
+
+export interface SearchOutcome {
+  ids: string[];
+  /** Vorschlag in Schreibweise der Katalogbegriffe, z. B. „Deckungsbeitrag“. */
+  suggestion?: string;
+  /** Die Treffer stammen aus dem korrigierten Suchbegriff, nicht aus dem eingegebenen. */
+  fuzzy: boolean;
+}
+
+/**
+ * Suche mit Tippfehlertoleranz. Exakte Treffer haben immer Vorrang: Nur wenn die normale Suche nichts findet,
+ * werden unbekannte Wörter durch das nächstliegende Katalogwort ersetzt (z. B. Buchstabendreher). Ein Vorschlag erscheint
+ * nur, wenn der korrigierte Begriff tatsächlich Treffer liefert.
+ */
+export function searchWithSuggestion(
+  query: string,
+  entries: SearchEntry[],
+): SearchOutcome {
+  const exact = search(query, entries);
+  const toks = tokens(query);
+  if (!toks.length || exact.length) return { ids: exact, fuzzy: false };
+
+  const vocab = vocabulary(entries);
+  const corrected: string[] = [];
+  const shown: string[] = [];
+  let changed = false;
+  for (const tok of toks) {
+    const known = entries.some((e) => {
+      const t = normalize(e.t),
+        s = normalize(e.s);
+      return wordMatch(t.split(" "), t, tok) || wordMatch(s.split(" "), s, tok);
+    });
+    if (known || tok.length < 5) {
+      corrected.push(tok);
+      shown.push(tok);
+      continue;
+    }
+    const limit = maxDistance(tok.length);
+    let best: { w: VocabWord; d: number } | undefined;
+    for (const w of vocab) {
+      if (Math.abs(w.norm.length - tok.length) > limit + 3) continue;
+      const d = distanceToWord(tok, w.norm);
+      if (d > limit) continue;
+      if (!best || d < best.d || (d === best.d && w.rank < best.w.rank))
+        best = { w, d };
+    }
+    if (!best) return { ids: [], fuzzy: false };
+    changed = true;
+    corrected.push(best.w.norm);
+    shown.push(best.w.display);
+  }
+  if (!changed) return { ids: [], fuzzy: false };
+  const ids = search(corrected.join(" "), entries);
+  if (!ids.length) return { ids: [], fuzzy: false };
+  return { ids, suggestion: shown.join(" "), fuzzy: true };
+}

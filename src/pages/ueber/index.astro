@@ -2,6 +2,7 @@
 import Base from '../../layouts/Base.astro';
 import PageBand from '../../components/PageBand.astro';
 import { TOPICS } from '../../data/registry';
+import { HELP_FAQ } from '../../data/faq';
 
 const crumbs = [
   { name: 'Start', href: '/' },
@@ -27,7 +28,7 @@ const sources = [
   <PageBand
     crumbs={crumbs}
     title="Über KPILot"
-    lead="KPILot ist ein kuratierter Grundkatalog aus 40 Rechnern für Prozentrechnung, Kosten- und Leistungsrechnung und wichtige Kennzahlen – für Alltag, kleine Unternehmen, Produkt, Marketing, Vertrieb, Controlling und Ausbildung."
+    lead={`KPILot ist ein kuratierter Grundkatalog aus ${TOPICS.length} Rechnern für Prozentrechnung, Kosten- und Leistungsrechnung und wichtige Kennzahlen – für Alltag, kleine Unternehmen, Produkt, Marketing, Vertrieb, Controlling und Ausbildung.`}
   />
   <div class="container page-body">
   <div class="card content-card prose">
@@ -50,20 +51,25 @@ const sources = [
       Rechnerseite nennt die verwendete Definition, Annahmen und typische Missverständnisse. Pauschale „gut/schlecht“-Bewertungen ohne Branchenkontext gibt es nicht.
     </p>
 
+    <h2 id="hilfe">Hilfe und häufige Fragen</h2>
+    <div class="faq">
+      {HELP_FAQ.map((f) => <details><summary>{f.q}</summary><p>{f.a}</p></details>)}
+    </div>
+
     <h2 id="daten">Deine Daten</h2>
-    <p>Die eingegebenen Zahlen werden im Browser berechnet und durch die Anwendung nicht an einen Berechnungsserver übertragen. Es gibt keine Analyse- oder Werbeskripte.</p>
+    <p>Die eingegebenen Zahlen werden im Browser berechnet und durch die Anwendung nicht an einen Berechnungsserver übertragen. Es gibt keine Werbeskripte. Eine Messung der Website-Nutzung mit Google Analytics ist nur mit deiner Zustimmung aktiv und überträgt nie Rechenwerte, Suchtexte oder Notizen (Details in den <a href="/datenschutz/">Datenschutzhinweisen</a>; Wahl ändern unter <button type="button" class="footer-linkbtn" data-consent-open>Cookie-Einstellungen</button>).</p>
     <p>
-      Favoriten (nur die IDs der Rechner) und ausdrücklich gespeicherte Rechnungen liegen im lokalen Speicher deines Browsers (localStorage). Übernommene Werte zwischen Rechnern und der
-      Zustand von Suche und Filter liegen nur für die aktuelle Sitzung im Sitzungsspeicher (sessionStorage). Es gibt keine Synchronisation zwischen Geräten.
+      Favoriten (nur die IDs der Rechner), zuletzt genutzte Rechner (Kennung und Zeitpunkt), die Katalogansicht und ausdrücklich gespeicherte Berechnungen („Meine Berechnungen“ mit Notizen, Vorhaben und Papierkorb) liegen im lokalen Speicher deines Browsers (localStorage). Übernommene Werte zwischen Rechnern, der
+      Zustand von Suche und Filter und der Entwurf des Ablaufs „Preis &amp; Wirtschaftlichkeit“ liegen nur für die aktuelle Sitzung im Sitzungsspeicher (sessionStorage). Es gibt keine Synchronisation zwischen Geräten – für einen Gerätewechsel nutzt du die Sicherungsdatei unter „Meine Berechnungen“.
     </p>
     <div class="card content-card" data-clear-root>
       <h3>Alle lokal gespeicherten Daten löschen</h3>
-      <p class="small">Entfernt Favoriten, gespeicherte Rechnungen und Sitzungsdaten dieser Website aus diesem Browser.</p>
+      <p class="small">Entfernt Favoriten, Meine Berechnungen (inklusive Papierkorb), zuletzt genutzte Rechner, Einstellungen und Sitzungsdaten dieser Website aus diesem Browser. Deine Entscheidung zur Nutzungsmessung bleibt erhalten.</p>
       <button type="button" class="btn btn-danger" data-clear-open>Alle lokalen Daten löschen …</button>
       <dialog data-clear-dialog aria-labelledby="clear-h">
         <form method="dialog">
           <h2 id="clear-h">Wirklich alles löschen?</h2>
-          <p>Favoriten und gespeicherte Rechnungen werden aus diesem Browser entfernt. Das lässt sich nicht rückgängig machen.</p>
+          <p>Favoriten und Meine Berechnungen werden aus diesem Browser entfernt. Das lässt sich nicht rückgängig machen – lade vorher eine Sicherung herunter, wenn du die Daten behalten möchtest.</p>
           <div class="form-actions">
             <button value="confirm" class="btn btn-danger">Ja, alles löschen</button>
             <button value="cancel" class="btn btn-secondary">Abbrechen</button>

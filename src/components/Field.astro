@@ -1,10 +1,14 @@
 ---
 import type { FieldDef } from '../calc/types';
+import type { FieldGuide } from '../data/field-guides';
 interface Props {
   f: FieldDef;
   prefix: string;
+  guide?: FieldGuide;
+  /** Zeigt den Hilfetext kompakt ohne „Was ist gemeint?“ (z. B. im Szenariovergleich). */
+  compact?: boolean;
 }
-const { f, prefix } = Astro.props;
+const { f, prefix, guide, compact = false } = Astro.props;
 const id = `${prefix}-${f.key}`;
 const helpId = f.help ? `${id}-help` : '';
 const unitId = f.unit ? `${id}-unit` : '';
@@ -12,6 +16,16 @@ const errId = `${id}-err`;
 const describedBy = [unitId, helpId, errId].filter(Boolean).join(' ');
 const inputmode = f.min === 'any' ? 'text' : f.integer ? 'numeric' : 'decimal';
 const optional = f.optional && !/optional/i.test(f.label);
+const rows: [string, string | undefined][] = guide
+  ? [
+      ['Gemeint ist', guide.means],
+      ['Dazu zählen', guide.includes],
+      ['Einheit und Zeitraum', guide.unitPeriod],
+      ['Netto oder brutto', guide.net],
+      ['Woher der Wert kommt', guide.source],
+      ['Häufige Verwechslung', guide.mistake],
+    ]
+  : [];
 ---
 
 <div class="field" data-field={f.key}>
@@ -50,5 +64,22 @@ const optional = f.optional && !/optional/i.test(f.label);
     }
   </div>
   {f.help && <p class="help" id={helpId}>{f.help}</p>}
+  {
+    guide && !compact && (
+      <details class="field-guide">
+        <summary>Was ist gemeint?</summary>
+        <dl>
+          {rows
+            .filter(([, v]) => v)
+            .map(([k, v]) => (
+              <>
+                <dt>{k}</dt>
+                <dd>{v}</dd>
+              </>
+            ))}
+        </dl>
+      </details>
+    )
+  }
   <p class="field-error" id={errId} data-error hidden></p>
 </div>

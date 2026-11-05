@@ -1,22 +1,53 @@
 ---
 import Base from '../../layouts/Base.astro';
 import PageBand from '../../components/PageBand.astro';
+import DraftNotice from '../../components/DraftNotice.astro';
+import Fact from '../../components/Fact.astro';
+import { OPERATOR, operatorComplete } from '../../config/operator';
+
+const complete = operatorComplete();
+const showOptional = Boolean(OPERATOR.legalForm.value || OPERATOR.register.value || OPERATOR.vatId.value);
 ---
 
-<Base title="Impressum (Entwurf) | KPILot" description="Impressum – Entwurf, Betreiberangaben fehlen noch." noindex>
+<Base
+  title={`Impressum${complete ? '' : ' (in Vorbereitung)'} | KPILot`}
+  description="Impressum von KPILot: Angaben zum Anbieter und Kontakt."
+  noindex
+>
   <PageBand title="Impressum" crumbs={[{ name: 'Start', href: '/' }, { name: 'Impressum', href: '/impressum/' }]} />
   <div class="container page-body">
-  <div class="card content-card prose">
-    <p class="notice notice-warn">
-      <strong>Entwurf:</strong> Die Betreiberangaben sind noch nicht eingetragen. Bitte vor der Veröffentlichung vollständig ausfüllen und rechtlich prüfen lassen.
-    </p>
-    <h2>Angaben zum Anbieter</h2>
-    <p>[Alexander Bandel]<br />[Graf-Dietrich-Weg 11]<br />[33034 Brakel]<br />[Germany]</p>
-    <h2>Kontakt</h2>
-    <p>E-Mail: alex.bundle2@gmail.com<br />Telefon: [optional]</p>
-    <h2>Weitere Pflichtangaben (falls zutreffend)</h2>
-    <p>[Rechtsform, Vertretungsberechtigte, Registergericht und Registernummer, Umsatzsteuer-Identifikationsnummer, inhaltlich Verantwortliche/r]</p>
-  </div>
+    <div class="card content-card prose">
+      <DraftNotice scope="impressum" />
+      <h2>Angaben zum Anbieter</h2>
+      <p>
+        <Fact k="name" /><br />
+        <Fact k="street" /><br />
+        <Fact k="city" /><br />
+        <Fact k="country" />
+      </p>
+      <h2>Kontakt</h2>
+      <p>
+        E-Mail: {OPERATOR.email.value ? <a href={`mailto:${OPERATOR.email.value}`}>{OPERATOR.email.value}</a> : <Fact k="email" />}
+        {!OPERATOR.email.confirmed && OPERATOR.email.value && <span class="fact-flag"> (nicht bestätigt)</span>}
+        {OPERATOR.phone.value && <><br />Telefon: {OPERATOR.phone.value}</>}
+      </p>
+      {
+        showOptional && (
+          <>
+            <h2>Weitere Angaben</h2>
+            <p>
+              {OPERATOR.legalForm.value && <>Rechtsform: {OPERATOR.legalForm.value}<br /></>}
+              {OPERATOR.register.value && <>Register: {OPERATOR.register.value}<br /></>}
+              {OPERATOR.vatId.value && <>Umsatzsteuer-Identifikationsnummer: {OPERATOR.vatId.value}</>}
+            </p>
+          </>
+        )
+      }
+      <h2>Haftung für Inhalte und Rechenergebnisse</h2>
+      <p>
+        Die Rechner dienen der Orientierung und verwenden bewusst vereinfachte Modelle. Sie ersetzen keine Steuer-, Rechts- oder Finanzberatung. Die verwendeten Modelle und Grenzen stehen
+        auf jeder Rechnerseite und unter <a href="/ueber/">Über KPILot</a>.
+      </p>
+    </div>
   </div>
 </Base>
-    

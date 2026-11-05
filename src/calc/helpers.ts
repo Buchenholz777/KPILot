@@ -29,6 +29,9 @@ export const out = (
   signed,
 });
 
+/** Markiert ein Ergebnis als Detail (Ebene 3: aufklappbar). */
+export const det = (o: Out): Out => ({ ...o, detail: true });
+
 export const undef = (
   message: string,
   partial?: Out[],

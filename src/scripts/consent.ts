@@ -1,6 +1,7 @@
 import { getConsent, setConsent, type Consent } from "../lib/storage";
 import { GA_ID } from "../config/site";
 import { toast } from "./ui";
+import { enableAnalytics, disableAnalytics } from "../lib/analytics";
 
 declare global {
   interface Window {
@@ -22,7 +23,18 @@ function loadAnalytics() {
     window.dataLayer!.push(arguments);
   };
   window.gtag("js", new Date());
-  window.gtag("config", GA_ID);
+  // Seitenaufruf selbst senden, damit weder Fragment (#…) noch Parameter in der Adresse übertragen werden.
+  // Keine Google-Signale, keine personalisierte Werbung.
+  window.gtag("config", GA_ID, {
+    send_page_view: false,
+    allow_google_signals: false,
+    allow_ad_personalization_signals: false,
+  });
+  window.gtag("event", "page_view", {
+    page_location: location.origin + location.pathname,
+    page_title: document.title,
+  });
+  enableAnalytics();
   const s = document.createElement("script");
   s.async = true;
   s.src = `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(GA_ID)}`;
@@ -57,6 +69,7 @@ function hide() {
 }
 
 function choose(c: Consent) {
+  if (c === "denied") disableAnalytics();
   const before = getConsent();
   if (!setConsent(c))
     toast("Deine Auswahl konnte in diesem Browser nicht gespeichert werden. Sie gilt nur für diese Seite.", 6000);

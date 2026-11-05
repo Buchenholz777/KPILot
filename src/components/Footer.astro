@@ -2,6 +2,8 @@
 import { CATEGORIES } from '../data/categories';
 import { SITE_NAME, SITE_CLAIM, SITE_DESCRIPTION } from '../config/site';
 import Logo from './Logo.astro';
+import { TOPICS } from '../data/registry';
+import { TASKS } from '../data/tasks';
 ---
 
 <footer class="site-footer">
@@ -15,13 +17,23 @@ import Logo from './Logo.astro';
         <h2>Kategorien</h2>
         <ul>{CATEGORIES.map((c) => <li><a href={`/kategorie/${c.slug}/`}>{c.title}</a></li>)}</ul>
       </nav>
+      <nav aria-label="Aufgaben und Lernen">
+        <h2>Aufgaben &amp; Lernen</h2>
+        <ul>
+          {TASKS.map((t) => <li><a href={`/aufgaben/${t.slug}/`}>{t.title}</a></li>)}
+          <li><a href="/ablauf/preis-wirtschaftlichkeit/">Ablauf: Preis &amp; Wirtschaftlichkeit</a></li>
+          <li><a href="/lernen/welche-kennzahl/">Welche Kennzahl beantwortet welche Frage?</a></li>
+          <li><a href="/praxisfaelle/">Praxisfälle</a></li>
+        </ul>
+      </nav>
       <nav aria-label="Weitere Seiten">
         <h2>Mehr</h2>
         <ul>
-          <li><a href="/rechner/">Alle 40 Rechner</a></li>
+          <li><a href="/rechner/">Alle {TOPICS.length} Rechner</a></li>
           <li><a href="/favoriten/">Meine Favoriten</a></li>
-          <li><a href="/gespeichert/">Gespeicherte Rechnungen</a></li>
+          <li><a href="/gespeichert/">Meine Berechnungen</a></li>
           <li><a href="/ueber/">Über {SITE_NAME} &amp; Berechnungsmethoden</a></li>
+          <li><a href="/ueber/#hilfe">Hilfe &amp; häufige Fragen</a></li>
           <li><a href="/impressum/">Impressum</a></li>
           <li><a href="/datenschutz/">Datenschutz</a></li>
           <li><button type="button" class="footer-linkbtn" data-consent-open>Cookie-Einstellungen</button></li>
@@ -30,7 +42,7 @@ import Logo from './Logo.astro';
     </div>
     <p class="footer-note">
       Die eingegebenen Zahlen werden im Browser berechnet und durch die Anwendung nicht an einen Berechnungsserver übertragen. Favoriten und
-      gespeicherte Rechnungen bleiben auf diesem Gerät in diesem Browser. Die Rechner ersetzen keine Steuer-, Rechts- oder Finanzberatung.
+      Meine Berechnungen bleiben auf diesem Gerät in diesem Browser. Eine Nutzungsmessung läuft nur mit deiner Zustimmung. Die Rechner ersetzen keine Steuer-, Rechts- oder Finanzberatung.
     </p>
   </div>
 </footer>

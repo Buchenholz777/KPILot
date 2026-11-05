@@ -6,9 +6,9 @@ import { runExample } from "../src/calc/engine";
 import { formatDecimal } from "../src/lib/number";
 
 describe("Erklärillustrationen", () => {
-  it("jedes der 40 Themen hat eine eigene Zeichnung", () => {
+  it("jedes Thema hat eine eigene Zeichnung", () => {
     for (const t of TOPICS) expect(DRAWINGS[t.id], t.id).toBeTypeOf("function");
-    expect(Object.keys(DRAWINGS)).toHaveLength(40);
+    expect(Object.keys(DRAWINGS)).toHaveLength(TOPICS.length);
   });
   for (const t of TOPICS) {
     it(`${t.id}: Detailbild zeigt das Ergebnis des Beispiels und ist als Beispiel gekennzeichnet`, () => {

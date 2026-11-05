@@ -1,0 +1,38 @@
+---
+import { technicalChangeDate, formatIsoDe, topicFile } from '../lib/content-meta';
+import type { Topic } from '../data/types';
+/** Quellen, Verantwortung und Stand. Zeigt nur, was tatsächlich bekannt ist. */
+interface Props {
+  topic: Topic;
+}
+const { topic: t } = Astro.props;
+const changed = technicalChangeDate(topicFile(t.category));
+---
+
+<section class="card content-card" aria-labelledby="quellen">
+  <h2 id="quellen">Quellen, Verantwortung und Stand</h2>
+  {
+    t.sources && t.sources.length > 0 ? (
+      <p>
+        <strong>Fachliche Quellen:</strong>{' '}
+        {t.sources.map((s, i) => (
+          <>
+            {i > 0 && ' · '}
+            <a href={s.url} rel="noopener" target="_blank">{s.label}</a>
+          </>
+        ))}
+        . Das Modell hier ist bewusst vereinfacht.
+      </p>
+    ) : (
+      <p>
+        <strong>Fachliche Grundlage:</strong> gängige betriebswirtschaftliche Lehrbuchdarstellung. Für diesen Rechner ist keine einzelne Primärquelle hinterlegt; Definition und Herleitung stehen in den
+        <a href="#formel">Formeln</a> und den <a href="#annahmen">Modellannahmen</a>.
+      </p>
+    )
+  }
+  <p class="small muted">
+    <strong>Verantwortlich für die Inhalte:</strong> der Betreiber von KPILot (siehe <a href="/impressum/">Impressum</a>).
+    <strong>Fachliche Prüfung durch Dritte:</strong> nicht dokumentiert.
+    {changed && <> <strong>Technisch zuletzt geändert:</strong> {formatIsoDe(changed)} (Änderungsdatum der Inhaltsdatei, keine inhaltliche Prüfung).</>}
+  </p>
+</section>

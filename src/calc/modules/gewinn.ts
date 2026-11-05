@@ -165,6 +165,28 @@ const def: CalcDef = {
       },
     },
   ],
+  followUps: [
+    {
+      id: "gewinn-kapazitaet",
+      variantId: "zielgewinn",
+      when: (_i, r) => r.status === "ok",
+      text: "Die berechnete Menge muss auch herstellbar oder lieferbar sein.",
+      label: "Erforderliche Menge mit verfügbarer Kapazität abgleichen",
+      action: {
+        kind: "capacity",
+        unit: "Stück",
+        quantity: (_i, r) => (r.status === "ok" ? r.main.value : undefined),
+      },
+    },
+    {
+      id: "gewinn-preis-pruefen",
+      variantId: "menge",
+      when: (i, r) => r.status === "ok" && r.tone === "negative" && !!i && i.values.p !== undefined && i.values.v !== undefined && i.values.p.lte(i.values.v),
+      text: "Der Preis deckt die variablen Stückkosten nicht.",
+      label: "Preis oder Kostenannahmen prüfen",
+      action: { kind: "focus", fields: ["p", "v"] },
+    },
+  ],
   transfers: [
     {
       target: "break-even",

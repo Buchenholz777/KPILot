@@ -1,4 +1,4 @@
-import { search, type SearchEntry } from "./search";
+import { searchWithSuggestion, type SearchEntry } from "./search";
 
 /**
  * Zustand von Suche und Kategoriefilter (ohne DOM, testbar).
@@ -55,6 +55,8 @@ export interface CatalogView {
   narrowed: boolean;
   /** Startseite ohne Suche/Filter: nur Empfehlungen. */
   homeDefault: boolean;
+  /** Vorschlag bei Tippfehler („Deckungsbeitrag“); die sichtbaren Treffer gehören dann zu diesem Vorschlag. */
+  suggestion?: string;
 }
 
 export function computeView(
@@ -63,7 +65,8 @@ export function computeView(
   opts: { mode: "home" | "all"; recommended: Set<string> },
 ): CatalogView {
   const q = s.q.trim();
-  const ranked = q ? search(q, entries) : entries.map((e) => e.id);
+  const found = q ? searchWithSuggestion(q, entries) : undefined;
+  const ranked = found ? found.ids : entries.map((e) => e.id);
   const catOf = new Map(entries.map((e) => [e.id, e.category]));
   const homeDefault = opts.mode === "home" && !q && s.cat === ALL;
   let visible =
@@ -77,5 +80,6 @@ export function computeView(
     globalCount: q ? ranked.length : entries.length,
     narrowed: !!q && s.cat !== ALL,
     homeDefault,
+    suggestion: found?.fuzzy ? found.suggestion : undefined,
   };
 }

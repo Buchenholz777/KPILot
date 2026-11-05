@@ -1,70 +1,114 @@
 ---
 import Base from '../../layouts/Base.astro';
 import PageBand from '../../components/PageBand.astro';
+import Icon from '../../components/Icon.astro';
 import { TOPICS, topicUrl, displayTitle } from '../../data/registry';
 import { CALCS } from '../../calc/all';
+import { FLOW_ID, FLOW_SCHEMA } from '../../calc/workflow';
 
 const crumbs = [
   { name: 'Start', href: '/' },
-  { name: 'Gespeicherte Rechnungen', href: '/gespeichert/' },
+  { name: 'Meine Berechnungen', href: '/gespeichert/' },
 ];
-const meta = JSON.stringify(
-  Object.fromEntries(
+const meta = {
+  ...Object.fromEntries(
     TOPICS.map((t) => [t.id, { title: displayTitle(t), url: topicUrl(t), schema: CALCS[t.id].schema, variants: Object.fromEntries(CALCS[t.id].variants.map((v) => [v.id, v.label])) }]),
   ),
-);
+  [FLOW_ID]: { title: 'Ablauf: Preis & Wirtschaftlichkeit', url: '/ablauf/preis-wirtschaftlichkeit/', schema: FLOW_SCHEMA, variants: { standard: 'Geführter Ablauf' } },
+};
 ---
 
-<Base title="Gespeicherte Rechnungen | KPILot" description="Deine ausdrücklich gespeicherten Rechnungen – lokal in diesem Browser." noindex>
+<Base title="Meine Berechnungen | KPILot" description="Deine ausdrücklich gespeicherten Berechnungen, Vorhaben und Notizen – lokal in diesem Browser." noindex>
   <PageBand
     crumbs={crumbs}
-    title="Gespeicherte Rechnungen"
-    lead="Hier stehen Rechnungen, die du mit „Rechnung speichern“ abgelegt hast – mit deinen Eingaben. Sie bleiben auf diesem Gerät in diesem Browser."
+    title="Meine Berechnungen"
+    lead="Berechnungen, die du mit „Speichern“ abgelegt hast – mit Ergebnisvorschau, Notizen und Vorhaben. Alles bleibt auf diesem Gerät in diesem Browser."
   />
-  <div class="container page-body">
-    <div data-saved-root>
-      <ul class="saved-list" data-saved-list></ul>
-      <p class="notice" data-saved-empty hidden>Noch keine gespeicherten Rechnungen. Öffne einen Rechner, rechne und klicke auf „Rechnung speichern“.</p>
-      <p class="notice notice-warn" data-saved-nostorage hidden>Dein Browser erlaubt hier keine lokale Speicherung. Rechnen funktioniert trotzdem, Speichern aber nicht.</p>
+  <div class="container page-body ws">
+    <div data-ws-root>
+      <div class="visually-hidden" role="status" aria-live="polite" data-ws-status></div>
+      <p class="notice notice-warn" data-ws-nostorage hidden>Dein Browser erlaubt hier keine lokale Speicherung. Rechnen funktioniert trotzdem, Speichern aber nicht.</p>
+
+      <section class="card ws-toolbar" aria-labelledby="ws-tools-h">
+        <h2 id="ws-tools-h" class="visually-hidden">Verwalten und sichern</h2>
+        <div class="tools-row">
+          <button type="button" class="btn btn-secondary" data-new-project><Icon name="plus" />Neues Vorhaben</button>
+          <button type="button" class="btn btn-secondary" data-export><Icon name="save" />Sicherung herunterladen</button>
+          <button type="button" class="btn btn-secondary" data-import-open><Icon name="arrow" />Sicherung einspielen …</button>
+        </div>
+        <details class="ws-help">
+          <summary>Gerätewechsel und Sicherung – so funktioniert es</summary>
+          <ul class="bullets small">
+            <li>Gespeichert wird nur in diesem Browser auf diesem Gerät. Es gibt keinen Konto-Sync und keinen Freigabelink.</li>
+            <li>Für einen Gerätewechsel: hier „Sicherung herunterladen“, die Datei auf das andere Gerät bringen und dort „Sicherung einspielen“ wählen.</li>
+            <li>Die Sicherung enthält Berechnungen, Vorhaben, Notizen und Favoriten – nicht deine Entscheidung zur Nutzungsmessung.</li>
+            <li>Wenn du Browserdaten löschst oder den Browser zurücksetzt, sind die gespeicherten Berechnungen weg. Eine Sicherungsdatei schützt davor.</li>
+          </ul>
+        </details>
+      </section>
+
+      <div data-ws-empty hidden>
+        <section class="card content-card">
+          <h2>Noch keine Berechnungen gespeichert</h2>
+          <p>Rechne etwas durch und klicke auf „Speichern“. Danach findest du die Berechnung hier – mit Vorschau, Notiz und Vorhaben.</p>
+          <p class="empty-actions">
+            <a class="btn btn-primary" href="/rechner/">Passenden Rechner öffnen</a>
+            <a class="btn btn-secondary" href="/break-even-rechner/#beispiel">Beispielrechnung ausprobieren</a>
+            <a class="btn btn-secondary" href="/aufgaben/">Anwendungsfall auswählen</a>
+          </p>
+        </section>
+      </div>
+
+      <div data-ws-groups></div>
+
+      <section class="ws-trash" data-ws-trash hidden aria-labelledby="trash-h">
+        <h2 id="trash-h">Zuletzt gelöscht</h2>
+        <p class="small muted">Gelöschte Berechnungen bleiben hier bis zu 30 Tage und lassen sich vollständig wiederherstellen – mit Name, Werten, Notiz und Vorhaben.</p>
+        <ul class="saved-list" data-trash-list></ul>
+      </section>
     </div>
-    <noscript><p class="notice">Gespeicherte Rechnungen benötigen JavaScript.</p></noscript>
-    <script type="application/json" id="kr-calcs" set:html={meta} />
+    <noscript><p class="notice">Meine Berechnungen benötigt JavaScript.</p></noscript>
+
+    <dialog data-edit-dialog aria-labelledby="edit-h">
+      <form method="dialog">
+        <h2 id="edit-h">Berechnung bearbeiten</h2>
+        <div class="field"><label for="edit-name">Name</label><div class="input-wrap"><input id="edit-name" name="name" maxlength="80" autocomplete="off" /></div></div>
+        <div class="field"><label for="edit-project">Vorhaben</label><div class="input-wrap"><select id="edit-project" name="project"></select></div></div>
+        <div class="field" data-edit-newwrap hidden><label for="edit-new">Name des neuen Vorhabens</label><div class="input-wrap"><input id="edit-new" name="newproject" maxlength="80" autocomplete="off" /></div></div>
+        <div class="field"><label for="edit-note">Notiz zu Annahmen</label><div class="input-wrap"><textarea id="edit-note" name="note" rows="4" maxlength="2000"></textarea></div></div>
+        <div class="form-actions"><button value="save" class="btn btn-primary">Speichern</button><button value="cancel" class="btn btn-secondary" formnovalidate>Abbrechen</button></div>
+      </form>
+    </dialog>
+
+    <dialog data-project-dialog aria-labelledby="proj-h">
+      <form method="dialog">
+        <h2 id="proj-h" data-project-dialog-title>Vorhaben</h2>
+        <div class="field"><label for="proj-name">Name des Vorhabens</label><div class="input-wrap"><input id="proj-name" name="name" maxlength="80" autocomplete="off" /></div><p class="help">Z. B. Angebot, Produkt oder Kampagne.</p></div>
+        <div class="field"><label for="proj-note">Gemeinsame Annahmen / Notiz</label><div class="input-wrap"><textarea id="proj-note" name="note" rows="3" maxlength="2000"></textarea></div></div>
+        <div class="form-actions"><button value="save" class="btn btn-primary">Speichern</button><button value="cancel" class="btn btn-secondary" formnovalidate>Abbrechen</button></div>
+      </form>
+    </dialog>
+
+    <dialog data-import-dialog aria-labelledby="imp-h">
+      <form method="dialog" data-import-form>
+        <h2 id="imp-h">Sicherung einspielen</h2>
+        <div class="field">
+          <label for="imp-file">Sicherungsdatei (.json)</label>
+          <div class="input-wrap"><input id="imp-file" type="file" accept="application/json,.json" data-import-file /></div>
+          <p class="help">Die Datei wird nur in deinem Browser gelesen und nirgendwohin gesendet.</p>
+        </div>
+        <div data-import-preview aria-live="polite"></div>
+        <div class="form-actions">
+          <button value="import" class="btn btn-primary" data-import-go disabled>Importieren</button>
+          <button value="cancel" class="btn btn-secondary" formnovalidate>Schließen</button>
+        </div>
+      </form>
+    </dialog>
+
+    <script type="application/json" id="kr-calcs" set:html={JSON.stringify(meta)} />
   </div>
 </Base>
 
 <script>
-  import { getSaved, removeSaved, storageAvailable } from '../../lib/storage';
-  import { esc, readJson, toast } from '../../scripts/ui';
-
-  type Meta = Record<string, { title: string; url: string; schema: number; variants: Record<string, string> }>;
-  const meta = readJson<Meta>('kr-calcs') ?? {};
-  const list = document.querySelector<HTMLElement>('[data-saved-list]')!;
-  const empty = document.querySelector<HTMLElement>('[data-saved-empty]')!;
-  const noStore = document.querySelector<HTMLElement>('[data-saved-nostorage]')!;
-
-  function render() {
-    noStore.hidden = storageAvailable();
-    const items = getSaved();
-    empty.hidden = items.length > 0 || !storageAvailable();
-    list.innerHTML = items
-      .map((s) => {
-        const m = meta[s.calcId];
-        const variant = m?.variants[s.variantId];
-        const date = new Date(s.savedAt);
-        const when = isNaN(date.getTime()) ? '' : date.toLocaleString('de-DE', { dateStyle: 'medium', timeStyle: 'short' });
-        const problem = !m ? 'Rechner nicht mehr vorhanden' : !variant ? 'Rechenmodus nicht mehr vorhanden' : s.schema !== m.schema ? 'aus älterer Version – Werte bitte prüfen' : '';
-        return `<li class="card saved-item"><div><h2>${esc(s.name)}</h2><p class="small muted">${esc(m?.title ?? s.calcId)}${variant && Object.keys(m.variants).length > 1 ? ` · ${esc(variant)}` : ''}${when ? ` · ${esc(when)}` : ''}${problem ? ` · <strong>${esc(problem)}</strong>` : ''}</p></div>
-        <div class="saved-actions">${m && variant ? `<a class="btn btn-primary" href="${m.url}#gespeichert=${encodeURIComponent(s.id)}">Öffnen</a>` : ''}<button type="button" class="btn btn-danger" data-del="${esc(s.id)}" aria-label="„${esc(s.name)}“ löschen">Löschen</button></div></li>`;
-      })
-      .join('');
-  }
-  list.addEventListener('click', (e) => {
-    const b = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-del]');
-    if (!b) return;
-    const ok = removeSaved(b.dataset.del!);
-    toast(ok ? 'Rechnung gelöscht.' : 'Löschen ist fehlgeschlagen.');
-    render();
-    (list.querySelector('[data-del]') as HTMLElement | null)?.focus();
-  });
-  render();
+  import '../../scripts/workspace-page';
 </script>

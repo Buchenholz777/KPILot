@@ -4,6 +4,16 @@ import { val, opt, out, eur, num, pct } from "../helpers";
 const def: CalcDef = {
   id: "clv",
   schema: 1,
+  scenario: { variantId: "standard" },
+  followUps: [
+    {
+      id: "clv-annahmen",
+      when: (_i, r) => r.status === "ok",
+      text: "Der CLV beruht auf angenommener Kaufhäufigkeit und Beziehungsdauer – beides sind Schätzungen.",
+      label: "Kaufhäufigkeit und Beziehungsdauer als Annahmen variieren",
+      action: { kind: "scenario", focus: ["kaeufe", "jahre"] },
+    },
+  ],
   variants: [
     {
       id: "standard",

@@ -1,0 +1,21 @@
+---
+import { OPERATOR, type OperatorKey } from '../config/operator';
+/** Zeigt eine Betreiberangabe. Unbestätigte Angaben sind sichtbar gekennzeichnet; fehlende Angaben nennen, was fehlt. */
+interface Props {
+  k: OperatorKey;
+  fallback?: string;
+}
+const { k, fallback } = Astro.props;
+const f = OPERATOR[k];
+---
+
+{
+  f.value ? (
+    <>
+      <span>{f.value}</span>
+      {!f.confirmed && <span class="fact-flag"> (nicht bestätigt)</span>}
+    </>
+  ) : (
+    <span class="fact-flag">{fallback ?? 'Angabe fehlt'}</span>
+  )
+}

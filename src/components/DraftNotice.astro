@@ -1,0 +1,35 @@
+---
+import { openOperatorItems, operatorComplete } from '../config/operator';
+/** Hinweis auf noch nicht bestätigte Betreiberangaben. Verschwindet, sobald alle Angaben in src/config/operator.ts bestätigt sind. */
+interface Props {
+  scope: 'impressum' | 'datenschutz';
+}
+const { scope } = Astro.props;
+const open = openOperatorItems().filter((i) => {
+  const imp = ['name', 'street', 'city', 'country', 'email', 'legalForm', 'register', 'vatId'];
+  return scope === 'impressum' ? imp.includes(i.key) || i.key === 'legalReview' : !['legalForm', 'register', 'vatId'].includes(i.key);
+});
+---
+
+{
+  !operatorComplete() && (
+    <div class="notice notice-warn" role="note">
+     <div>
+      <p>
+        <strong>Stand: in Vorbereitung.</strong> Diese Seite ist technisch vollständig, aber nicht alle Angaben sind vom Betreiber bestätigt. Als „nicht bestätigt“ markierte Angaben
+        sind Platzhalter aus dem bisherigen Entwurf und keine verbindlichen Aussagen.
+      </p>
+      {open.length > 0 && (
+        <>
+          <p>Noch zu bestätigen oder zu ergänzen:</p>
+          <ul class="bullets">
+            {open.map((i) => (
+              <li>{i.label}</li>
+            ))}
+          </ul>
+        </>
+      )}
+     </div>
+    </div>
+  )
+}

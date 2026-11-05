@@ -11,7 +11,7 @@ import { formatValue } from "../src/lib/number";
 it("erzeugt docs/FORMELN.md und docs/MODELLANNAHMEN.md", () => {
   mkdirSync("docs", { recursive: true });
   let f =
-    "# Formeldokumentation – alle 40 Themen\n\n> Automatisch erzeugt mit `npm run docs` aus `src/data/topics/*` und `src/calc/modules/*`.\n\n";
+    "# Formeldokumentation – alle " + TOPICS.length + " Rechner\n\n> Automatisch erzeugt mit `npm run docs` aus `src/data/topics/*` und `src/calc/modules/*`.\n\n";
   let a =
     "# Modellannahmen und verwendete Definitionen\n\n> Automatisch erzeugt mit `npm run docs`. Allgemeine Regeln: `README.md` → „Zahlen und Rundung“.\n\n";
   TOPICS.forEach((t, i) => {
@@ -28,6 +28,23 @@ it("erzeugt docs/FORMELN.md und docs/MODELLANNAHMEN.md", () => {
     }
     a += `## ${displayTitle(t)}\n\n${t.assumptions.map((x) => `- ${x}`).join("\n")}\n\n**Typische Missverständnisse**\n\n${t.misconceptions.map((x) => `- ${x}`).join("\n")}\n\n`;
   });
+  a += `## Herleitung der neuen Modelle
+
+### Rabatt: nötiger Mehrabsatz (\`rabatt-absatz\`)
+
+Gleicher Gesamtdeckungsbeitrag vorher und nachher: d₀ · q₀ = d₁ · q₁ mit d₀ = p₀ − v und d₁ = p₁ − v. Umgestellt: q₁ = q₀ · d₀ / d₁, Absatzfaktor = d₀ / d₁, Mehrabsatz = (Faktor − 1) · 100 %.
+Voraussetzungen: konstante variable Stückkosten v, vergleichbare Fixkostenbasis, d₀ > 0 und d₁ > 0. Ist d₁ ≤ 0, gibt es keine Menge, die den Beitrag erreicht (kein endlicher und kein „unendlicher“ Wert). Ganze Stückzahlen werden erst am Ende aufgerundet (q₀ · d₀ wird vor der Division multipliziert) und gegen die ungerundeten Werte geprüft.
+Das Modell sagt nichts darüber, ob die Nachfrage erreichbar ist. Es ist eine Standardumformung der Deckungsbeitragsrechnung (Lehrbuchdarstellung); eine externe Primärquelle ist dafür nicht hinterlegt.
+
+### Werbewirtschaftlichkeit und Mindest-ROAS (\`roas\`, Modus „Werbewirtschaftlichkeit“)
+
+Mit der Deckungsbeitragsquote u vor Werbekosten (variable Kosten bereits abgezogen): DB vor Werbung = Umsatz · u; Beitrag nach Werbung = DB vor Werbung − Werbekosten. Der Beitrag ist ≥ 0, wenn Umsatz · u ≥ Werbekosten, also ROAS = Umsatz / Werbekosten ≥ 1 / u. Daraus Mindest-ROAS = 1 / u (nur für u > 0).
+Weitere Fixkosten sind nicht berücksichtigt; Attribution und Messzeitraum bestimmen den Umsatz. Bei Werbekosten 0 ist der ROAS nicht definiert, bei u = 0 ist der Mindest-ROAS nicht definiert.
+
+### Ablauf „Preis und Wirtschaftlichkeit“
+
+Der Ablauf verwendet ausschließlich die Rechenfunktionen von Deckungsbeitrag, Break-even, Gewinn und Verkaufspreis aus Zielmarge; er enthält keine eigene Formel. Eine Vollkostenangabe wird nicht als variable Kosten übernommen, damit Fixkosten nicht doppelt zählen.
+`;
   writeFileSync("docs/FORMELN.md", f);
   writeFileSync("docs/MODELLANNAHMEN.md", a);
 });

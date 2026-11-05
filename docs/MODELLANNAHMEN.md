@@ -152,6 +152,18 @@
 - Arbeitszeit ist nicht gleich abrechenbare Zeit – Urlaub, Krankheit und Verwaltung zählen nicht.
 - Der Kostensatz ist noch kein Verkaufspreis.
 
+## Rabatt: nötiger Mehrabsatz
+
+- Die variablen Kosten je Einheit bleiben gleich.
+- Die Fixkosten sind vor und nach dem Rabatt vergleichbar.
+- Nettopreise ohne Umsatzsteuer; Absatz im selben Zeitraum.
+
+**Typische Missverständnisse**
+
+- 10 % Rabatt verlangen nicht 10 % Mehrabsatz: Weil der Rabatt direkt vom Beitrag abgeht, ist der Effekt oft viel größer (hier 100 %).
+- Mehr Umsatz ist nicht mehr Deckungsbeitrag: Bei sinkendem Stückbeitrag wächst der Umsatz schneller als der Beitrag.
+- Der Rechner prüft nicht, ob die zusätzliche Nachfrage tatsächlich kommt.
+
 ## EBIT
 
 - Vereinfachtes Modell, kein vollständiger HGB-/IFRS-Abschluss.
@@ -294,11 +306,14 @@
 ## ROAS
 
 - Umsatz und Kosten aus demselben Zeitraum und derselben Attribution.
+- Werbewirtschaftlichkeit: konstante Deckungsbeitragsquote vor Werbekosten; die variablen Kosten sind darin schon abgezogen, die Werbekosten nicht.
 
 **Typische Missverständnisse**
 
 - ROAS ist keine Gewinnkennzahl.
 - Attribution entscheidet, welcher Umsatz der Werbung zugerechnet wird.
+- Ein Beitrag nach Werbekosten ist noch kein Gewinn: Weitere Fixkosten sind damit nicht gedeckt.
+- Leads, Bestellungen und Neukunden sind verschiedene Bezugsgrößen und nicht ohne Erklärung gleichzusetzen.
 
 ## Neukundenkosten (CAC)
 
@@ -381,3 +396,19 @@
 - Nicht Umsatz durch Bestand zu Einstandspreisen teilen.
 - Die Lagerdauer ist ein Durchschnitt, nicht das Alter jedes Artikels.
 
+## Herleitung der neuen Modelle
+
+### Rabatt: nötiger Mehrabsatz (`rabatt-absatz`)
+
+Gleicher Gesamtdeckungsbeitrag vorher und nachher: d₀ · q₀ = d₁ · q₁ mit d₀ = p₀ − v und d₁ = p₁ − v. Umgestellt: q₁ = q₀ · d₀ / d₁, Absatzfaktor = d₀ / d₁, Mehrabsatz = (Faktor − 1) · 100 %.
+Voraussetzungen: konstante variable Stückkosten v, vergleichbare Fixkostenbasis, d₀ > 0 und d₁ > 0. Ist d₁ ≤ 0, gibt es keine Menge, die den Beitrag erreicht (kein endlicher und kein „unendlicher“ Wert). Ganze Stückzahlen werden erst am Ende aufgerundet (q₀ · d₀ wird vor der Division multipliziert) und gegen die ungerundeten Werte geprüft.
+Das Modell sagt nichts darüber, ob die Nachfrage erreichbar ist. Es ist eine Standardumformung der Deckungsbeitragsrechnung (Lehrbuchdarstellung); eine externe Primärquelle ist dafür nicht hinterlegt.
+
+### Werbewirtschaftlichkeit und Mindest-ROAS (`roas`, Modus „Werbewirtschaftlichkeit“)
+
+Mit der Deckungsbeitragsquote u vor Werbekosten (variable Kosten bereits abgezogen): DB vor Werbung = Umsatz · u; Beitrag nach Werbung = DB vor Werbung − Werbekosten. Der Beitrag ist ≥ 0, wenn Umsatz · u ≥ Werbekosten, also ROAS = Umsatz / Werbekosten ≥ 1 / u. Daraus Mindest-ROAS = 1 / u (nur für u > 0).
+Weitere Fixkosten sind nicht berücksichtigt; Attribution und Messzeitraum bestimmen den Umsatz. Bei Werbekosten 0 ist der ROAS nicht definiert, bei u = 0 ist der Mindest-ROAS nicht definiert.
+
+### Ablauf „Preis und Wirtschaftlichkeit“
+
+Der Ablauf verwendet ausschließlich die Rechenfunktionen von Deckungsbeitrag, Break-even, Gewinn und Verkaufspreis aus Zielmarge; er enthält keine eigene Formel. Eine Vollkostenangabe wird nicht als variable Kosten übernommen, damit Fixkosten nicht doppelt zählen.

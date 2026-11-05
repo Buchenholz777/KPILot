@@ -4,7 +4,7 @@
 
 Markenname, Claim und Kurzbeschreibung stehen zentral in `src/config/site.ts`. Der Projektordner heißt aus historischen Gründen weiterhin `klarrechnen`. Lokale Speicherschlüssel (`kr.*`) wurden bewusst nicht umbenannt, damit Favoriten und gespeicherte Rechnungen erhalten bleiben.
 
-Statische, deutschsprachige Website mit 40 Rechnern in sechs Kategorien: kurze Erklärung, eigene Erklärillustration, Rechner mit Rechenweg, Favoriten, gespeicherte Rechnungen, Werteübernahme und Szenariovergleich. Alle Berechnungen laufen deterministisch im Browser. Es gibt keine Datenbank, kein Konto, keine KI-Aufrufe und keine Tracking-Skripte.
+Statische, deutschsprachige Website mit 41 Rechnern in sechs Kategorien (die Zahl ergibt sich aus dem Register `src/data/registry.ts`; Anwendungsfälle zählen nicht mit): kurze Erklärung, eigene Erklärillustration, Rechner mit Rechenweg, Ergebnis in drei Ebenen, Folgeaktionen, Favoriten, zuletzt genutzte Rechner, „Meine Berechnungen“ (Vorschau, Notizen, Vorhaben, Papierkorb, Sicherung), Werteübernahme und Szenariovergleich. Dazu fünf Aufgabeneinstiege, der geführte Ablauf „Preis & Wirtschaftlichkeit“, drei Praxisfälle und Lernseiten. Alle Berechnungen laufen deterministisch im Browser. Es gibt keine Datenbank, kein Konto, keine KI-Aufrufe und keine Werbeskripte. Eine Nutzungsmessung mit Google Analytics läuft ausschließlich nach Einwilligung (`docs/MESSKONZEPT.md`).
 
 Technik: Astro 7 (statische Generierung), TypeScript, normales CSS mit Design-Tokens, decimal.js, Vitest.
 
@@ -15,11 +15,12 @@ Technik: Astro 7 (statische Generierung), TypeScript, normales CSS mit Design-To
 ```bash
 npm install
 npm run dev          # Vorschau mit Live-Reload: http://localhost:4321
-npm test             # 226 Tests: Formeln, Randfälle, Suche, Speicher, Illustrationen
+npm test             # Formeln, Randfälle, Suche, Arbeitsbereich, Sicherung, Ablauf, Praxisfälle, Messung
 npm run check        # TypeScript- und Astro-Prüfung
 npm run build        # statisches Build nach dist/
 npm run check:site   # prüft dist/: Links, Titel, Descriptions, Canonicals, noindex, Sitemap
 npm run preview      # fertiges Build lokal ansehen
+NODE_PATH=$(npm root -g) node scripts/e2e-smoke.mjs   # Browserprüfung der Nutzerwege (Playwright, Preview muss laufen)
 ```
 
 Benötigt Node.js ≥ 22.
@@ -31,9 +32,12 @@ src/
   calc/
     modules/<id>.ts     Rechenmodul je Thema: Felder, Varianten, Beispieldaten, Formeln, Randfälle
     engine.ts           Validierung (fehlende Werte ≠ 0) und Ausführung
-    types.ts            Typen für Felder, Varianten, Ergebnisse, Werteübernahmen
+    types.ts            Typen für Felder, Varianten, Ergebnisse, Werteübernahmen, Folgeaktionen
+    scenario.ts         A/B-Vergleich mit Zeitraumregel · workflow.ts: Ablauf „Preis & Wirtschaftlichkeit“
     all.ts / load.ts    alle Module (Build/Tests) bzw. Einzel-Laden im Browser
+  config/operator.ts    Betreiberangaben mit Bestätigungsflags (Impressum, Datenschutz, Rückmeldung)
   data/
+    tasks.ts            fünf Aufgabeneinstiege · cases.ts: drei Praxisfälle · field-guides.ts: Eingabehilfen · home.ts: Reihenfolge der Startauswahl
     topics/*.ts         Texte je Thema: Titel, Kurztext, Nutzerfrage, Synonyme, Bildtexte, Formel …
     categories.ts       die sechs Kategorien inkl. „Häufig verwechselt“
     registry.ts         zentrales Rechnerverzeichnis (Reihenfolge 01–40)
@@ -41,12 +45,14 @@ src/
   lib/
     decimal.ts          zentrale Präzision (40 Stellen, ROUND_HALF_UP)
     number.ts           Eingabe-Parser und deutsche Zahlenformatierung
-    search.ts           Katalogsuche
-    storage.ts          Favoriten, gespeicherte Rechnungen, Sitzungsdaten (robust)
+    search.ts           Katalogsuche inkl. Tippfehlertoleranz („Meintest du …?“)
+    workspace.ts        Meine Berechnungen (v2), Vorhaben, Papierkorb, Sicherung/Import, zuletzt genutzt, Einstellungen
+    analytics.ts        einwilligungsabhängige Erfolgsmessung (nur Kennungen)
+    storage.ts          Speicher-Grundlagen, Favoriten, Einwilligung, Sitzungsdaten (robust)
   components/           Kachel, Stern-Button, Katalog, Rechner, Felder …
   scripts/              Browser-Logik: favorites.ts, calculator.ts, ui.ts
   styles/               tokens.css (Design-Tokens), global.css, components.css
-  pages/                Startseite, /rechner/, /kategorie/…, 40 Rechnerseiten, Favoriten, Gespeichert, Über, Impressum, Datenschutz, 404, sitemap.xml, robots.txt, /illustrationen/*.svg
+  pages/                Startseite, /rechner/, /kategorie/…, 41 Rechnerseiten, Aufgaben, Ablauf, Lernseiten, Praxisfälle, Favoriten, Meine Berechnungen (+ Zusammenfassung), Über, Impressum, Datenschutz, 404, sitemap.xml, robots.txt, /illustrationen/*.svg
 tests/                  Vitest-Tests mit unabhängig festgelegten Erwartungswerten
 scripts/check-site.mjs  Prüfung des Builds
 docs/                   Formeln, Modellannahmen, Vorlagen, Quellen, Checklisten, Prüfprotokoll
@@ -80,7 +86,7 @@ Logik ohne DOM in `src/lib/catalog-state.ts`, getestet in `tests/catalog-state.t
 
 ## Rechnerverzeichnis und Kategorien
 
-Die 40 Themen stehen in `src/data/registry.ts` (Reihenfolge und Texte) und `src/calc/modules/` (Rechenlogik). ID, URL und Kategorie entsprechen dem verbindlichen Register. Die vollständige Liste mit Formeln steht in [`docs/FORMELN.md`](docs/FORMELN.md).
+Die 41 Themen stehen in `src/data/registry.ts` (Reihenfolge und Texte) und `src/calc/modules/` (Rechenlogik). ID, URL und Kategorie entsprechen dem verbindlichen Register. Die vollständige Liste mit Formeln steht in [`docs/FORMELN.md`](docs/FORMELN.md).
 
 Kategorien: Prozent & Grundlagen · Kostenrechnung & Preise · Finanzen & Liquidität · Marketing & Vertrieb · Produkt & Kunden · Controlling & Planung.
 
@@ -96,7 +102,7 @@ Vorlage und Schritt-für-Schritt-Anleitung: [`docs/NEUER-RECHNER.md`](docs/NEUER
 4. Tests mit **unabhängig berechneten** Erwartungswerten schreiben.
 5. `npm test && npm run check && npm run build && npm run check:site`
 
-Die Tests prüfen automatisch: genau 40 Module, eindeutige IDs und URLs, gültige Beispiele, existierende verwandte Rechner, höchstens zwei Einstiegssätze und dass jedes Detailbild das Beispielergebnis zeigt. Bei einem 41. Rechner die erwartete Anzahl in `tests/examples.test.ts` und `tests/search-storage.test.ts` anpassen.
+Die Tests prüfen automatisch: genau so viele Module wie Themen im Register, eindeutige IDs und URLs, gültige Beispiele, existierende verwandte Rechner, höchstens zwei Einstiegssätze und dass jedes Detailbild das Beispielergebnis zeigt. Bei einem weiteren Rechner die erwartete Anzahl in `tests/examples.test.ts` und `tests/search-storage.test.ts` anpassen; angezeigte Zahlen leiten sich aus dem Register ab.
 
 ## Zahlen und Rundung
 
@@ -114,11 +120,15 @@ Die Tests prüfen automatisch: genau 40 Module, eindeutige IDs und URLs, gültig
 - **Migration:** Liegt `kr.favorites.v1` nicht vor, werden ältere Schlüssel (`klarrechnen-favoriten`, `klarrechnen.favorites`, `kr.favorites`) gelesen (Array oder `{ids}`, `:` wird zu `#`) und übernommen. Ändert sich künftig eine ID, eine Zuordnung in `getFavorites()` in `src/lib/storage.ts` ergänzen.
 - Synchronisation: alle Sterne einer Seite, über Tabs hinweg (`storage`-Ereignis) und nach dem Zurück-Button.
 
-## Gespeicherte Rechnungen und lokale Daten löschen
+## Meine Berechnungen, Sicherung und lokale Daten
 
-- Nur per Klick auf „Rechnung speichern“: Name, Rechner-ID, Varianten-ID, Schema-Version, Zeitpunkt und alle Rohwerte inklusive Auswahlfeldern (Zeitraum, Tagesbasis). Schlüssel `kr.saved.v1`, höchstens 100 Einträge.
-- Ansicht `/gespeichert/`: öffnen (`/<rechner>/#gespeichert=<id>`) und einzeln löschen. Bei abweichender Schema-Version erscheint ein Prüfhinweis.
-- „Alle lokalen Daten löschen“ mit eigenem Bestätigungsschritt: `/ueber/#daten`.
+- Gespeichert wird nur nach Klick auf „Speichern“: Name, Rechner-ID, Modus-ID, Schema-Version, Zeitpunkte (gespeichert/geändert), alle Rohwerte inkl. Auswahlfeldern, optionale Notiz und optionales Vorhaben (Projekt). Schlüssel `kr.workspace.v2` (`{ v: 2, items, projects, trash }`), höchstens 100 Berechnungen, 30 Vorhaben, Papierkorb 30 Einträge / 30 Tage.
+- **Migration:** Daten aus `kr.saved.v1` (v1) werden beim ersten Lesen verlustfrei nach v2 übernommen; der alte Schlüssel bleibt unverändert als Sicherung liegen. Getestet in `tests/workspace.test.ts`.
+- Ansicht `/gespeichert/` („Meine Berechnungen“): Ergebnisvorschau (immer live aus den Eingaben berechnet, nie als alter Wert gespeichert), Umbenennen/Bearbeiten, Duplizieren (eigenständige Kopie), Notizen, Gruppierung nach Vorhaben, Löschen mit „Rückgängig“ (auch per Tastatur) und Papierkorb „Zuletzt gelöscht“, Zusammenfassung je Vorhaben (`/gespeichert/zusammenfassung/#projekt=<id>`, Kopieren und Druckansicht/PDF).
+- Rechnerseite: Speicherstatus („gespeichert“ / „Änderungen noch nicht gespeichert“), Öffnen über `/<rechner>/#gespeichert=<id>`.
+- **Sicherung:** Datei `kpilot-sicherung-<Datum>.json` (`app: "KPILot"`, `version: 1`) mit Berechnungen, Vorhaben, Notizen, Favoriten – nie mit der Einwilligung. Import mit strukturierter Validierung, Vorschau und Konfliktstrategie (behalten / als Kopie / überschreiben; Überschriebenes landet im Papierkorb). Unbekannte (neuere) Versionen und beschädigte Dateien werden verständlich abgelehnt; importierte Texte werden bereinigt und nur als Text ausgegeben.
+- „Zuletzt genutzt“: `kr.recent.v1`, nur Rechner-ID und Zeitpunkt. Ansicht des Katalogs: `kr.prefs.v1`.
+- „Alle lokalen Daten löschen“ mit eigenem Bestätigungsschritt: `/ueber/#daten` (behält die Einwilligungsentscheidung).
 - Ist kein Speicher verfügbar, wird weitergerechnet, und Speichern wird nie als erfolgreich gemeldet.
 
 ## Werteübernahme und Einheiten
@@ -133,8 +143,10 @@ Die Tests prüfen automatisch: genau 40 Module, eindeutige IDs und URLs, gültig
 | EBIT | EBITDA | EBIT, Abschreibungen |
 | EBIT | EBIT-Marge | EBIT, Umsatzerlöse |
 | CAC | CLV | CAC als optionaler Abzug |
+| Rabatt-Mehrabsatz | Gewinn, Deckungsbeitrag | neuer Preis, variable Kosten, ggf. erforderliche Menge |
+| ROAS | ROAS-Modus „Werbewirtschaftlichkeit“ (gleiche Seite) | Werbeumsatz, Werbekosten |
 
-Der Zielrechner zeigt, was übernommen wurde, was noch fehlt und ob der Zeitraum zu prüfen ist. Fehlende Werte werden nie als 0 angenommen. Definiert ist das in `transfers` des jeweiligen Rechenmoduls. Break-even und Gewinn haben zusätzlich einen Szenariovergleich A/B.
+Der Zielrechner zeigt, was übernommen wurde, was noch fehlt und ob der Zeitraum zu prüfen ist. Fehlende Werte werden nie als 0 angenommen. Definiert ist das in `transfers` des jeweiligen Rechenmoduls. Break-even, Gewinn, Rabatt-Mehrabsatz, Werbewirtschaftlichkeit und CLV haben zusätzlich einen Szenariovergleich A/B mit **gemeinsamem Betrachtungszeitraum** (keine automatische Umrechnung; unterschiedliche Zeiträume erzeugen keine Differenz). Folgeaktionen beim Ergebnis stehen als `followUps` im Rechenmodul.
 
 ## Domain, SEO und Hosting
 
@@ -144,7 +156,7 @@ Der Zielrechner zeigt, was übernommen wurde, was noch fehlt und ob der Zeitraum
   ```
   (PowerShell: `$env:SITE_URL='https://www.deine-domain.de'; npm run build`)
 - **Ohne Domain (Vorschaumodus: lokale Builds ohne `SITE_URL`, Cloudflare-Vorschau-Branches):** alle Seiten `noindex`, keine Canonicals, kein JSON-LD mit Domain, leere Sitemap.
-- **Mit Domain:** 49 indexierbare Seiten (Start, Katalog, Über, 6 Kategorien, 40 Rechner) mit Canonical, Open Graph, JSON-LD (WebSite, WebPage, BreadcrumbList) und Sitemap. Favoriten, Gespeichert, Impressum, Datenschutz und 404 bleiben `noindex`.
+- **Mit Domain:** 60 indexierbare Seiten (Start, Katalog, Über, Aufgaben, Ablauf, Lernseiten, Praxisfälle, 6 Kategorien, 41 Rechner) mit Canonical, Open Graph, JSON-LD (WebSite, WebPage, BreadcrumbList) und Sitemap. Favoriten, Meine Berechnungen, Impressum, Datenschutz und 404 bleiben `noindex`.
 - `robots.txt` erlaubt das Crawling, damit `noindex` gelesen wird, und nennt in Produktion die Sitemap.
 
 ### Veröffentlichen auf Cloudflare Pages
@@ -169,7 +181,7 @@ Manuell ohne GitHub: `npx wrangler login`, dann `npm run deploy`. Die eigene Dom
 
 ## Weitere Dokumente
 
-- [`docs/FORMELN.md`](docs/FORMELN.md): Formeln, Variablen und Beispielrechnung aller 40 Themen (aus dem Code erzeugt)
+- [`docs/FORMELN.md`](docs/FORMELN.md): Formeln, Variablen und Beispielrechnung aller Rechner (aus dem Code erzeugt)
 - [`docs/MODELLANNAHMEN.md`](docs/MODELLANNAHMEN.md): Annahmen und typische Missverständnisse je Thema
 - [`docs/NEUER-RECHNER.md`](docs/NEUER-RECHNER.md): Vorlage für neue Rechner und Anleitung für Erklärillustrationen
 - [`docs/QUELLEN.md`](docs/QUELLEN.md): fachliche Referenzquellen

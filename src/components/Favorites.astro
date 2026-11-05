@@ -24,6 +24,10 @@ const { heading = 'Meine Favoriten', layout = 'grid' } = Astro.props;
       <a class="favs-manage" href="/favoriten/" data-fav-manage hidden>
         Alle Favoriten
       </a>
+      <div class="recent-row" data-recent hidden>
+        <h3>Zuletzt genutzt</h3>
+        <ul class="fav-links" data-recent-links />
+      </div>
     </section>
   ) : (
     <section class="favs-section" aria-labelledby="favs-h">
@@ -32,9 +36,14 @@ const { heading = 'Meine Favoriten', layout = 'grid' } = Astro.props;
           <Icon name="star" />
           {heading}
         </h2>
-        <p class="favs-empty notice" data-fav-empty>
-          Noch keine Favoriten. Markiere häufig benötigte Rechner mit dem Stern auf der Kachel oder der Rechnerseite – dann findest du sie hier wieder.
-        </p>
+        <div class="favs-empty notice" data-fav-empty>
+          <p>Noch keine Favoriten. Markiere häufig benötigte Rechner mit dem Stern auf der Kachel oder der Rechnerseite – dann findest du sie hier wieder.</p>
+          <p class="empty-actions">
+            <a class="btn btn-primary" href="/rechner/">Rechner durchsuchen</a>
+            <a class="btn btn-secondary" href="/break-even-rechner/#beispiel">Beispielrechnung ausprobieren</a>
+            <a class="btn btn-secondary" href="/aufgaben/">Aufgabe auswählen</a>
+          </p>
+        </div>
       </div>
       <div class="grid" data-fav-grid />
       <noscript>

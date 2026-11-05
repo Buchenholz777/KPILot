@@ -233,6 +233,31 @@ export const basisKosten: Record<string, Draw> = {
     );
   },
 
+  "rabatt-absatz": (d) =>
+    T(80, 30, "Beitrag je Stück", { s: 11, w: 700, a: "middle" }) +
+    L(24, 130, 140, 130, { c: C.ink }) +
+    R(34, 50, 40, 80, C.tealSoft, { stroke: C.teal }) +
+    R(86, 90, 40, 40, HATCH.rose, { stroke: C.rose }) +
+    T(54, 44, "20 €", { s: 13, w: 700, c: C.teal, a: "middle" }) +
+    T(106, 84, "10 €", { s: 13, w: 700, c: C.rose, a: "middle" }) +
+    T(54, 146, "vorher", { s: 10, c: C.muted, a: "middle" }) +
+    T(106, 146, "−10 % Preis", { s: 10, c: C.muted, a: "middle" }) +
+    T(240, 30, "Absatz in Stück", { s: 11, w: 700, a: "middle" }) +
+    L(184, 130, 300, 130, { c: C.ink }) +
+    R(194, 90, 40, 40, C.greySoft, { stroke: C.grey }) +
+    R(246, 50, 40, 80, HATCH.accent, { stroke: C.accent }) +
+    T(214, 84, "100", { s: 13, w: 700, a: "middle" }) +
+    T(266, 44, "200", { s: 13, w: 700, c: C.accent, a: "middle" }) +
+    T(214, 146, "bisher", { s: 10, c: C.muted, a: "middle" }) +
+    T(266, 146, "nötig", { s: 10, c: C.muted, a: "middle" }) +
+    L(142, 90, 180, 90, { arrow: true, c: C.accent }) +
+    T(160, 80, "+100 %", { s: 12, w: 700, c: C.accent, a: "middle" }) +
+    D(
+      d,
+      T(160, 168, "Absatzfaktor = 20 € / 10 € = 2", { s: 10.5, w: 600, a: "middle" }) +
+        T(160, 112, "Mehrabsatz", { s: 9, c: C.muted, a: "middle" }),
+    ),
+
   gewinn: (d) =>
     L(36, 150, 210, 150, { c: C.ink }) +
     R(50, 30, 64, 120, C.accentSoft, { stroke: C.accent }) +

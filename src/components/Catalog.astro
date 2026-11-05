@@ -6,6 +6,8 @@ import Tile from './Tile.astro';
 import Icon from './Icon.astro';
 import CategoryIcon from './CategoryIcon.astro';
 import BandLines from './BandLines.astro';
+import { TASKS, taskUrl } from '../data/tasks';
+import { HOME_ORDER } from '../data/home';
 
 interface Props {
   /** home: zeigt ohne Suche/Filter nur „Empfohlen“; all: kompletter Katalog. */
@@ -14,7 +16,7 @@ interface Props {
 }
 const { mode, headingId = 'katalog-h' } = Astro.props;
 const index = JSON.stringify(buildSearchIndex());
-const firstVisible = new Set((mode === 'home' ? TOPICS.filter((t) => t.recommended) : TOPICS).slice(0, 6).map((t) => t.id));
+const firstVisible = new Set((mode === 'home' ? HOME_ORDER.map((id) => TOPICS.find((t) => t.id === id)!) : TOPICS).slice(0, 6).map((t) => t.id));
 const qId = `q-${mode}`;
 ---
 
@@ -43,7 +45,7 @@ const qId = `q-${mode}`;
             />
             <button type="button" class="search-clear" data-clear aria-label="Suche leeren" hidden><Icon name="x" /></button>
           </div>
-          <p class="visually-hidden" id={`${qId}-hint`}>Sucht immer in allen 40 Rechnern – auch nach Abkürzungen und Alltagsfragen.</p>
+          <p class="visually-hidden" id={`${qId}-hint`}>Sucht immer in allen {TOPICS.length} Rechnern – auch nach Abkürzungen und Alltagsfragen. Kleine Tippfehler werden erkannt.</p>
           <a class="search-jump" href={`#${headingId}`} data-jump hidden></a>
         </form>
       </div>
@@ -76,19 +78,26 @@ const qId = `q-${mode}`;
     </fieldset>
 
     <div class="catalog-head">
-      <h2 id={headingId} data-catalog-heading>{mode === 'home' ? 'Empfohlen' : 'Alle Rechner'}</h2>
+      <h2 id={headingId} data-catalog-heading>{mode === 'home' ? 'Nützliche Rechner für den Start' : 'Alle Rechner'}</h2>
+      <fieldset class="view-toggle" data-view-toggle>
+        <legend>Ansicht</legend>
+        <button type="button" class="view-btn" data-view-btn="explain" aria-pressed="true">Mit Erklärungen</button>
+        <button type="button" class="view-btn" data-view-btn="compact" aria-pressed="false">Kompakt</button>
+      </fieldset>
       <div class="catalog-status" role="status" aria-live="polite" data-status>
-        <span data-count><strong>{mode === 'home' ? 'Eine Auswahl häufig hilfreicher Themen' : `${TOPICS.length} Rechner`}</strong></span>
+        <span data-count><strong>{mode === 'home' ? 'Redaktionelle Auswahl – Geschäftsnutzen und Grundlagen' : `${TOPICS.length} Rechner`}</strong></span>
         <span class="scope" data-scope hidden></span>
         <button type="button" class="btn btn-ghost" data-widen hidden>In allen Kategorien suchen</button>
         <button type="button" class="btn btn-ghost" data-reset hidden><Icon name="x" />Zurücksetzen</button>
       </div>
     </div>
 
-    <div class="grid" data-grid>
+    <p class="suggest" data-suggest role="status" hidden></p>
+
+    <div class="grid" data-grid data-view="explain">
       {
         TOPICS.map((t) => (
-          <div class="grid-item" data-item={t.id} data-cat={t.category} hidden={mode === 'home' && !t.recommended ? true : undefined}>
+          <div class="grid-item" data-item={t.id} data-cat={t.category} data-home-rank={HOME_ORDER.indexOf(t.id) >= 0 ? HOME_ORDER.indexOf(t.id) : 99} hidden={mode === 'home' && !t.recommended ? true : undefined}>
             <Tile topic={t} eager={firstVisible.has(t.id)} />
           </div>
         ))
@@ -98,14 +107,25 @@ const qId = `q-${mode}`;
     <div class="card no-results" data-empty hidden>
       <h3>Keine passenden Rechner gefunden</h3>
       <p class="muted" data-empty-text>Versuche einen anderen Begriff, z. B. eine Abkürzung wie „ROI“ oder eine Frage wie „Was bleibt vom Umsatz?“.</p>
-      <button type="button" class="btn btn-primary" data-empty-allcats hidden>In allen Kategorien suchen</button>
+      <p class="no-results-actions">
+        <button type="button" class="btn btn-primary" data-empty-allcats hidden>In allen Kategorien suchen</button>
+        <button type="button" class="btn btn-secondary" data-empty-reset>Suche zurücksetzen</button>
+      </p>
+      <h4>Oder starte mit einer Aufgabe</h4>
+      <ul class="empty-links">
+        {TASKS.map((t) => <li><a href={taskUrl(t)}>{t.title}</a></li>)}
+      </ul>
+      <h4>Oder wähle eine Kategorie</h4>
+      <ul class="empty-links">
+        {CATEGORIES.map((c) => <li><a href={`/kategorie/${c.slug}/`}>{c.title}</a></li>)}
+      </ul>
     </div>
 
     {
       mode === 'home' && (
         <p class="catalog-more" data-more>
           <a class="btn btn-secondary" href="/rechner/">
-            Alle 40 Rechner anzeigen <Icon name="arrow" />
+            Alle {TOPICS.length} Rechner anzeigen <Icon name="arrow" />
           </a>
         </p>
       )
@@ -127,6 +147,8 @@ const qId = `q-${mode}`;
   import type { SearchEntry } from '../lib/search';
   import { computeView, initialState, onCategory, onClear, onQueryChange, restore, ALL, type CatalogState } from '../lib/catalog-state';
   import { getCatalogState, setCatalogState } from '../lib/storage';
+  import { getPrefs, setPrefs, type CatalogView } from '../lib/workspace';
+  import { track } from '../lib/analytics';
 
   const esc = (s: string) => s.replace(/[<>&"]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' })[c]!);
 
@@ -151,6 +173,18 @@ const qId = `q-${mode}`;
     const more = root.querySelector<HTMLElement>('[data-more]');
     const jump = root.querySelector<HTMLAnchorElement>('[data-jump]');
     const catSelect = root.querySelector<HTMLSelectElement>('[data-cat-select]');
+    const suggestEl = root.querySelector<HTMLElement>('[data-suggest]')!;
+    const emptyReset = root.querySelector<HTMLButtonElement>('[data-empty-reset]')!;
+    const rank = new Map([...items].map(([id, el]) => [id, Number(el.dataset.homeRank ?? 99)]));
+    const viewBtns = [...root.querySelectorAll<HTMLButtonElement>('[data-view-btn]')];
+    // Ansicht „Mit Erklärungen“ / „Kompakt“: lokal gemerkt, ändert Suche und Filter nicht
+    function setView(v: CatalogView, persist = true) {
+      grid.dataset.view = v;
+      viewBtns.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.viewBtn === v)));
+      if (persist) setPrefs({ catalogView: v });
+    }
+    viewBtns.forEach((b) => b.addEventListener('click', () => setView(b.dataset.viewBtn as CatalogView)));
+    setView(getPrefs().catalogView, false);
     // Kompakte Auswahlliste (schmale Bildschirme) – gleiche Regel B wie die Kategorie-Buttons
     catSelect?.addEventListener('change', () => {
       state = onCategory(state, catSelect.value);
@@ -169,15 +203,33 @@ const qId = `q-${mode}`;
       const order = new Set(v.visible);
       for (const [id, el] of items) el.hidden = !order.has(id);
       // Reihenfolge nach Relevanz auch für Tastatur und Screenreader
-      (q ? v.visible : entries.map((e) => e.id)).forEach((id) => grid.appendChild(items.get(id)!));
+      (q ? v.visible : v.homeDefault ? [...v.visible].sort((a, b) => (rank.get(a) ?? 99) - (rank.get(b) ?? 99)) : entries.map((e) => e.id)).forEach((id) => grid.appendChild(items.get(id)!));
+
+      // Tippfehler: Vorschlag mit direkt erreichbaren Treffern
+      suggestEl.hidden = !v.suggestion;
+      if (v.suggestion) {
+        suggestEl.replaceChildren();
+        suggestEl.append(`Keine exakten Treffer für „${state.q.trim()}“. Meintest du `);
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'suggest-btn';
+        b.textContent = v.suggestion;
+        b.addEventListener('click', () => {
+          input.value = v.suggestion!;
+          state = onQueryChange(state, input.value);
+          render();
+          input.focus();
+        });
+        suggestEl.append(b, '? Die Treffer unten gehören zu diesem Vorschlag.');
+      }
 
       const catName = state.cat === ALL ? '' : titles[state.cat];
-      heading.textContent = v.homeDefault ? 'Empfohlen' : q ? 'Suchergebnisse' : state.cat === ALL ? 'Alle Rechner' : catName;
+      heading.textContent = v.homeDefault ? 'Nützliche Rechner für den Start' : q ? 'Suchergebnisse' : state.cat === ALL ? 'Alle Rechner' : catName;
       const n = v.visible.length;
       countEl.innerHTML = v.homeDefault
-        ? '<strong>Eine Auswahl häufig hilfreicher Themen</strong>'
+        ? '<strong>Redaktionelle Auswahl – Geschäftsnutzen und Grundlagen</strong>'
         : q
-          ? `<strong>${n} ${n === 1 ? 'Treffer' : 'Treffer'}</strong> für „${esc(q)}“`
+          ? `<strong>${n} Treffer</strong> für „${esc(v.suggestion ?? q)}“`
           : `<strong>${n} Rechner</strong>`;
 
       // Suchumfang sichtbar machen
@@ -194,6 +246,7 @@ const qId = `q-${mode}`;
       clearBtn.hidden = !state.q;
 
       empty.hidden = n > 0;
+      if (!n && q) track('search_no_results');
       if (!n) {
         const elsewhere = v.narrowed ? v.globalCount : 0;
         emptyAll.hidden = !elsewhere;
@@ -235,6 +288,12 @@ const qId = `q-${mode}`;
     };
     widenBtn.addEventListener('click', widen);
     emptyAll.addEventListener('click', widen);
+    emptyReset.addEventListener('click', () => {
+      state = onClear();
+      input.value = '';
+      render();
+      input.focus();
+    });
     // C: Leeren / Zurücksetzen
     const clear = () => {
       state = onClear();

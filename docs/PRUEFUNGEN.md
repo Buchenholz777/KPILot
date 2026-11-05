@@ -68,3 +68,20 @@ Außerdem geprüft: „Beispiel einsetzen“, Ergebnisdiagramm Break-even, Werte
 ## Dokumentation neu erzeugen
 
 `docs/FORMELN.md` und `docs/MODELLANNAHMEN.md` werden aus dem Code erzeugt. Nach Änderungen an Formeln oder Texten: `npm run docs`.
+
+## Überarbeitung „Vollständige Verbesserung“, 05.11.2026
+
+Selbstprüfung durch den Entwickler; **keine Tests mit Personen, keine Screenreader-Prüfung, keine echten Mobilgeräte, nur Chromium (Playwright)**.
+
+| Prüfung | Befehl / Methode | Ergebnis |
+|---|---|---|
+| Rechen-, Speicher-, Such-, Ablauf-, Fall- und Messtests | `npm test` | 348 Tests in 15 Dateien bestanden (vorher 258) |
+| TypeScript / Astro | `npm run check` | 0 Fehler |
+| Build und Seitenprüfung (Produktions-`SITE_URL`) | `npm run build` + `npm run check:site` | 66 Seiten, 60 indexierbar = 60 Sitemap-URLs, keine Probleme |
+| Kontraste (35 Paare, keine neuen Farben) | `npm run check:contrast` | alle erfüllen ihr Ziel |
+| Browser-Nutzerwege (Erstbesuch, Zustimmung/Ablehnung, Suche mit Tippfehler, Beispiel, A/B, Speichern, Duplizieren, Löschen + Rückgängig per Tastatur, Export, Rabatt, Werbung, Ablauf, Netzwerk) | `node scripts/e2e-smoke.mjs` | alle Prüfungen bestanden |
+| Horizontaler Seitenüberlauf, 12 Seiten × 360/414/768/1280 px | `scripts/e2e-smoke.mjs` | keiner (Befunde auf Rechnerseiten wurden behoben) |
+| Automatisierte Zugänglichkeitsprüfung axe-core 4.10 (WCAG 2.0/2.1 A/AA + Best Practice), 15 Seiten × 1280/375 px | Playwright + axe | 0 Verstöße nach Korrekturen (Kontrast Cookie-Link auf Über-Seite, Schrittnavigation ohne Namen bei 375 px) |
+| Netzwerk: vor Zustimmung und nach Ablehnung keine Anfrage an Google; nach Zustimmung nur `gtag/js`; Rechenwerte weder in `dataLayer` noch in Anfrage-URLs; `calc_result` einmal | Playwright | bestanden |
+
+**Nicht ausgeführt / eingeschränkt:** Screenreader (NVDA/VoiceOver), echte iOS/Android-Geräte, Firefox/Safari, Druckvorschau und PDF-Export (Druck-CSS vorhanden, nicht visuell geprüft), Lighthouse-/Performance-Messung, Nutzertests (Verfahren in `docs/MESSKONZEPT.md`). Es wird keine vollständige Barrierefreiheit behauptet: axe findet nur einen Teil möglicher Probleme.

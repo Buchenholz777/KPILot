@@ -1,62 +1,105 @@
 ---
 import Base from '../../layouts/Base.astro';
 import PageBand from '../../components/PageBand.astro';
+import DraftNotice from '../../components/DraftNotice.astro';
+import Fact from '../../components/Fact.astro';
+import { OPERATOR, operatorComplete } from '../../config/operator';
+import { GA_ID } from '../../config/site';
+
+const complete = operatorComplete();
 ---
 
-<Base title="Datenschutz (Entwurf) | KPILot" description="Datenschutzhinweise – Entwurf, Angaben fehlen noch." noindex>
+<Base
+  title={`Datenschutzhinweise${complete ? '' : ' (in Vorbereitung)'} | KPILot`}
+  description="Datenschutzhinweise von KPILot: was mit Rechenwerten, lokal gespeicherten Daten und optionaler Nutzungsmessung passiert."
+  noindex
+>
   <PageBand title="Datenschutzhinweise" crumbs={[{ name: 'Start', href: '/' }, { name: 'Datenschutzhinweise', href: '/datenschutz/' }]} />
   <div class="container page-body">
-  <div class="card content-card prose">
-    <p class="notice notice-warn">
-      <strong>Entwurf:</strong> Dieser Text beschreibt die technische Funktionsweise der Website. Verantwortliche Stelle, Hosting-Anbieter und Rechtsgrundlagen müssen vor der
-      Veröffentlichung ergänzt und rechtlich geprüft werden. Er ist keine Zusicherung rechtlicher Konformität.
-    </p>
-    <h2>Verantwortliche Stelle</h2>
-    <p>[Name, Anschrift, E-Mail – wie im Impressum]</p>
-    <h2>Was die Website technisch tut</h2>
-    <ul class="bullets">
-      <li>Die Rechner berechnen alle Eingaben im Browser. Die Anwendung überträgt eingegebene Zahlen nicht an einen Berechnungsserver.</li>
-      <li>
-        Es werden keine Werbeskripte und keine externen Schriften oder Bilder geladen. Google Analytics wird nur eingesetzt, wenn du ausdrücklich zustimmst (siehe unten).
-      </li>
-      <li>
-        Favoriten (Rechner-IDs) und ausdrücklich gespeicherte Rechnungen werden im lokalen Speicher des Browsers (localStorage) abgelegt, übernommene Werte und Suchzustand im
-        Sitzungsspeicher (sessionStorage). Diese Daten verlassen das Gerät nicht und können unter „Über KPILot“ gelöscht werden.
-      </li>
-      <li>Deine Entscheidung zur Nutzungsmessung wird im lokalen Speicher des Browsers abgelegt (Schlüssel „kr.consent.v1“), damit wir nicht bei jedem Besuch erneut fragen.</li>
-    </ul>
-    <h2>Nutzungsmessung mit Google Analytics (nur mit Einwilligung)</h2>
-    <p>
-      Wenn du im Hinweis „Darf KPILot die Nutzung messen?“ auf „Akzeptieren“ klickst, binden wir Google Analytics 4 ein, einen Dienst der Google Ireland Limited, Gordon House,
-      Barrow Street, Dublin 4, Irland. Vorher wird kein Skript von Google geladen und kein Analyse-Cookie gesetzt.
-    </p>
-    <ul class="bullets">
-      <li><strong>Zweck:</strong> Wir sehen in zusammengefasster Form, welche Seiten und Rechner aufgerufen werden, um die Website zu verbessern.</li>
-      <li>
-        <strong>Verarbeitete Daten:</strong> u. a. aufgerufene Seiten, Zeitpunkt, ungefähre Region, Gerät, Browser und Herkunftsseite. Dazu setzt Google Cookies („_ga“,
-        „_ga_…“). Deine eingegebenen Zahlen werden nicht an Google übertragen.
-      </li>
-      <li>
-        <strong>Rechtsgrundlage:</strong> deine Einwilligung (Art. 6 Abs. 1 lit. a DSGVO, § 25 Abs. 1 TDDDG).
-      </li>
-      <li>
-        <strong>Übermittlung in Drittländer:</strong> Eine Übermittlung an Google LLC in den USA ist möglich. [Grundlage ergänzen, z. B. EU-US Data Privacy Framework, und
-        rechtlich prüfen.]
-      </li>
-      <li><strong>Speicherdauer:</strong> [In Google Analytics eingestellte Aufbewahrungsdauer eintragen, z. B. 2 oder 14 Monate.]</li>
-      <li>
-        <strong>Widerruf:</strong> Du kannst deine Einwilligung jederzeit mit Wirkung für die Zukunft widerrufen. Klicke dazu
-        <button type="button" class="btn btn-secondary" data-consent-open>Cookie-Einstellungen ändern</button>
-        oder unten auf der Seite auf „Cookie-Einstellungen“ und wähle „Ablehnen“. Dann werden die Analyse-Cookies dieser Website gelöscht.
-      </li>
-    </ul>
-    <h2>Hosting</h2>
-    <p>
-      [Hosting-Anbieter eintragen, z. B. Cloudflare. Beim Abruf jeder Website verarbeitet der Hosting-Anbieter technisch notwendige Verbindungsdaten wie IP-Adresse und Zeitpunkt.
-      Art, Umfang, Speicherdauer und Rechtsgrundlage gemäß Anbieterangaben ergänzen.]
-    </p>
-    <h2>Deine Rechte</h2>
-    <p>[Auskunft, Berichtigung, Löschung, Einschränkung, Widerspruch, Beschwerde bei einer Aufsichtsbehörde – mit zuständiger Behörde ergänzen.]</p>
-  </div>
+    <div class="card content-card prose">
+      <DraftNotice scope="datenschutz" />
+
+      <h2>Verantwortliche Stelle</h2>
+      <p>
+        <Fact k="name" />, <Fact k="street" />, <Fact k="city" />, <Fact k="country" /><br />
+        E-Mail: <Fact k="email" /> · weitere Angaben im <a href="/impressum/">Impressum</a>.
+      </p>
+
+      <h2>Überblick: vier Arten der Verarbeitung</h2>
+      <ol class="bullets">
+        <li><strong>Eingegebene Rechenwerte</strong> – werden ausschließlich im Browser verarbeitet.</li>
+        <li><strong>Lokale Speicherung</strong> – Favoriten, Meine Berechnungen und Einstellungen bleiben auf deinem Gerät.</li>
+        <li><strong>Optionale Nutzungsmessung</strong> – nur mit deiner ausdrücklichen Zustimmung.</li>
+        <li><strong>Technisch notwendige Verarbeitung</strong> – beim Aufruf der Website durch den Hosting-Anbieter.</li>
+      </ol>
+
+      <h2 id="rechenwerte">1. Eingegebene Rechenwerte</h2>
+      <p>
+        Alle Berechnungen laufen in deinem Browser. Zahlen, Projektnamen und Notizen werden von der Anwendung nicht an einen Berechnungsserver gesendet. Sie sind weder Bestandteil
+        von Webadressen noch von Messereignissen. Alle fachlichen Funktionen arbeiten genauso, wenn du die Nutzungsmessung ablehnst.
+      </p>
+
+      <h2 id="lokal">2. Lokale Speicherung im Browser</h2>
+      <p>Diese Daten werden nur auf deinem Gerät abgelegt und verlassen es nicht. Du kannst sie unter <a href="/ueber/#daten">Über KPILot → Deine Daten</a> löschen.</p>
+      <ul class="bullets">
+        <li><strong>localStorage:</strong> Favoriten (Rechner- und Modus-Kennungen), Meine Berechnungen mit Eingaben, Namen, Notizen und Vorhaben, kürzlich gelöschte Berechnungen (Papierkorb), zuletzt genutzte Rechner (Rechnerkennung und Zeitpunkt), Ansichtswahl des Katalogs und deine Entscheidung zur Nutzungsmessung (Schlüssel „kr.consent.v1“).</li>
+        <li><strong>sessionStorage</strong> (nur bis zum Schließen des Tabs): übernommene Werte zwischen Rechnern, Suche und Kategorie, Entwurf des Ablaufs „Preis und Wirtschaftlichkeit“.</li>
+        <li>
+          <strong>Sicherungsdatei:</strong> Wenn du eine Sicherung exportierst, wird eine Datei auf deinem Gerät erzeugt. KPILot lädt sie nirgendwohin hoch. Deine Einwilligung zur Nutzungsmessung ist nicht
+          Bestandteil der Sicherung.
+        </li>
+      </ul>
+
+      <h2 id="messung">3. Optionale Nutzungsmessung mit Google Analytics</h2>
+      <p>
+        Wenn du im Hinweis „Darf KPILot die Nutzung messen?“ auf „Akzeptieren“ klickst, wird Google Analytics 4 (Mess-ID {GA_ID}) geladen, ein Dienst der Google Ireland Limited, Gordon House,
+        Barrow Street, Dublin 4, Irland. Vorher wird kein Skript von Google geladen und kein Analyse-Cookie gesetzt. „Ablehnen“ und „Akzeptieren“ sind gleichwertige Schaltflächen.
+      </p>
+      <ul class="bullets">
+        <li><strong>Zweck:</strong> Wir sehen in zusammengefasster Form, welche Seiten und Rechner genutzt werden, um die Website zu verbessern.</li>
+        <li>
+          <strong>Verarbeitete Daten:</strong> aufgerufene Seite (Pfad ohne Parameter und ohne Fragment „#…“), Zeitpunkt, ungefähre Region, Gerät, Browser und Herkunftsseite. Dazu setzt Google Cookies („_ga“,
+          „_ga_…“). Außerdem senden wir wenige, nicht inhaltliche Ereignisse: Aufgabeneinstieg gewählt, Berechnung begonnen, gültiges Ergebnis erreicht, Suche ohne Treffer, Szenariovergleich genutzt, Werte an
+          einen anderen Rechner übernommen, Berechnung gespeichert oder geöffnet – jeweils nur mit der Kennung des Rechners oder der Aufgabe. <strong>Nicht übertragen werden</strong> Rechenwerte, Suchtexte,
+          Namen von Berechnungen oder Vorhaben, Notizen und importierte Inhalte. Google-Signale und personalisierte Werbung sind ausgeschaltet.
+        </li>
+        <li><strong>Rechtsgrundlage:</strong> deine Einwilligung (Art. 6 Abs. 1 lit. a DSGVO, § 25 Abs. 1 TDDDG).</li>
+        <li>
+          <strong>Übermittlung in Drittländer:</strong> Eine Übermittlung an Google LLC in den USA ist möglich.
+          {OPERATOR.analyticsTransferBasis.value ? <> Grundlage: {OPERATOR.analyticsTransferBasis.value}.</> : <span class="fact-flag"> Grundlage: Angabe des Betreibers fehlt.</span>}
+        </li>
+        <li>
+          <strong>Speicherdauer:</strong>
+          {OPERATOR.analyticsRetention.value ? <> {OPERATOR.analyticsRetention.value}</> : <span class="fact-flag"> Die in der Google-Analytics-Property eingestellte Aufbewahrungsdauer ist noch einzutragen.</span>}
+        </li>
+        <li>
+          <strong>Widerruf:</strong> Du kannst deine Einwilligung jederzeit mit Wirkung für die Zukunft widerrufen. Klicke dazu
+          <button type="button" class="btn btn-secondary" data-consent-open>Cookie-Einstellungen ändern</button>
+          (auch im Fußbereich jeder Seite) und wähle „Ablehnen“. Dann werden die Analyse-Cookies dieser Website gelöscht und das Messskript wird nicht mehr geladen.
+        </li>
+      </ul>
+
+      <h2 id="hosting">4. Hosting und technisch notwendige Verarbeitung</h2>
+      <p>
+        Beim Aufruf jeder Seite verarbeitet der Hosting-Anbieter technisch notwendige Verbindungsdaten, insbesondere die IP-Adresse und den Zeitpunkt des Abrufs, um die Seite auszuliefern und den Betrieb
+        zu sichern. Es werden keine externen Schriften, Bilder oder Werbeskripte nachgeladen.
+      </p>
+      <p>
+        Hosting-Anbieter:
+        <Fact k="hostingProvider" fallback="Angabe des Betreibers fehlt" />.
+        {OPERATOR.hostingProvider.value && <span> Das Projekt ist für Cloudflare Pages konfiguriert; der Betreiber bestätigt den tatsächlichen Anbieter.</span>}
+        {OPERATOR.hostingDetails.value ? <> {OPERATOR.hostingDetails.value}</> : <span class="fact-flag"> Art, Umfang und Speicherdauer der Verbindungsdaten laut Anbieter sind noch zu ergänzen.</span>}
+      </p>
+
+      <h2 id="rechte">5. Deine Rechte</h2>
+      <p>
+        Du hast nach der DSGVO das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung, Datenübertragbarkeit und Widerspruch sowie das Recht, dich bei einer
+        Datenschutz-Aufsichtsbehörde zu beschweren. Eine erteilte Einwilligung kannst du jederzeit widerrufen. Wende dich dazu an die oben genannte Kontaktadresse.
+      </p>
+      <p>
+        Zuständige Aufsichtsbehörde:
+        {OPERATOR.supervisoryAuthority.value ? <> {OPERATOR.supervisoryAuthority.value}</> : <span class="fact-flag"> Wird nach Bestätigung des Sitzes des Betreibers ergänzt.</span>}
+      </p>
+    </div>
   </div>
 </Base>

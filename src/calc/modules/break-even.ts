@@ -9,6 +9,7 @@ import {
   periodField,
   periodName,
   ceilQty,
+  det,
 } from "../helpers";
 
 export function breakEven(i: Inputs): CalcResult {
@@ -23,7 +24,7 @@ export function breakEven(i: Inputs): CalcResult {
     if (d.gt(0))
       return {
         status: "ok",
-        main: out("Theoretische Gewinnschwelle", D(0), "integer", "Stück"),
+        main: out("Mindeststückzahl zur Kostendeckung", D(0), "integer", "Stück"),
         extra: [out("Ergebnis bei 1 Stück", d, "money")],
         meaning:
           "Ohne Fixkosten sind die Kosten schon bei 0 Stück gedeckt; jedes verkaufte Stück bringt Gewinn.",
@@ -60,10 +61,9 @@ export function breakEven(i: Inputs): CalcResult {
 
   return {
     status: "ok",
-    main: out("Theoretische Gewinnschwelle", qTheo, "number", "Stück"),
+    main: out("Mindeststückzahl zur Kostendeckung", qMin, "integer", "Stück"),
     extra: [
-      out("Mindeststückzahl zur Kostendeckung", qMin, "integer", "Stück"),
-      out("Umsatz bei dieser Stückzahl", p.mul(qMin), "money"),
+      out("Positiver Gewinn ab", profitFrom, "integer", "Stück"),
       out(
         resultAtMin.isZero()
           ? "Ergebnis bei dieser Stückzahl (Kostendeckung)"
@@ -73,8 +73,9 @@ export function breakEven(i: Inputs): CalcResult {
         undefined,
         true,
       ),
-      out("Positiver Gewinn ab", profitFrom, "integer", "Stück"),
-      out("Theoretischer Break-even-Umsatz", qTheo.mul(p), "money"),
+      det(out("Theoretische Gewinnschwelle", qTheo, "number", "Stück")),
+      det(out("Umsatz bei dieser Stückzahl", p.mul(qMin), "money")),
+      det(out("Theoretischer Break-even-Umsatz", qTheo.mul(p), "money")),
     ],
     meaning: qTheo.isInteger()
       ? `Bei ${num(qMin)} Stück ${zr} sind alle Kosten genau gedeckt; ein Gewinn entsteht ab ${num(profitFrom)} Stück.`
@@ -85,9 +86,7 @@ export function breakEven(i: Inputs): CalcResult {
       `Aufgerundet auf ganze Stück: ${num(qMin)} Stück`,
       `Ergebnis bei ${num(qMin)} Stück = d × q − F = ${eur(d)} × ${num(qMin)} − ${eur(F)} = ${eur(resultAtMin)}`,
     ],
-    notes: [
-      `Fixkosten, Preise und Mengen gelten ${zr}. Nettobeträge ohne Umsatzsteuer.`,
-    ],
+    notes: [`Fixkosten, Preise und Mengen gelten ${zr}.`],
     chart: {
       kind: "break-even",
       points: [pt(0), pt(qMax)],
@@ -129,6 +128,22 @@ const def: CalcDef = {
       ],
       example: { p: "50", v: "30", F: "3000", zeitraum: "monat" },
       compute: breakEven,
+    },
+  ],
+  followUps: [
+    {
+      id: "be-preis-pruefen",
+      when: (_i, r) => r.status === "impossible",
+      text: "Der Preis deckt die variablen Stückkosten nicht.",
+      label: "Preis oder Kostenannahmen prüfen",
+      action: { kind: "focus", fields: ["p", "v"] },
+    },
+    {
+      id: "be-gewinn",
+      when: (_i, r) => r.status === "ok",
+      text: "Kostendeckung ist noch kein Gewinn.",
+      label: "Geplanten Absatz ergänzen und Gewinn bestimmen",
+      action: { kind: "transfer", target: "gewinn" },
     },
   ],
   transfers: [

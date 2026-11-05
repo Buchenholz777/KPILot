@@ -1,0 +1,28 @@
+---
+import Base from '../../layouts/Base.astro';
+import PageBand from '../../components/PageBand.astro';
+import TaskTiles from '../../components/TaskTiles.astro';
+
+const crumbs = [
+  { name: 'Start', href: '/' },
+  { name: 'Aufgaben', href: '/aufgaben/' },
+];
+---
+
+<Base
+  title="Aufgaben: Preis, Wirtschaftlichkeit, Werbung, Liquidität | KPILot"
+  description="Starte mit deiner Frage statt mit einem Kennzahlnamen: Verkaufspreis bestimmen, Wirtschaftlichkeit prüfen, Werbung bewerten, Liquidität verstehen, Kennzahlen lernen."
+  crumbs={crumbs}
+>
+  <PageBand crumbs={crumbs} title="Aufgaben" lead="Wähle, was du klären möchtest. Jede Aufgabe führt dich Schritt für Schritt zu den passenden Rechnern." />
+  <div class="container page-body">
+    <TaskTiles />
+    <section class="section">
+      <h2>Lieber mit einem Gesamtablauf starten?</h2>
+      <p>
+        Im <a href="/ablauf/preis-wirtschaftlichkeit/">geführten Ablauf „Preis &amp; Wirtschaftlichkeit“</a> gehst du von den Kosten über den Preis und die Absatzplanung bis zu Gewinn und Variantenvergleich – deine Eingaben bleiben
+        zwischen den Schritten erhalten.
+      </p>
+    </section>
+  </div>
+</Base>

@@ -4,14 +4,24 @@ import type {
   CalcDef,
   CalcResult,
   FieldDef,
+  FollowUpDef,
   Out,
   RawInputs,
   VariantDef,
 } from "../calc/types";
-import { formatValue, formatDecimal } from "../lib/number";
-import { D } from "../lib/decimal";
+import { compareScenarios, PERIOD_KEY } from "../calc/scenario";
+import { formatValue, parseNumber } from "../lib/number";
 import { setTransfer, takeTransfer } from "../lib/storage";
-import { addSaved, getSaved } from "../lib/workspace";
+import {
+  addProject,
+  addSaved,
+  getProjects,
+  getSavedItem,
+  touchRecent,
+  updateSaved,
+} from "../lib/workspace";
+import { track } from "../lib/analytics";
+import { barsChart, breakEvenChart } from "./charts";
 import { esc, toast } from "./ui";
 
 type Ok = Extract<CalcResult, { status: "ok" }>;
@@ -34,6 +44,14 @@ async function init(root: HTMLElement) {
   const toolsEl = root.querySelector<HTMLElement>("[data-tools]")!;
   const transfersEl = root.querySelector<HTMLElement>("[data-transfers]");
   const noticeEl = root.querySelector<HTMLElement>("[data-notice]")!;
+  const chartEl = root.querySelector<HTMLElement>("[data-chart]")!;
+  const followEl = root.querySelector<HTMLElement>("[data-followups]")!;
+  const followList = followEl.querySelector<HTMLElement>("[data-followup-list]")!;
+  const capacityEl = followEl.querySelector<HTMLElement>("[data-capacity]")!;
+  const saveStatusEl = root.querySelector<HTMLElement>("[data-save-status]")!;
+  /** Aktuell geöffnete gespeicherte Berechnung (für „Änderungen speichern“). */
+  let opened: { id: string; name: string; inputs: RawInputs; variantId: string } | null = null;
+  let exampleActive = false;
   const touched = new Set<string>();
   let variant: VariantDef = def.variants[0];
   let last: {
@@ -172,6 +190,8 @@ async function init(root: HTMLElement) {
   };
 
   /* ---------- Berechnen und darstellen ---------- */
+  const analyticsId = () => ({ calc: def.id, variant: variant.id });
+
   function update(opts: { showAll?: boolean; announce?: boolean } = {}) {
     const form = forms.get(variant.id)!;
     const raw = readRaw(form, variant);
@@ -185,6 +205,7 @@ async function init(root: HTMLElement) {
       }
     }
     showFieldErrors(form, variant, errors, !!opts.showAll);
+    updateSaveStatus();
 
     if (!result) {
       const hasErrors = Object.keys(validation.fieldErrors).length > 0;
@@ -225,15 +246,21 @@ async function init(root: HTMLElement) {
       }
       toolsEl.hidden = true;
       if (transfersEl) transfersEl.hidden = true;
+      followEl.hidden = true;
+      chartEl.innerHTML = "";
       if (opts.announce)
         announce(
           "Noch kein Ergebnis – bitte Eingaben vervollständigen oder prüfen.",
         );
       return;
     }
-    renderResult(result);
-    toolsEl.hidden = result.status !== "ok";
-    if (transfersEl) transfersEl.hidden = result.status !== "ok";
+    renderResult(result, raw);
+    const ok = result.status === "ok";
+    toolsEl.hidden = !ok;
+    if (transfersEl) transfersEl.hidden = !ok;
+    if (ok) track("calc_result", analyticsId());
+    renderChart(result);
+    renderFollowUps(result);
     const summary =
       result.status === "ok"
         ? `Ergebnis: ${result.main.label} ${fmt(result.main)}. ${result.meaning}`
@@ -253,22 +280,49 @@ async function init(root: HTMLElement) {
     resultEl.innerHTML = html;
   }
 
-  function renderResult(r: CalcResult) {
+  /** Zeitraum und Einheit des Ergebnisses (Ebene 2: Einordnung). */
+  function contextLine(r: Ok, raw: RawInputs): string {
+    const parts: string[] = [];
+    const pf = variant.fields.find((f) => f.key === PERIOD_KEY);
+    if (pf) {
+      const v = typeof raw[PERIOD_KEY] === "string" && raw[PERIOD_KEY] ? (raw[PERIOD_KEY] as string) : pf.defaultValue;
+      const label = pf.options?.find((o) => o.value === v)?.label;
+      if (label) parts.push(`Zeitraum: ${label}`);
+    }
+    if (r.main.unit) parts.push(`Einheit: ${r.main.unit}`);
+    return parts.join(" · ");
+  }
+
+  function dl(list: Out[]): string {
+    return `<dl class="result-extra">${list.map((o) => `<div><dt>${esc(o.label)}</dt><dd>${esc(fmt(o))}</dd></div>`).join("")}</dl>`;
+  }
+
+  function renderResult(r: CalcResult, raw: RawInputs) {
     if (r.status === "ok") {
-      const extra = r.extra?.length
-        ? `<dl class="result-extra">${r.extra.map((o) => `<div><dt>${esc(o.label)}</dt><dd>${esc(fmt(o))}</dd></div>`).join("")}</dl>`
-        : "";
+      const key = (r.extra ?? []).filter((o) => !o.detail);
+      const details = (r.extra ?? []).filter((o) => o.detail);
+      const ctx = contextLine(r, raw);
       const notes = r.notes?.length
         ? `<ul class="result-notes">${r.notes.map((n) => `<li>${esc(n)}</li>`).join("")}</ul>`
         : "";
-      const chart = r.chart?.kind === "break-even" ? breakEvenChart(r) : "";
+      const tag = exampleActive ? "Ergebnis mit Beispielwerten" : "Dein Ergebnis";
       setResult(
         "ok",
-        `<p class="result-tag">Dein Ergebnis</p>
-        <p class="result-main-label">${esc(r.main.label)}</p>
-        <p class="result-main"${r.tone ? ` data-tone="${r.tone}"` : ""}>${esc(fmt(r.main))}</p>
-        <p class="result-meaning">${esc(r.meaning)}</p>${extra}${notes}${chart}
-        <details><summary>Rechenweg anzeigen</summary><ol class="steps">${r.steps.map((s) => `<li>${esc(s)}</li>`).join("")}</ol></details>`,
+        `<div class="result-l1">
+          <p class="result-tag">${tag}</p>
+          <p class="result-main-label">${esc(r.main.label)}</p>
+          <p class="result-main"${r.tone ? ` data-tone="${r.tone}"` : ""}>${esc(fmt(r.main))}</p>
+          <p class="result-meaning">${esc(r.meaning)}</p>
+        </div>
+        <div class="result-l2">
+          ${key.length ? `<h4 class="result-sub">Einordnung</h4>${dl(key)}` : ""}
+          ${ctx ? `<p class="result-context">${esc(ctx)}</p>` : ""}${notes}
+        </div>
+        <details class="result-details"><summary>Details, Rechenweg und Modellgrenzen</summary>
+          ${details.length ? dl(details) : ""}
+          <ol class="steps">${r.steps.map((s) => `<li>${esc(s)}</li>`).join("")}</ol>
+          <p class="small muted"><a href="#annahmen">Modellannahmen und Grenzen dieser Berechnung</a></p>
+        </details>`,
       );
     } else {
       const head = {
@@ -278,9 +332,7 @@ async function init(root: HTMLElement) {
         invalid: "Eingabe prüfen",
       }[r.status];
       const partial =
-        "partial" in r && r.partial?.length
-          ? `<dl class="result-extra">${r.partial.map((o) => `<div><dt>${esc(o.label)}</dt><dd>${esc(fmt(o))}</dd></div>`).join("")}</dl>`
-          : "";
+        "partial" in r && r.partial?.length ? dl(r.partial) : "";
       setResult(
         r.status === "invalid" ? "error" : "info",
         `<p class="result-tag">${head}</p><p>${esc(r.message)}</p>${partial}`,
@@ -288,47 +340,117 @@ async function init(root: HTMLElement) {
     }
   }
 
-  function breakEvenChart(r: Ok): string {
-    const pts = r.chart!.points;
-    const be = r.chart!.breakEven ?? 0;
-    const qMax = pts[pts.length - 1].q;
-    const vMax = Math.max(...pts.map((p) => Math.max(p.revenue, p.cost))) || 1;
-    const W = 320,
-      H = 190,
-      x0 = 46,
-      y0 = 160,
-      w = 260,
-      h = 140;
-    const X = (q: number) => x0 + (q / qMax) * w;
-    const Y = (v: number) => y0 - (v / vMax) * h;
-    const line = (key: "revenue" | "cost") =>
-      `M${X(pts[0].q)} ${Y(pts[0][key])} L${X(pts[1].q)} ${Y(pts[1][key])}`;
-    const rev = (q: number) =>
-      pts[0].revenue + ((pts[1].revenue - pts[0].revenue) * q) / qMax;
-    const n = (v: number, d = 0) => formatDecimal(D(v), { max: d });
-    const beY = Y(rev(be));
-    const rows = [0, be, qMax].map((q) => {
-      const revenue = rev(q),
-        cost = pts[0].cost + ((pts[1].cost - pts[0].cost) * q) / qMax;
-      return `<tr><td>${n(q, 2)}</td><td>${n(revenue, 2)} €</td><td>${n(cost, 2)} €</td><td>${n(revenue - cost, 2)} €</td></tr>`;
-    });
-    return `<div class="chart-box">
-      <p class="result-tag">Dein Ergebnis als Diagramm</p>
-      <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Umsatz- und Gesamtkostenlinie deiner Eingaben; Schnittpunkt bei ${n(be, 2)} Stück.">
-        <line x1="${x0}" y1="${y0}" x2="${x0 + w}" y2="${y0}" stroke="#17253D"/><line x1="${x0}" y1="${y0}" x2="${x0}" y2="${y0 - h}" stroke="#17253D"/>
-        <path d="${line("cost")}" stroke="#17253D" stroke-width="2" fill="none"/>
-        <path d="${line("revenue")}" stroke="#3D4AE8" stroke-width="2.6" fill="none" stroke-dasharray="7 3"/>
-        <line x1="${X(be)}" y1="${beY}" x2="${X(be)}" y2="${y0}" stroke="#4A5872" stroke-dasharray="3 3"/>
-        <circle cx="${X(be)}" cy="${beY}" r="4" fill="#fff" stroke="#17253D" stroke-width="1.5"/>
-        <text x="${X(be)}" y="${y0 + 14}" font-size="10" text-anchor="middle" fill="#17253D" font-weight="700">${n(be, 2)} Stück</text>
-        <text x="${x0 - 4}" y="${y0 - h + 4}" font-size="9" text-anchor="end" fill="#4A5872">${n(vMax)} €</text>
-        <text x="${x0 - 4}" y="${y0 + 4}" font-size="9" text-anchor="end" fill="#4A5872">0</text>
-        <text x="${x0 + w}" y="${y0 + 14}" font-size="9" text-anchor="end" fill="#4A5872">${n(qMax)} Stück</text>
-        <line x1="${x0 + 8}" y1="16" x2="${x0 + 26}" y2="16" stroke="#3D4AE8" stroke-width="2.6" stroke-dasharray="7 3"/><text x="${x0 + 30}" y="19" font-size="10" fill="#17253D">Umsatz</text>
-        <line x1="${x0 + 86}" y1="16" x2="${x0 + 104}" y2="16" stroke="#17253D" stroke-width="2"/><text x="${x0 + 108}" y="19" font-size="10" fill="#17253D">Gesamtkosten</text>
-      </svg>
-      <details><summary>Werte als Tabelle</summary><div class="table-scroll"><table><thead><tr><th scope="col">Stück</th><th scope="col">Umsatz</th><th scope="col">Gesamtkosten</th><th scope="col">Ergebnis</th></tr></thead><tbody>${rows.join("")}</tbody></table></div></details>
-    </div>`;
+  function renderChart(r: CalcResult) {
+    if (r.status !== "ok" || !r.chart) {
+      chartEl.innerHTML = "";
+      return;
+    }
+    chartEl.innerHTML =
+      r.chart.kind === "break-even"
+        ? breakEvenChart(r.chart)
+        : barsChart(r.chart);
+  }
+
+  /* ---------- Nächste Schritte ---------- */
+  function renderFollowUps(r: CalcResult) {
+    const list = (def.followUps ?? []).filter(
+      (f) => (!f.variantId || f.variantId === variant.id) && f.when(last.inputs, r),
+    );
+    capacityEl.hidden = true;
+    followList.replaceChildren(
+      ...list.map((f) => {
+        const li = document.createElement("li");
+        const p = document.createElement("p");
+        p.textContent = f.text;
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "btn btn-secondary";
+        b.textContent = f.label;
+        b.addEventListener("click", () => runFollowUp(f, b));
+        li.append(p, b);
+        return li;
+      }),
+    );
+    followEl.hidden = list.length === 0;
+  }
+
+  function runFollowUp(f: FollowUpDef, btn: HTMLElement) {
+    const a = f.action;
+    const form = forms.get(variant.id)!;
+    if (a.kind === "transfer") {
+      root.querySelector<HTMLButtonElement>(`[data-transfer="${a.target}"]`)?.click();
+    } else if (a.kind === "focus") {
+      const el = a.fields
+        .map((k) => form.elements.namedItem(k) as HTMLElement | null)
+        .find(Boolean);
+      el?.focus();
+      el?.scrollIntoView({ block: "center", behavior: "smooth" });
+    } else if (a.kind === "variant") {
+      if (!last.inputs || !last.result) return;
+      const values = a.values(last.inputs, last.result);
+      track("values_transferred", { calc: def.id, variant: a.variantId });
+      switchVariant(a.variantId, true);
+      const nf = forms.get(a.variantId)!;
+      const nv = def.variants.find((x) => x.id === a.variantId)!;
+      writeRaw(nf, nv, values);
+      markTransferred(nf, nv, values);
+      const missing = nv.fields.filter((x) => !x.optional && x.type !== "select" && !(x.key in values)).map((x) => x.label);
+      noticeEl.innerHTML = `<div><p><strong>Übernommen:</strong> ${esc(a.describe)}.</p>${missing.length ? `<p>Noch einzutragen: <strong>${missing.map(esc).join(", ")}</strong> – unbekannte Werte werden nicht als 0 angenommen.</p>` : ""}</div>`;
+      noticeEl.hidden = false;
+      update({ announce: true });
+      const first = nv.fields.find((x) => missing.includes(x.label));
+      if (first) (nf.elements.namedItem(first.key) as HTMLElement | null)?.focus();
+      root.scrollIntoView({ block: "start" });
+    } else if (a.kind === "scenario") {
+      const scnEl = root.querySelector<HTMLDetailsElement>("[data-scenario]");
+      if (!scnEl) return;
+      scnEl.open = true;
+      copyToScenarios();
+      scnEl.scrollIntoView({ block: "start", behavior: "smooth" });
+      const formB = scnEl.querySelector<HTMLFormElement>('[data-scn="B"]')!;
+      (a.focus.map((k) => formB.elements.namedItem(k) as HTMLElement | null).find(Boolean))?.focus();
+    } else if (a.kind === "capacity") {
+      if (!last.inputs || !last.result) return;
+      const qty = a.quantity(last.inputs, last.result);
+      if (!qty) return;
+      capacityEl.hidden = false;
+      const input = capacityEl.querySelector<HTMLInputElement>("[data-capacity-input]")!;
+      const resEl = capacityEl.querySelector<HTMLElement>("[data-capacity-result]")!;
+      const pf = variant.fields.find((x) => x.key === PERIOD_KEY);
+      const pv = (last.raw[PERIOD_KEY] as string) || pf?.defaultValue;
+      const period = pf?.options?.find((o) => o.value === pv)?.label;
+      capacityEl.querySelector("[data-capacity-label]")!.textContent = `Verfügbare Kapazität${period ? ` (Zeitraum: ${period})` : ""}`;
+      capacityEl.querySelector("[data-capacity-unit]")!.textContent = a.unit;
+      capacityEl.querySelector("[data-capacity-help]")!.textContent = `Erforderlich sind ${formatValue(qty, "integer", a.unit)}${period ? ` je ${period}` : ""}. Trage die Kapazität in derselben Einheit und für denselben Zeitraum ein.`;
+      const check = () => {
+        const p = parseNumber(input.value);
+        if (p.kind !== "ok" || p.value.isNegative()) {
+          resEl.hidden = true;
+          return;
+        }
+        const cap = p.value;
+        resEl.hidden = false;
+        if (cap.gte(qty)) {
+          resEl.textContent = `✓ Die Kapazität reicht: ${formatValue(cap, "integer", a.unit)} verfügbar, ${formatValue(qty, "integer", a.unit)} erforderlich (Reserve ${formatValue(cap.sub(qty), "integer", a.unit)}).`;
+          resEl.dataset.tone = "positive";
+        } else {
+          const gap = qty.sub(cap);
+          resEl.textContent = `✗ Die Kapazität reicht nicht: Es fehlen ${formatValue(gap, "integer", a.unit)} (${formatValue(gap.div(qty).mul(100), "percent")} der erforderlichen Menge).`;
+          resEl.dataset.tone = "negative";
+        }
+      };
+      input.oninput = check;
+      input.focus();
+      check();
+    }
+    void btn;
+  }
+
+  function markTransferred(form: HTMLFormElement, v: VariantDef, values: Record<string, string>) {
+    for (const k of Object.keys(values)) {
+      if (v.fields.some((x) => x.key === k))
+        form.querySelector(`[data-field="${k}"]`)?.setAttribute("data-transferred", "");
+    }
   }
 
   /* ---------- Varianten ---------- */
@@ -346,6 +468,7 @@ async function init(root: HTMLElement) {
       .querySelectorAll<HTMLElement>("[data-variant-fav]")
       .forEach((s) => (s.hidden = s.dataset.variantFav !== id));
     touched.clear();
+    setExample(false);
     if (updateHash && def.variants.length > 1)
       history.replaceState(null, "", `#${id}`);
     update();
@@ -356,13 +479,21 @@ async function init(root: HTMLElement) {
       b.addEventListener("click", () => switchVariant(b.dataset.variantBtn!)),
     );
 
+  function setExample(on: boolean) {
+    exampleActive = on;
+    for (const form of forms.values())
+      form.querySelector<HTMLElement>("[data-example-flag]")!.hidden = !on || form.hidden;
+  }
+
   /* ---------- Formular-Ereignisse ---------- */
   let inputTimer: number | undefined;
   for (const [vid, form] of forms) {
     const v = def.variants.find((x) => x.id === vid)!;
     form.addEventListener("input", (e) => {
-      const t = e.target as HTMLElement;
+      const t = e.target as HTMLInputElement;
       t.closest("[data-field]")?.removeAttribute("data-transferred");
+      if (exampleActive) setExample(false);
+      if (t.value && t.value.trim()) track("calc_started", analyticsId());
       window.clearTimeout(inputTimer);
       inputTimer = window.setTimeout(() => update(), 160);
     });
@@ -384,23 +515,15 @@ async function init(root: HTMLElement) {
     });
     form
       .querySelector('[data-action="example"]')!
-      .addEventListener("click", () => {
-        writeRaw(form, v, v.example);
-        form
-          .querySelectorAll("[data-transferred]")
-          .forEach((el) => el.removeAttribute("data-transferred"));
-        touched.clear();
-        update({ announce: true });
-        toast(
-          "Beispielwerte eingesetzt. Du kannst sie jetzt durch eigene Zahlen ersetzen.",
-        );
-      });
+      .addEventListener("click", () => applyExample(form, v));
     form
       .querySelector('[data-action="reset"]')!
       .addEventListener("click", () => {
         writeRaw(form, v, {});
         touched.clear();
         noticeEl.hidden = true;
+        opened = null;
+        setExample(false);
         form
           .querySelectorAll("[data-transferred]")
           .forEach((el) => el.removeAttribute("data-transferred"));
@@ -430,6 +553,20 @@ async function init(root: HTMLElement) {
       });
     }
   }
+  function applyExample(form: HTMLFormElement, v: VariantDef) {
+    writeRaw(form, v, v.example);
+    form
+      .querySelectorAll("[data-transferred]")
+      .forEach((el) => el.removeAttribute("data-transferred"));
+    touched.clear();
+    opened = null;
+    setExample(true);
+    track("calc_started", { calc: def.id, variant: v.id });
+    update({ announce: true });
+    toast(
+      "Beispielwerte eingesetzt. Du kannst sie jetzt durch eigene Zahlen ersetzen.",
+    );
+  }
   function cellKey(v: VariantDef, input: HTMLInputElement) {
     if (!v.rows || input.dataset.col === undefined) return "";
     const tr = input.closest("tr")!;
@@ -455,9 +592,10 @@ async function init(root: HTMLElement) {
     return [
       `${title}${def.variants.length > 1 ? ` – ${variant.label}` : ""}`,
       `${r.main.label}: ${fmt(r.main)}`,
-      ...(r.extra ?? []).map((o) => `${o.label}: ${fmt(o)}`),
+      ...(r.extra ?? []).filter((o) => !o.detail).map((o) => `${o.label}: ${fmt(o)}`),
       r.meaning,
       ...(inputs.length ? ["", "Eingaben:", ...inputs] : []),
+      ...(exampleActive ? ["", "(Beispielwerte)"] : []),
       "",
       `Berechnet mit KPILot (${location.origin}${location.pathname})`,
     ].join("\n");
@@ -487,31 +625,108 @@ async function init(root: HTMLElement) {
   root
     .querySelector('[data-tool="print"]')!
     .addEventListener("click", () => window.print());
+  root.querySelector('[data-tool="compare"]')?.addEventListener("click", () => {
+    const scnEl = root.querySelector<HTMLDetailsElement>("[data-scenario]");
+    if (!scnEl) return;
+    scnEl.open = true;
+    copyToScenarios();
+    scnEl.scrollIntoView({ block: "start", behavior: "smooth" });
+  });
 
+  /* ----- Speichern ----- */
   const dialog = root.querySelector<HTMLDialogElement>("[data-save-dialog]")!;
-  const nameInput =
-    dialog.querySelector<HTMLInputElement>('input[name="name"]')!;
-  root.querySelector('[data-tool="save"]')!.addEventListener("click", () => {
-    nameInput.value = `${title}${def.variants.length > 1 ? ` – ${variant.label}` : ""} (${new Date().toLocaleDateString("de-DE")})`;
+  const saveForm = dialog.querySelector<HTMLFormElement>("[data-save-form]")!;
+  const nameInput = dialog.querySelector<HTMLInputElement>('input[name="name"]')!;
+  const noteInput = dialog.querySelector<HTMLTextAreaElement>('textarea[name="note"]')!;
+  const projectSel = dialog.querySelector<HTMLSelectElement>("[data-save-project]")!;
+  const newProjectWrap = dialog.querySelector<HTMLElement>("[data-save-newproject]")!;
+  const newProjectInput = dialog.querySelector<HTMLInputElement>('input[name="newproject"]')!;
+  projectSel.addEventListener("change", () => {
+    newProjectWrap.hidden = projectSel.value !== "__new";
+    if (!newProjectWrap.hidden) newProjectInput.focus();
+  });
+  function openSaveDialog(asNew: boolean) {
+    const existing = !asNew && opened ? getSavedItem(opened.id) : undefined;
+    nameInput.value = existing
+      ? existing.name
+      : `${title}${def.variants.length > 1 ? ` – ${variant.label}` : ""} (${new Date().toLocaleDateString("de-DE")})`;
+    noteInput.value = existing?.note ?? "";
+    projectSel.replaceChildren(
+      new Option("Ohne Vorhaben", ""),
+      ...getProjects().map((p) => new Option(p.name, p.id)),
+      new Option("Neues Vorhaben anlegen …", "__new"),
+    );
+    projectSel.value = existing?.projectId ?? "";
+    newProjectWrap.hidden = true;
+    newProjectInput.value = "";
+    saveForm.dataset.mode = existing ? "update" : "new";
     dialog.showModal();
     nameInput.select();
-  });
+  }
+  root.querySelector('[data-tool="save"]')!.addEventListener("click", () => openSaveDialog(false));
   dialog.addEventListener("close", () => {
     if (dialog.returnValue !== "save") return;
-    const saved = addSaved({
+    let projectId: string | undefined = projectSel.value || undefined;
+    if (projectSel.value === "__new") {
+      const p = addProject(newProjectInput.value);
+      projectId = p?.id;
+      if (!p) toast("Das Vorhaben konnte nicht angelegt werden – die Berechnung wird ohne Vorhaben gespeichert.", 6000);
+    }
+    const payload = {
       name: nameInput.value.trim() || title,
-      calcId: def.id,
+      note: noteInput.value,
+      projectId,
+      inputs: last.raw,
       variantId: variant.id,
       schema: def.schema,
-      inputs: last.raw,
-    });
+    };
+    const updating = saveForm.dataset.mode === "update" && opened;
+    const saved = updating
+      ? updateSaved(opened!.id, payload)
+      : addSaved({ ...payload, calcId: def.id });
+    if (saved) {
+      opened = { id: saved.id, name: saved.name, inputs: structuredClone(last.raw), variantId: variant.id };
+      track("calc_saved", analyticsId());
+    }
     toast(
       saved
-        ? `Gespeichert als „${saved.name}“. Du findest die Rechnung unter „Gespeichert“.`
-        : "Speichern ist fehlgeschlagen: Dein Browser erlaubt hier keine lokale Speicherung oder der Speicher ist voll.",
+        ? `Gespeichert als „${saved.name}“. Du findest die Berechnung unter „Meine Berechnungen“.`
+        : "Speichern ist fehlgeschlagen: Dein Browser erlaubt hier keine lokale Speicherung, der Speicher ist voll oder es sind schon 100 Berechnungen gespeichert.",
       6000,
     );
+    updateSaveStatus();
   });
+
+  /** Zeigt nachvollziehbar, ob Änderungen schon gespeichert sind. */
+  function updateSaveStatus() {
+    if (!opened) {
+      saveStatusEl.hidden = true;
+      return;
+    }
+    const same =
+      opened.variantId === variant.id && JSON.stringify(opened.inputs) === JSON.stringify(last.raw);
+    saveStatusEl.hidden = false;
+    saveStatusEl.dataset.state = same ? "saved" : "dirty";
+    saveStatusEl.replaceChildren();
+    const t = document.createElement("span");
+    t.textContent = same
+      ? `✓ Gespeichert als „${opened.name}“ – keine ungespeicherten Änderungen.`
+      : `● Änderungen gegenüber „${opened.name}“ sind noch nicht gespeichert.`;
+    saveStatusEl.append(t);
+    if (!same) {
+      const b1 = document.createElement("button");
+      b1.type = "button";
+      b1.className = "btn btn-ghost";
+      b1.textContent = "Änderungen speichern";
+      b1.addEventListener("click", () => openSaveDialog(false));
+      const b2 = document.createElement("button");
+      b2.type = "button";
+      b2.className = "btn btn-ghost";
+      b2.textContent = "Als neue Berechnung speichern";
+      b2.addEventListener("click", () => openSaveDialog(true));
+      saveStatusEl.append(" ", b1, b2);
+    }
+  }
 
   /* ---------- Werteübernahme zu anderen Rechnern ---------- */
   root.querySelectorAll<HTMLButtonElement>("[data-transfer]").forEach((b) =>
@@ -532,6 +747,7 @@ async function init(root: HTMLElement) {
         );
         return;
       }
+      track("values_transferred", { calc: def.id, variant: t.target });
       location.href = b.dataset.transferUrl!;
     }),
   );
@@ -575,6 +791,7 @@ async function init(root: HTMLElement) {
         : "";
     noticeEl.innerHTML = `<div><p><strong>Aus „${esc(tr.fromTitle)}“ übernommen:</strong> ${labels.map(esc).join(", ")}.</p>${missing.length ? `<p>Noch einzutragen: <strong>${missing.map(esc).join(", ")}</strong> – unbekannte Werte werden nicht als 0 angenommen.</p>` : ""}${periodNote}</div>`;
     noticeEl.hidden = false;
+    track("calc_started", { calc: def.id, variant: v.id });
     update();
     const firstMissing = v.fields.find((f) => missing.includes(f.label));
     if (firstMissing)
@@ -584,13 +801,14 @@ async function init(root: HTMLElement) {
     return true;
   }
 
-  /* ---------- Gespeicherte Rechnung öffnen ---------- */
+  /* ---------- Gespeicherte Berechnung öffnen ---------- */
   function applySaved(id: string) {
-    const item = getSaved().find((s) => s.id === id);
+    const item = getSavedItem(id);
     if (!item || item.calcId !== def.id) {
       noticeEl.innerHTML =
-        "<p>Diese gespeicherte Rechnung wurde in diesem Browser nicht gefunden.</p>";
+        "<p>Diese gespeicherte Berechnung wurde in diesem Browser nicht gefunden.</p>";
       noticeEl.hidden = false;
+      update();
       return;
     }
     const v = def.variants.find((x) => x.id === item.variantId);
@@ -601,84 +819,94 @@ async function init(root: HTMLElement) {
     }
     switchVariant(v.id, def.variants.length > 1);
     writeRaw(forms.get(v.id)!, v, item.inputs);
-    noticeEl.innerHTML = `<p><strong>Gespeicherte Rechnung „${esc(item.name)}“ geöffnet</strong> (gespeichert am ${new Date(item.savedAt).toLocaleDateString("de-DE")}).${item.schema !== def.schema ? " Sie stammt aus einer älteren Version – bitte die Werte prüfen." : ""}</p>`;
+    noticeEl.innerHTML = `<p><strong>Gespeicherte Berechnung „${esc(item.name)}“ geöffnet</strong> (zuletzt geändert am ${new Date(item.updatedAt).toLocaleDateString("de-DE")}).${item.schema !== def.schema ? " Sie stammt aus einer älteren Version – bitte die Werte prüfen." : ""}${item.note ? ` Notiz: ${esc(item.note)}` : ""}</p>`;
     noticeEl.hidden = false;
     update({ announce: true });
+    opened = { id: item.id, name: item.name, inputs: structuredClone(last.raw), variantId: v.id };
+    updateSaveStatus();
+    track("saved_reopened", { calc: def.id, variant: v.id });
   }
 
   /* ---------- Szenariovergleich ---------- */
   const scn = root.querySelector<HTMLElement>("[data-scenario]");
+  let copyToScenarios = () => {};
   if (scn) {
     const sv = def.variants.find((x) => x.id === scn.dataset.scenario)!;
     const formA = scn.querySelector<HTMLFormElement>('[data-scn="A"]')!;
     const formB = scn.querySelector<HTMLFormElement>('[data-scn="B"]')!;
-    const out = scn.querySelector<HTMLElement>("[data-scn-result]")!;
+    const shared = scn.querySelector<HTMLSelectElement>(`select[name="${PERIOD_KEY}"]`);
+    const outEl = scn.querySelector<HTMLElement>("[data-scn-result]")!;
+    const nameOf = (f: HTMLFormElement, fallback: string) =>
+      (f.elements.namedItem("scnName") as HTMLInputElement).value.trim() || fallback;
+    const scnRaw = (f: HTMLFormElement): RawInputs => {
+      const raw = readRaw(f, { ...sv, fields: sv.fields.filter((x) => x.key !== PERIOD_KEY) });
+      if (shared) raw[PERIOD_KEY] = shared.value;
+      return raw;
+    };
     const compare = () => {
-      const a = run(sv, readRaw(formA, sv)).result;
-      const b = run(sv, readRaw(formB, sv)).result;
-      if (!a && !b) {
-        out.innerHTML =
+      const a = scnRaw(formA),
+        b = scnRaw(formB);
+      const nA = nameOf(formA, "A"),
+        nB = nameOf(formB, "B");
+      const c = compareScenarios(sv, a, b);
+      // abweichende Eingaben kennzeichnen
+      for (const f of sv.fields) {
+        const w = formB.querySelector<HTMLElement>(`[data-field="${f.key}"]`);
+        if (!w) continue;
+        const differs = c.differingFields.includes(f.key) && c.state !== "empty";
+        w.toggleAttribute("data-differs", differs);
+      }
+      if (c.state === "empty") {
+        outEl.innerHTML =
           '<p class="small muted">Trage in beiden Szenarien Werte ein, um sie zu vergleichen.</p>';
         return;
       }
-      const list = (r: CalcResult | null) =>
-        r && r.status === "ok" ? [r.main, ...(r.extra ?? [])] : [];
-      const la = list(a),
-        lb = list(b);
-      const nRows = Math.max(la.length, lb.length);
-      const cell = (r: CalcResult | null, o?: Out) =>
-        o
-          ? esc(fmt(o))
-          : r
-            ? r.status === "ok"
-              ? "–"
-              : esc(
-                  r.status === "invalid"
-                    ? "Eingabe prüfen"
-                    : "nicht bestimmbar",
-                )
-            : "fehlt noch";
-      let rows = "";
-      for (let i = 0; i < nRows; i++) {
-        const oa = la[i],
-          ob = lb[i];
-        const label =
-          oa && ob && oa.label !== ob.label
-            ? `${oa.label} / ${ob.label}`
-            : (oa ?? ob)!.label;
-        const diff =
-          oa && ob && oa.format === ob.format && oa.format !== "factor"
-            ? formatValue(
-                ob.value.sub(oa.value),
-                oa.format === "pp" ? "pp" : oa.format,
-                oa.unit,
-                true,
-              )
-            : "–";
-        rows += `<tr><th scope="row">${esc(label)}</th><td>${cell(a, oa)}</td><td>${cell(b, ob)}</td><td>${esc(diff)}</td></tr>`;
-      }
-      out.innerHTML = `<div class="table-scroll"><table class="compare-table"><caption>Deine Szenarien im Vergleich</caption><thead><tr><th scope="col">Kennzahl</th><th scope="col">A</th><th scope="col">B</th><th scope="col">B − A</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+      const head = (n: string, s: string) => (n === s ? s : `${s}: ${n}`);
+      const warn = c.warnings.map((w) => `<p class="notice notice-warn" role="note">${esc(w)}</p>`).join("");
+      const same = c.differingLabels.length
+        ? `<p class="small"><strong>Abweichende Eingaben:</strong> ${c.differingLabels.map(esc).join(", ")}.</p>`
+        : '<p class="small muted">Beide Szenarien haben dieselben Eingaben.</p>';
+      const period = c.periodsMatch && c.periodA ? `<p class="small muted">Gemeinsamer Betrachtungszeitraum: ${esc(c.periodA)}. Alle Werte beider Szenarien beziehen sich darauf.</p>` : "";
+      const rows = c.rows
+        .map(
+          (r) =>
+            `<tr><th scope="row">${esc(r.label)}</th><td>${esc(r.a ?? "")}</td><td>${esc(r.b ?? "")}</td><td>${r.diff ? esc(r.diff) : `<span class="muted">${esc(r.diffNote ?? "–")}</span>`}</td></tr>`,
+        )
+        .join("");
+      outEl.innerHTML = `${warn}${same}${period}<div class="table-scroll" tabindex="0" role="region" aria-label="Szenariovergleich – bei Bedarf horizontal scrollbar"><table class="compare-table"><caption>Deine Szenarien im Vergleich</caption><thead><tr><th scope="col">Kennzahl</th><th scope="col">${esc(head(nA, "A"))}${c.periodsMatch ? "" : ` (${esc(c.periodA ?? "")})`}</th><th scope="col">${esc(head(nB, "B"))}${c.periodsMatch ? "" : ` (${esc(c.periodB ?? "")})`}</th><th scope="col">${esc(nB)} − ${esc(nA)}</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+      if (c.state === "ok") track("scenario_used", { calc: def.id, variant: sv.id });
     };
-    formA.addEventListener("input", compare);
-    formB.addEventListener("input", compare);
-    formA.addEventListener("change", compare);
-    formB.addEventListener("change", compare);
-    scn.querySelector("[data-scn-copy]")!.addEventListener("click", () => {
+    for (const f of [formA, formB]) {
+      f.addEventListener("input", compare);
+      f.addEventListener("change", compare);
+    }
+    shared?.addEventListener("change", compare);
+    copyToScenarios = () => {
       const raw = variant.id === sv.id ? readRaw(forms.get(sv.id)!, sv) : {};
-      writeRaw(formA, sv, raw);
-      writeRaw(formB, sv, raw);
+      writeRaw(formA, { ...sv, fields: sv.fields.filter((x) => x.key !== PERIOD_KEY) }, raw);
+      writeRaw(formB, { ...sv, fields: sv.fields.filter((x) => x.key !== PERIOD_KEY) }, raw);
+      if (shared && typeof raw[PERIOD_KEY] === "string" && raw[PERIOD_KEY]) shared.value = raw[PERIOD_KEY] as string;
       compare();
-      (formB.querySelector("input") as HTMLInputElement | null)?.focus();
+    };
+    scn.querySelector("[data-scn-copy]")!.addEventListener("click", () => {
+      copyToScenarios();
+      (formB.querySelector("input:not([name=scnName])") as HTMLInputElement | null)?.focus();
     });
     compare();
   }
 
   /* ---------- Start ---------- */
+  touchRecent(def.id);
   const hash = decodeURIComponent(location.hash.slice(1));
+  const [hVariant, hFlag] = hash.includes(":") ? hash.split(":") : [hash, ""];
   if (!applyIncoming()) {
     if (hash.startsWith("gespeichert="))
       applySaved(hash.slice("gespeichert=".length));
-    else if (def.variants.some((v) => v.id === hash)) {
+    else if (hash === "beispiel" || hFlag === "beispiel") {
+      const v = def.variants.find((x) => x.id === hVariant) ?? def.variants[0];
+      switchVariant(v.id, false);
+      applyExample(forms.get(v.id)!, v);
+    } else if (def.variants.some((v) => v.id === hash)) {
       switchVariant(hash, false);
       root.scrollIntoView({ block: "start" });
     } else update();

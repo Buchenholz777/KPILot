@@ -1,3 +1,5 @@
+import { TOPICS } from './registry';
+
 /** Häufige Fragen auf der Startseite (sichtbar und als FAQPage-Daten). */
 export const HOME_FAQ: { q: string; a: string }[] = [
   {
@@ -10,6 +12,6 @@ export const HOME_FAQ: { q: string; a: string }[] = [
   },
   {
     q: 'Ist der KPI Rechner kostenlos und werden meine Zahlen gespeichert?',
-    a: 'Ja, alle 40 Rechner sind kostenlos und ohne Anmeldung nutzbar. Die Berechnung läuft direkt in deinem Browser; deine eingegebenen Zahlen werden nicht an einen Server übertragen.',
+    a: `Ja, alle ${TOPICS.length} Rechner sind kostenlos und ohne Anmeldung nutzbar. Die Berechnung läuft direkt in deinem Browser; deine eingegebenen Zahlen werden nicht an einen Berechnungsserver übertragen. Gespeichert wird nur, wenn du es ausdrücklich möchtest – lokal in deinem Browser. Eine Messung der Website-Nutzung gibt es nur mit deiner Zustimmung.`,
   },
 ];

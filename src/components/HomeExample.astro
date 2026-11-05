@@ -1,0 +1,35 @@
+---
+import { getVariant } from '../calc/all';
+import { runExample } from '../calc/engine';
+import { formatValue } from '../lib/number';
+import { topicUrl } from '../data/registry';
+/** Kurzes, vollständiges Praxisbeispiel – die Werte stammen aus denselben Rechenfunktionen wie der Rechner. */
+const v = getVariant('rabatt-absatz', 'prozent');
+const r = runExample(v);
+const ok = r.status === 'ok' ? r : undefined;
+---
+
+{
+  ok && (
+    <section class="container section home-example" aria-labelledby="bsp-h">
+      <div class="card content-card">
+        <p class="eyebrow">Ein Beispiel aus dem Handel (ausdrücklich fiktiv)</p>
+        <h2 id="bsp-h">„10 % Rabatt auf ein Produkt – lohnt sich das?“</h2>
+        <p>
+          <strong>Annahmen:</strong> Ein Produkt kostet netto 100 €, die variablen Kosten betragen 80 €, bisher werden 100 Stück im Monat verkauft. Jetzt sind 10 % Rabatt im Gespräch.
+        </p>
+        <ol class="steps">{ok.steps.map((s) => <li>{s}</li>)}</ol>
+        <p class="home-example-result">
+          <strong>Ergebnis:</strong> {ok.meaning}
+        </p>
+        <p class="small muted">
+          Das Beispiel sagt nicht, ob diese zusätzliche Nachfrage erreichbar ist – es zeigt, was sie voraussetzt. Nächster Prüfschritt: Passt der erforderliche Absatz zu deiner Kapazität und zu deinem Markt?
+        </p>
+        <p class="step-links">
+          <a class="btn btn-primary" href={`${topicUrl('rabatt-absatz')}#beispiel`}>Dieses Beispiel im Rechner öffnen</a>
+          <a href="/praxisfaelle/">Alle drei Praxisfälle ansehen</a>
+        </p>
+      </div>
+    </section>
+  )
+}

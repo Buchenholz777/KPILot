@@ -15,7 +15,8 @@ const cur = (p: string) => (path === p ? 'page' : undefined);
     <nav class="main-nav" aria-label="Hauptnavigation">
       <ul>
         <li><a href="/rechner/" aria-current={cur('/rechner/')}><Icon name="grid" /><span class="nav-label nav-label-first"><span class="nav-long">Alle </span>Rechner</span></a></li>
-        <li class="nav-optional"><a href="/gespeichert/" aria-current={cur('/gespeichert/')}><Icon name="save" />Gespeichert</a></li>
+        <li><a href="/aufgaben/" aria-current={path.startsWith('/aufgaben/') || path.startsWith('/ablauf/') || path.startsWith('/lernen/') || path.startsWith('/praxisfaelle/') ? 'page' : undefined}><Icon name="compass" /><span class="nav-label">Aufgaben</span></a></li>
+        <li><a href="/gespeichert/" aria-current={path.startsWith('/gespeichert/') ? 'page' : undefined}><Icon name="save" /><span class="nav-label"><span class="nav-long">Meine </span>Berechnungen</span></a></li>
         <li>
           <a href="/favoriten/" class="nav-fav" aria-current={cur('/favoriten/')}>
             <Icon name="star" /><span class="nav-label"><span class="nav-long">Meine </span>Favoriten</span><span class="count" data-fav-count hidden></span>

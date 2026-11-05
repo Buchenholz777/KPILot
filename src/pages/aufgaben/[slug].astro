@@ -1,0 +1,54 @@
+---
+import type { GetStaticPaths } from 'astro';
+import Base from '../../layouts/Base.astro';
+import PageBand from '../../components/PageBand.astro';
+import { TASKS, taskUrl, type Task } from '../../data/tasks';
+import { TOPIC_BY_ID, topicUrl, displayTitle } from '../../data/registry';
+
+export const getStaticPaths = (() => TASKS.map((t) => ({ params: { slug: t.slug }, props: { task: t } }))) satisfies GetStaticPaths;
+const { task: t } = Astro.props as { task: Task };
+const crumbs = [
+  { name: 'Start', href: '/' },
+  { name: 'Aufgaben', href: '/aufgaben/' },
+  { name: t.title, href: taskUrl(t) },
+];
+const link = (s: Task['steps'][number]) =>
+  s.calc ? `${topicUrl(s.calc)}${s.variant ? `#${s.variant}` : ''}` : s.href!;
+const label = (s: Task['steps'][number]) =>
+  s.linkLabel ?? `${displayTitle(TOPIC_BY_ID[s.calc!])}${s.variant ? ' (Modus öffnen)' : ' öffnen'}`;
+---
+
+<Base title={`${t.title} – Schritt für Schritt | KPILot`} description={t.promise} crumbs={crumbs}>
+  <PageBand crumbs={crumbs} title={t.title} lead={t.promise} />
+  <div class="container page-body">
+    <section class="card content-card" aria-labelledby="fragen">
+      <h2 id="fragen">Diese Fragen beantwortet die Aufgabe</h2>
+      <ul class="bullets">{t.questions.map((q) => <li>{q}</li>)}</ul>
+    </section>
+
+    <section class="section" aria-labelledby="schritte">
+      <h2 id="schritte">Deine nächsten Schritte</h2>
+      <ol class="task-steps">
+        {
+          t.steps.map((s) => (
+            <li class="card">
+              <h3>{s.title}</h3>
+              <p>{s.text}</p>
+              <p class="step-links">
+                <a class="btn btn-secondary" href={link(s)}>{label(s)}</a>
+                {s.calc && <a class="step-example" href={`${topicUrl(s.calc)}#${s.variant ? `${s.variant}:` : ''}beispiel`}>mit Beispielwerten ansehen</a>}
+              </p>
+            </li>
+          ))
+        }
+      </ol>
+    </section>
+
+    <section class="card content-card" aria-labelledby="grenzen">
+      <h2 id="grenzen">Was die Rechner hier nicht leisten</h2>
+      <ul class="bullets">{t.limits.map((l) => <li>{l}</li>)}</ul>
+    </section>
+
+    <p><a href="/aufgaben/">← Alle Aufgaben</a></p>
+  </div>
+</Base>

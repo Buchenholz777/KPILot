@@ -3,6 +3,7 @@ import Base from '../../layouts/Base.astro';
 import Catalog from '../../components/Catalog.astro';
 import Breadcrumb from '../../components/Breadcrumb.astro';
 import { CATEGORIES } from '../../data/categories';
+import { TOPICS } from '../../data/registry';
 import { SITE_NAME } from '../../config/site';
 
 const crumbs = [
@@ -12,7 +13,7 @@ const crumbs = [
 ---
 
 <Base
-  title={`Alle 40 Rechner – Prozent, Kosten, Finanzen, Marketing | ${SITE_NAME}`}
+  title={`Alle ${TOPICS.length} Rechner – Prozent, Kosten, Finanzen, Marketing | ${SITE_NAME}`}
   description={`Alle Rechner von ${SITE_NAME} durchsuchen und nach sechs Kategorien filtern: Prozentrechnung, Kostenrechnung, Finanzkennzahlen, Marketing-KPIs, Kundenkennzahlen und Controlling.`}
   crumbs={crumbs}
 >
@@ -20,7 +21,7 @@ const crumbs = [
     <Fragment slot="intro">
       <Breadcrumb items={crumbs} />
       <h1 class="hero-title">Alle Rechner</h1>
-      <p class="hero-sub">40 Themen in 6 Kategorien</p>
+      <p class="hero-sub">{TOPICS.length} Rechner in {CATEGORIES.length} Kategorien</p>
     </Fragment>
   </Catalog>
   <div class="container">

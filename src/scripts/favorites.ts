@@ -6,6 +6,7 @@ import {
   storageAvailable,
 } from "../lib/storage";
 import { toast, readJson } from "./ui";
+import { getRecent } from "../lib/workspace";
 
 interface KrData {
   ids: string[];
@@ -38,6 +39,29 @@ function render() {
   document
     .querySelectorAll<HTMLElement>("[data-fav-links]")
     .forEach(renderLinks);
+  document
+    .querySelectorAll<HTMLElement>("[data-recent-links]")
+    .forEach(renderRecent);
+}
+
+/** Zuletzt genutzte Rechner: nur Rechnerkennung und Zeitpunkt, keine Eingaben. */
+function renderRecent(list: HTMLElement) {
+  const wrap = list.closest<HTMLElement>("[data-recent]");
+  const items = getRecent()
+    .map((e) => data.topics[e.id])
+    .filter(Boolean)
+    .slice(0, 5)
+    .map((meta) => {
+      const li = document.createElement("li");
+      const a = document.createElement("a");
+      a.className = "fav-link";
+      a.href = meta.href;
+      a.textContent = meta.title;
+      li.appendChild(a);
+      return li;
+    });
+  list.replaceChildren(...items);
+  if (wrap) wrap.hidden = items.length === 0;
 }
 
 /** Kompakte Favoritenleiste (Startseite): nur Links, damit Suche, Filter und Kacheln sichtbar bleiben. */

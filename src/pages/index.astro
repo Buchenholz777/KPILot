@@ -3,6 +3,9 @@ import Base from '../layouts/Base.astro';
 import Catalog from '../components/Catalog.astro';
 import Favorites from '../components/Favorites.astro';
 import KpiInfo from '../components/KpiInfo.astro';
+import TaskTiles from '../components/TaskTiles.astro';
+import HomeExample from '../components/HomeExample.astro';
+import { TOPICS } from '../data/registry';
 import { SITE_NAME, SITE_DESCRIPTION } from '../config/site';
 import { HOME_FAQ } from '../data/faq';
 
@@ -20,16 +23,25 @@ const websiteLd = site
 ---
 
 <Base
-  title={`KPI Rechner – Kostenlos Key Performance Indicators berechnen | ${SITE_NAME}`}
-  description="Berechne deine wichtigsten Unternehmens-KPIs schnell und kostenlos mit KPILot. Das einfache Tool für Conversion Rate, ROI, CAC und mehr."
+  title={`KPI Rechner – Preise kalkulieren, Wirtschaftlichkeit prüfen, Kennzahlen verstehen | ${SITE_NAME}`}
+  description={`Kostenlose Rechner für Preis, Rabatt, Break-even, Gewinn, Werbung und Liquidität – ${TOPICS.length} Rechner mit nachvollziehbarem Rechenweg, Variantenvergleich und Weiterverwendung der Werte.`}
   jsonLd={websiteLd}
 >
   <Catalog mode="home">
     <Fragment slot="intro">
-      <h1 class="hero-title">Kostenloser KPI Rechner <span class="accent">für dein Business</span></h1>
-      <p class="hero-sub">40 Rechner mit Erklärung und Rechenweg</p>
+      <h1 class="hero-title">Preise kalkulieren. <span class="accent">Wirtschaftlichkeit prüfen. Kennzahlen verstehen.</span></h1>
+      <p class="hero-sub">
+        {TOPICS.length} kostenlose Rechner mit nachvollziehbarem Rechenweg. Vergleiche Varianten und nimm deine Werte in den nächsten Rechner mit.
+      </p>
     </Fragment>
-    <Favorites slot="between" layout="row" />
+    <Fragment slot="between">
+      <section class="home-tasks" aria-labelledby="aufgaben-h">
+        <h2 id="aufgaben-h">Womit möchtest du starten?</h2>
+        <TaskTiles />
+      </section>
+      <Favorites layout="row" />
+    </Fragment>
   </Catalog>
+  <HomeExample />
   <KpiInfo />
 </Base>

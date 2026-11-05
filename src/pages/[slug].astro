@@ -4,6 +4,8 @@ import Base from '../layouts/Base.astro';
 import PageBand from '../components/PageBand.astro';
 import Calculator from '../components/Calculator.astro';
 import FavButton from '../components/FavButton.astro';
+import Provenance from '../components/Provenance.astro';
+import Feedback from '../components/Feedback.astro';
 import CategoryIcon from '../components/CategoryIcon.astro';
 import { TOPICS, TOPIC_BY_ID, topicUrl, displayTitle } from '../data/registry';
 import { CATEGORY_BY_ID } from '../data/categories';
@@ -24,10 +26,16 @@ const crumbs = [
   { name, href: topicUrl(t) },
 ];
 const COST_ASSUMPTIONS = ['kosten'].includes(t.category)
-  ? ['Nettobeträge ohne automatische Umsatzsteuer.', 'Ein einheitlicher Betrachtungszeitraum für alle Beträge und Mengen.']
+  ? ['Nettobeträge ohne Umsatzsteuer.', 'Ein einheitlicher Betrachtungszeitraum für alle Beträge und Mengen.']
   : t.category === 'marketing'
     ? ['Zähler und Nenner betreffen denselben Zeitraum und dieselbe Messung.']
     : [];
+// Gleiche Aussagen nicht doppelt zeigen (z. B. mehrfach „Nettobeträge …“, mehrfach „derselbe Zeitraum“)
+const sameTopic = (a: string, b: string) => {
+  const key = (x: string) => (/netto/i.test(x) ? 'netto' : /(einheitlich|derselbe|gleichen?)\w* (betrachtungs)?zeitraum|selben zeitraum/i.test(x) ? 'zeit' : x.toLowerCase());
+  return key(a) === key(b);
+};
+const assumptions = [...t.assumptions, ...COST_ASSUMPTIONS].reduce<string[]>((acc, a) => (acc.some((x) => sameTopic(x, a)) ? acc : [...acc, a]), []);
 
 const examples = calc.variants.map((v) => {
   const r = runExample(v);
@@ -54,17 +62,19 @@ const examples = calc.variants.map((v) => {
   <div class="container" data-cat={t.category}>
     <div class="detail-top">
       <section class="card intro-card" aria-labelledby="kurz">
-        <h2 class="eyebrow" id="kurz">Kurz erklärt</h2>
-        <p class="intro-text">{t.intro}</p>
-        <p class="jump"><a href="#rechner">Direkt zum Rechner ↓</a></p>
-        <figure class="figure">
+        <div class="intro-text-col">
+          <h2 class="eyebrow" id="kurz">Kurz erklärt</h2>
+          <p class="intro-text">{t.intro}</p>
+          <p class="jump"><a href="#rechner">Direkt zum Rechner ↓</a></p>
+          <details class="img-desc">
+            <summary>Bildbeschreibung lesen</summary>
+            <p>{t.image.description}</p>
+          </details>
+        </div>
+        <figure class="figure intro-figure">
           <img src={illustrationPath(t.id, true)} width="640" height="360" alt={t.image.alt} decoding="async" fetchpriority="high" />
           <figcaption>{t.image.caption}</figcaption>
         </figure>
-        <details class="img-desc">
-          <summary>Bildbeschreibung lesen</summary>
-          <p>{t.image.description}</p>
-        </details>
       </section>
 
       <Calculator id={t.id} />
@@ -130,24 +140,10 @@ const examples = calc.variants.map((v) => {
 
       <section class="card content-card" aria-labelledby="annahmen">
         <h2 id="annahmen">Modellannahmen</h2>
-        <ul class="bullets">{[...t.assumptions, ...COST_ASSUMPTIONS].map((a) => <li>{a}</li>)}</ul>
-        {
-          t.sources && (
-            <p class="small muted">
-              Fachliche Quelle:{' '}
-              {t.sources.map((s, i) => (
-                <>
-                  {i > 0 && ' · '}
-                  <a href={s.url} rel="noopener" target="_blank">
-                    {s.label}
-                  </a>
-                </>
-              ))}
-              . Das Modell hier ist bewusst vereinfacht.
-            </p>
-          )
-        }
+        <ul class="bullets">{assumptions.map((a) => <li>{a}</li>)}</ul>
       </section>
+
+      <Provenance topic={t} />
 
       <section class="card content-card" aria-labelledby="verwandt">
         <h2 id="verwandt">Verwandte Rechner</h2>
@@ -167,6 +163,7 @@ const examples = calc.variants.map((v) => {
           }
         </ul>
       </section>
+      <Feedback name={name} url={topicUrl(t)} />
     </div>
   </div>
 </Base>

@@ -1,0 +1,28 @@
+---
+import { OPERATOR } from '../config/operator';
+/** Rückmeldung zu einem Rechner. Es wird nur die Rechnerkennung übernommen – nie Rechenwerte oder gespeicherte Daten. */
+interface Props {
+  name: string;
+  url: string;
+}
+const { name, url } = Astro.props;
+const email = OPERATOR.email.value;
+const subject = `KPILot Rückmeldung: ${name}`;
+const body = `Rechner: ${name}\nSeite: ${url}\n\nMein Hinweis (Fehler oder unverständlicher Begriff):\n\n`;
+const href = email ? `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}` : undefined;
+---
+
+<aside class="feedback card" aria-labelledby="feedback-h">
+  <h2 id="feedback-h">Fehler gefunden oder etwas unklar?</h2>
+  <p>
+    Schreib uns, was nicht stimmt oder welchen Begriff du nicht verstehst. Die E-Mail enthält nur den Namen dieses Rechners und den Text, den du selbst schreibst – deine Rechenwerte und gespeicherten
+    Daten werden nicht angehängt.
+  </p>
+  {
+    href ? (
+      <a class="btn btn-secondary" href={href}>Rückmeldung zu „{name}“ per E-Mail</a>
+    ) : (
+      <p class="notice notice-warn">Der Kontaktweg für Rückmeldungen ist noch nicht eingetragen (E-Mail-Adresse in <code>src/config/operator.ts</code>).</p>
+    )
+  }
+</aside>

@@ -1,6 +1,7 @@
 import type { APIRoute } from "astro";
 import { TOPICS, topicUrl } from "../data/registry";
 import { CATEGORIES } from "../data/categories";
+import { TASKS, taskUrl } from "../data/tasks";
 
 /** Nur indexierbare, kanonische Inhaltsseiten. Im Vorschaumodus (ohne SITE_URL) leer. */
 export const GET: APIRoute = ({ site }) => {
@@ -8,6 +9,12 @@ export const GET: APIRoute = ({ site }) => {
     "/",
     "/rechner/",
     "/ueber/",
+    "/aufgaben/",
+    ...TASKS.map((t) => taskUrl(t)),
+    "/ablauf/preis-wirtschaftlichkeit/",
+    "/lernen/welche-kennzahl/",
+    "/lernen/unsicherheit/",
+    "/praxisfaelle/",
     ...CATEGORIES.map((c) => `/kategorie/${c.slug}/`),
     ...TOPICS.map((t) => topicUrl(t)),
   ];

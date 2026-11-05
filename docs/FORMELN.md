@@ -1,4 +1,4 @@
-# Formeldokumentation – alle 40 Themen
+# Formeldokumentation – alle 41 Rechner
 
 > Automatisch erzeugt mit `npm run docs` aus `src/data/topics/*` und `src/calc/modules/*`.
 
@@ -142,7 +142,7 @@ Beispiel: Stückdeckungsbeitrag d = p − v = 50,00 € − 30,00 € = 20,00 �
 - **F**: Fixkosten im gewählten Zeitraum
 - **d**: Stückdeckungsbeitrag
 
-Beispiel: Stückdeckungsbeitrag d = p − v = 50,00 € − 30,00 € = 20,00 € → Theoretische Menge = F / d = 3.000,00 € / 20,00 € = 150 Stück → Aufgerundet auf ganze Stück: 150 Stück → Ergebnis bei 150 Stück = d × q − F = 20,00 € × 150 − 3.000,00 € = 0,00 € ⇒ **Theoretische Gewinnschwelle: 150 Stück**
+Beispiel: Stückdeckungsbeitrag d = p − v = 50,00 € − 30,00 € = 20,00 € → Theoretische Menge = F / d = 3.000,00 € / 20,00 € = 150 Stück → Aufgerundet auf ganze Stück: 150 Stück → Ergebnis bei 150 Stück = d × q − F = 20,00 € × 150 − 3.000,00 € = 0,00 € ⇒ **Mindeststückzahl zur Kostendeckung: 150 Stück**
 
 ## 10. Gewinn & Zielgewinn
 
@@ -235,7 +235,25 @@ Beispiel (Zuschlagssatz ermitteln): Zuschlagssatz = Gemeinkosten / Bezugsbasis �
 
 Beispiel: Kostensatz = Periodenkosten / abrechenbare Stunden = 1.200,00 € / 60 h = 20,00 €/h ⇒ **Kosten je Stunde: 20,00 € je Stunde**
 
-## 16. EBIT
+## 16. Rabatt: nötiger Mehrabsatz
+
+- ID: `rabatt-absatz` · URL: `/rabatt-mehrabsatz-rechner/` · Kategorie: Kostenrechnung & Preise
+- Varianten: `prozent` (Rabatt in Prozent), `neuer-preis` (Neuer Preis)
+
+    Neuer Preis = Ausgangspreis × (1 − Rabatt / 100)
+    d₀ = Ausgangspreis − v · d₁ = neuer Preis − v
+    Absatzfaktor = d₀ / d₁ (nur wenn d₀ > 0 und d₁ > 0)
+    Mehrabsatz (%) = (Absatzfaktor − 1) × 100 · Neue Menge = Ausgangsmenge × Absatzfaktor
+
+- **v**: variable Kosten je Einheit
+- **d₀, d₁**: Stückdeckungsbeitrag vor und nach dem Rabatt
+- **Absatzfaktor**: Verhältnis der erforderlichen zur bisherigen Menge
+
+Beispiel (Rabatt in Prozent): Neuer Preis = Ausgangspreis − Rabatt = 100,00 € × (1 − 10 %) = 90,00 € → Stückdeckungsbeitrag vorher = 100,00 € − 80,00 € = 20,00 € → Stückdeckungsbeitrag nachher = 90,00 € − 80,00 € = 10,00 € → Absatzfaktor = vorher / nachher = 20,00 € / 10,00 € = 2 → Mehrabsatz = (Absatzfaktor − 1) × 100 = 100 % → Neue Menge = bisherige Menge × Absatzfaktor = 100 × 2 = 200 → aufgerundet 200 Stück → Kontrolle mit ungerundeten Werten: 10,00 € × 200 = 2.000,00 € ≥ 20,00 € × 100 = 2.000,00 € ⇒ **Erforderlicher Mehrabsatz: 100 %**
+
+Beispiel (Neuer Preis): Neuer Preis = Ausgangspreis − Rabatt = 100,00 € × (1 − 10 %) = 90,00 € → Stückdeckungsbeitrag vorher = 100,00 € − 80,00 € = 20,00 € → Stückdeckungsbeitrag nachher = 90,00 € − 80,00 € = 10,00 € → Absatzfaktor = vorher / nachher = 20,00 € / 10,00 € = 2 → Mehrabsatz = (Absatzfaktor − 1) × 100 = 100 % → Neue Menge = bisherige Menge × Absatzfaktor = 100 × 2 = 200 → aufgerundet 200 Stück → Kontrolle mit ungerundeten Werten: 10,00 € × 200 = 2.000,00 € ≥ 20,00 € × 100 = 2.000,00 € ⇒ **Erforderlicher Mehrabsatz: 100 %**
+
+## 17. EBIT
 
 - ID: `ebit` · URL: `/ebit-rechner/` · Kategorie: Finanzen & Liquidität
 - Varianten: `standard` (EBIT)
@@ -249,7 +267,7 @@ Beispiel: Kostensatz = Periodenkosten / abrechenbare Stunden = 1.200,00 € / 60
 
 Beispiel: EBIT = Umsatzerlöse + sonstige Erträge − Aufwendungen ohne Abschreibungen − Abschreibungen → = 100.000,00 € + 0,00 € − 70.000,00 € − 10.000,00 € = 20.000,00 € ⇒ **EBIT: +20.000,00 €**
 
-## 17. EBITDA
+## 18. EBITDA
 
 - ID: `ebitda` · URL: `/ebitda-rechner/` · Kategorie: Finanzen & Liquidität
 - Varianten: `standard` (EBITDA)
@@ -261,7 +279,7 @@ Beispiel: EBIT = Umsatzerlöse + sonstige Erträge − Aufwendungen ohne Abschre
 
 Beispiel: EBITDA = EBIT + Abschreibungen = 20.000,00 € + 10.000,00 € = 30.000,00 € ⇒ **EBITDA: +30.000,00 €**
 
-## 18. EBIT-Marge
+## 19. EBIT-Marge
 
 - ID: `ebit-marge` · URL: `/ebit-marge-rechner/` · Kategorie: Finanzen & Liquidität
 - Varianten: `standard` (EBIT-Marge)
@@ -273,7 +291,7 @@ Beispiel: EBITDA = EBIT + Abschreibungen = 20.000,00 € + 10.000,00 € = 30.00
 
 Beispiel: EBIT-Marge = EBIT / Nettoumsatz × 100 = 20.000,00 € / 100.000,00 € × 100 = 20 % ⇒ **EBIT-Marge: +20 %**
 
-## 19. Umsatzrendite
+## 20. Umsatzrendite
 
 - ID: `umsatzrendite` · URL: `/umsatzrendite-rechner/` · Kategorie: Finanzen & Liquidität
 - Varianten: `standard` (Nettoumsatzrendite)
@@ -285,7 +303,7 @@ Beispiel: EBIT-Marge = EBIT / Nettoumsatz × 100 = 20.000,00 € / 100.000,00 �
 
 Beispiel: Umsatzrendite = Jahresüberschuss / Nettoumsatz × 100 = 8.000,00 € / 100.000,00 € × 100 = 8 % ⇒ **Nettoumsatzrendite: +8 %**
 
-## 20. Cashflow
+## 21. Cashflow
 
 - ID: `cashflow` · URL: `/cashflow-rechner/` · Kategorie: Finanzen & Liquidität
 - Varianten: `operativ` (Operativer Cashflow), `erweitert` (Erweiterte Übersicht)
@@ -302,7 +320,7 @@ Beispiel (Operativer Cashflow): Operativer Cashflow = Einzahlungen − Auszahlun
 
 Beispiel (Erweiterte Übersicht): Operativ = 30.000,00 € − 22.000,00 € = 8.000,00 € → Investiv = 0,00 € − 5.000,00 € = −5.000,00 € → Finanzierung = 2.000,00 € − 0,00 € = 2.000,00 € → Netto = 8.000,00 € + −5.000,00 € + 2.000,00 € = 5.000,00 € ⇒ **Erfasster Netto-Cashflow: +5.000,00 €**
 
-## 21. Working Capital
+## 22. Working Capital
 
 - ID: `working-capital` · URL: `/working-capital-rechner/` · Kategorie: Finanzen & Liquidität
 - Varianten: `standard` (Working Capital)
@@ -314,7 +332,7 @@ Beispiel (Erweiterte Übersicht): Operativ = 30.000,00 € − 22.000,00 € = 8
 
 Beispiel: Working Capital = Umlaufvermögen − kurzfristige Verpflichtungen = 50.000,00 € − 30.000,00 € = 20.000,00 € ⇒ **Working Capital: +20.000,00 €**
 
-## 22. Liquidität 1., 2. & 3. Grades
+## 23. Liquidität 1., 2. & 3. Grades
 
 - ID: `liquiditaet` · URL: `/liquiditaetsrechner/` · Kategorie: Finanzen & Liquidität
 - Varianten: `standard` (Liquiditätsgrade)
@@ -329,7 +347,7 @@ Beispiel: Working Capital = Umlaufvermögen − kurzfristige Verpflichtungen = 5
 
 Beispiel: L1 = liquide Mittel / Verpflichtungen × 100 = 10.000,00 € / 20.000,00 € × 100 = 50 % → L2 = (liquide Mittel + Forderungen) / Verpflichtungen × 100 = 25.000,00 € / 20.000,00 € × 100 = 125 % → L3 = Umlaufvermögen / Verpflichtungen × 100 = 50.000,00 € / 20.000,00 € × 100 = 250 % ⇒ **Liquidität 1. Grades: 50 %**
 
-## 23. Eigenkapitalquote
+## 24. Eigenkapitalquote
 
 - ID: `eigenkapital` · URL: `/eigenkapitalquote-rechner/` · Kategorie: Finanzen & Liquidität
 - Varianten: `standard` (Eigenkapitalquote)
@@ -341,7 +359,7 @@ Beispiel: L1 = liquide Mittel / Verpflichtungen × 100 = 10.000,00 € / 20.000,
 
 Beispiel: Quote = Eigenkapital / Gesamtkapital × 100 = 30.000,00 € / 100.000,00 € × 100 = 30 % ⇒ **Eigenkapitalquote: 30 %**
 
-## 24. Kapitalrendite (ROI)
+## 25. Kapitalrendite (ROI)
 
 - ID: `roi` · URL: `/roi-rechner/` · Kategorie: Finanzen & Liquidität
 - Varianten: `standard` (ROI)
@@ -353,7 +371,7 @@ Beispiel: Quote = Eigenkapital / Gesamtkapital × 100 = 30.000,00 € / 100.000,
 
 Beispiel: ROI = Gewinn / eingesetztes Kapital × 100 = 5.000,00 € / 50.000,00 € × 100 = 10 % ⇒ **ROI im betrachteten Zeitraum: +10 %**
 
-## 25. Amortisationsdauer
+## 26. Amortisationsdauer
 
 - ID: `amortisation` · URL: `/amortisationsrechner/` · Kategorie: Finanzen & Liquidität
 - Varianten: `standard` (Amortisationsdauer)
@@ -365,7 +383,7 @@ Beispiel: ROI = Gewinn / eingesetztes Kapital × 100 = 5.000,00 € / 50.000,00 
 
 Beispiel: Amortisationsdauer = Investition / Überschuss je Periode = 10.000,00 € / 2.500,00 € = 4 Jahre ⇒ **Amortisationsdauer: 4 Jahre**
 
-## 26. Conversion Rate (CR)
+## 27. Conversion Rate (CR)
 
 - ID: `conversion` · URL: `/conversion-rate-rechner/` · Kategorie: Marketing & Vertrieb
 - Varianten: `besuche` (Besuchsbasiert), `ereignisse` (Ereignisbasiert)
@@ -381,7 +399,7 @@ Beispiel (Besuchsbasiert): Conversion Rate = konvertierte Besuche / Besuche × 1
 
 Beispiel (Ereignisbasiert): Rate = Ereignisse / Interaktionen × 100 = 25 / 1.000 × 100 = 2,5 % ⇒ **Conversion Rate (Ereignisse): 2,5 %**
 
-## 27. Klickrate (CTR)
+## 28. Klickrate (CTR)
 
 - ID: `ctr` · URL: `/ctr-rechner/` · Kategorie: Marketing & Vertrieb
 - Varianten: `standard` (CTR)
@@ -393,7 +411,7 @@ Beispiel (Ereignisbasiert): Rate = Ereignisse / Interaktionen × 100 = 25 / 1.00
 
 Beispiel: CTR = Klicks / Impressionen × 100 = 200 / 10.000 × 100 = 2 % ⇒ **Klickrate (CTR): 2 %**
 
-## 28. Kosten je Klick (CPC)
+## 29. Kosten je Klick (CPC)
 
 - ID: `cpc` · URL: `/cpc-rechner/` · Kategorie: Marketing & Vertrieb
 - Varianten: `standard` (CPC)
@@ -405,7 +423,7 @@ Beispiel: CTR = Klicks / Impressionen × 100 = 200 / 10.000 × 100 = 2 % ⇒ **K
 
 Beispiel: CPC = Werbekosten / Klicks = 100,00 € / 200 = 0,50 € ⇒ **Durchschnittlicher CPC: 0,50 € je Klick**
 
-## 29. Tausenderkontaktpreis (CPM)
+## 30. Tausenderkontaktpreis (CPM)
 
 - ID: `cpm` · URL: `/cpm-rechner/` · Kategorie: Marketing & Vertrieb
 - Varianten: `standard` (CPM)
@@ -417,7 +435,7 @@ Beispiel: CPC = Werbekosten / Klicks = 100,00 € / 200 = 0,50 € ⇒ **Durchsc
 
 Beispiel: CPM = Werbekosten / Impressionen × 1.000 = 100,00 € / 50.000 × 1.000 = 2,00 € ⇒ **CPM: 2,00 € je 1.000 Impressionen**
 
-## 30. Kosten je Conversion (CPA)
+## 31. Kosten je Conversion (CPA)
 
 - ID: `cpa` · URL: `/cpa-rechner/` · Kategorie: Marketing & Vertrieb
 - Varianten: `standard` (CPA)
@@ -429,20 +447,26 @@ Beispiel: CPM = Werbekosten / Impressionen × 1.000 = 100,00 € / 50.000 × 1.0
 
 Beispiel: CPA = Werbekosten / Conversions = 500,00 € / 20 = 25,00 € ⇒ **CPA: 25,00 € je Conversion**
 
-## 31. ROAS
+## 32. ROAS
 
 - ID: `roas` · URL: `/roas-rechner/` · Kategorie: Marketing & Vertrieb
-- Varianten: `standard` (ROAS)
+- Varianten: `standard` (ROAS), `wirtschaftlichkeit` (Werbewirtschaftlichkeit)
 
     ROAS (Faktor) = Werbeumsatz / Werbekosten
     ROAS (%) = Faktor × 100
+    Werbewirtschaftlichkeit: Deckungsbeitrag vor Werbung = Werbeumsatz × Quote
+    Beitrag nach Werbung = Deckungsbeitrag vor Werbung − Werbekosten
+    Mindest-ROAS = 1 / Quote (nur bei Quote > 0)
 
 - **Werbeumsatz**: Umsatz, den die Messung der Werbung zuordnet
 - **Werbekosten**: Kosten der Werbung im selben Zeitraum
+- **Quote**: Deckungsbeitragsquote vor Werbekosten, als Dezimalzahl (30 % = 0,3): Anteil des Umsatzes nach variablen Kosten
 
-Beispiel: ROAS = Werbeumsatz / Werbekosten = 2.000,00 € / 500,00 € = 4,0-fach = 400 % ⇒ **ROAS: 4,0-fach**
+Beispiel (ROAS): ROAS = Werbeumsatz / Werbekosten = 2.000,00 € / 500,00 € = 4,0-fach = 400 % ⇒ **ROAS: 4,0-fach**
 
-## 32. Neukundenkosten (CAC)
+Beispiel (Werbewirtschaftlichkeit): Deckungsbeitrag vor Werbung = Umsatz × Quote = 2.000,00 € × 30 % = 600,00 € → Beitrag nach Werbung = 600,00 € − 500,00 € = 100,00 € → ROAS = 2.000,00 € / 500,00 € = 4,0-fach → Mindest-ROAS = 1 / Quote = 1 / 0,3 = 3,3333 ⇒ **Beitrag nach Werbekosten: +100,00 €**
+
+## 33. Neukundenkosten (CAC)
 
 - ID: `cac` · URL: `/cac-rechner/` · Kategorie: Marketing & Vertrieb
 - Varianten: `standard` (CAC)
@@ -455,7 +479,7 @@ Beispiel: ROAS = Werbeumsatz / Werbekosten = 2.000,00 € / 500,00 € = 4,0-fac
 
 Beispiel: CAC = (Marketing + Vertrieb) / Neukunden = (2.000,00 € + 1.000,00 €) / 30 = 100,00 € ⇒ **CAC: 100,00 € je Neukunde**
 
-## 33. Umsatz je Account (ARPU)
+## 34. Umsatz je Account (ARPU)
 
 - ID: `arpu` · URL: `/arpu-rechner/` · Kategorie: Produkt & Kunden
 - Varianten: `standard` (ARPU)
@@ -467,7 +491,7 @@ Beispiel: CAC = (Marketing + Vertrieb) / Neukunden = (2.000,00 € + 1.000,00 �
 
 Beispiel: ARPU = Umsatz / durchschnittlich aktive Accounts = 5.000,00 € / 100 = 50,00 € ⇒ **ARPU: 50,00 € je Account und Monat**
 
-## 34. Customer Lifetime Value (CLV)
+## 35. Customer Lifetime Value (CLV)
 
 - ID: `clv` · URL: `/clv-rechner/` · Kategorie: Produkt & Kunden
 - Varianten: `standard` (Customer Lifetime Value)
@@ -482,7 +506,7 @@ Beispiel: ARPU = Umsatz / durchschnittlich aktive Accounts = 5.000,00 € / 100 
 
 Beispiel: Lebenszeit-Umsatz = 50,00 € × 4 Käufe/Jahr × 3 Jahre = 600,00 € → CLV = Lebenszeit-Umsatz × DB-Quote = 600,00 € × 40 % = 240,00 € ⇒ **CLV (deckungsbeitragsbasiert): 240,00 € je Kunde**
 
-## 35. Churn & Kundenbindung
+## 36. Churn & Kundenbindung
 
 - ID: `churn` · URL: `/churn-rechner/` · Kategorie: Produkt & Kunden
 - Varianten: `standard` (Churn & Retention)
@@ -495,7 +519,7 @@ Beispiel: Lebenszeit-Umsatz = 50,00 € × 4 Käufe/Jahr × 3 Jahre = 600,00 €
 
 Beispiel: Churn = verlorene / Anfangsbestand × 100 = 10 / 100 × 100 = 10 % → Retention = (100 − 10) / 100 × 100 = 90 % ⇒ **Churn-Rate: 10 %**
 
-## 36. MRR & ARR
+## 37. MRR & ARR
 
 - ID: `mrr` · URL: `/mrr-arr-rechner/` · Kategorie: Produkt & Kunden
 - Varianten: `standard` (MRR & ARR)
@@ -510,7 +534,7 @@ Beispiel: Churn = verlorene / Anfangsbestand × 100 = 10 / 100 × 100 = 10 % →
 
 Beispiel: Tarif 1: 10 × 20,00 € / 1 Monate = 200,00 € MRR → Tarif 2: 12 × 120,00 € / 12 Monate = 120,00 € MRR → MRR = 200,00 € + 120,00 € = 320,00 € → ARR = MRR × 12 = 3.840,00 € ⇒ **MRR: 320,00 € je Monat**
 
-## 37. Net Promoter Score (NPS)
+## 38. Net Promoter Score (NPS)
 
 - ID: `nps` · URL: `/nps-rechner/` · Kategorie: Produkt & Kunden
 - Varianten: `standard` (NPS)
@@ -523,7 +547,7 @@ Beispiel: Tarif 1: 10 × 20,00 € / 1 Monate = 200,00 € MRR → Tarif 2: 12 �
 
 Beispiel: NPS = (Promotoren − Detraktoren) / alle Antworten × 100 = (60 − 30) / 100 × 100 = +30 ⇒ **Net Promoter Score: +30 Punkte**
 
-## 38. Soll-Ist-Abweichung
+## 39. Soll-Ist-Abweichung
 
 - ID: `soll-ist` · URL: `/soll-ist-rechner/` · Kategorie: Controlling & Planung
 - Varianten: `standard` (Soll-Ist-Abweichung)
@@ -536,7 +560,7 @@ Beispiel: NPS = (Promotoren − Detraktoren) / alle Antworten × 100 = (60 − 3
 
 Beispiel: Abweichung = Ist − Soll = 110 − 100 = +10 → Relativ = Abweichung / Soll × 100 = 10 / 100 × 100 = +10 % ⇒ **Abweichung relativ: +10 %**
 
-## 39. Kapazitätsauslastung
+## 40. Kapazitätsauslastung
 
 - ID: `auslastung` · URL: `/auslastung-rechner/` · Kategorie: Controlling & Planung
 - Varianten: `standard` (Kapazitätsauslastung)
@@ -548,7 +572,7 @@ Beispiel: Abweichung = Ist − Soll = 110 − 100 = +10 → Relativ = Abweichung
 
 Beispiel: Auslastung = genutzt / verfügbar × 100 = 75 / 100 × 100 = 75 % ⇒ **Auslastung: 75 %**
 
-## 40. Lagerumschlag & Lagerdauer
+## 41. Lagerumschlag & Lagerdauer
 
 - ID: `lager` · URL: `/lagerkennzahlen-rechner/` · Kategorie: Controlling & Planung
 - Varianten: `durchschnitt` (Mit Ø-Bestand), `anfang-ende` (Aus Anfangs- & Endbestand)

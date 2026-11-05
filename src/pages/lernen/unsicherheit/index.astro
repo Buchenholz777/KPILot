@@ -1,0 +1,65 @@
+---
+import Base from '../../../layouts/Base.astro';
+import PageBand from '../../../components/PageBand.astro';
+import { topicUrl } from '../../../data/registry';
+
+const crumbs = [
+  { name: 'Start', href: '/' },
+  { name: 'Aufgaben', href: '/aufgaben/' },
+  { name: 'Umgang mit Unsicherheit', href: '/lernen/unsicherheit/' },
+];
+---
+
+<Base
+  title="Unsichere Annahmen: beobachtet oder geschätzt? | KPILot"
+  description="Wie du beobachtete Daten von Schätzungen trennst und vorsichtige, realistische und optimistische Varianten bildest – besonders bei CLV, Absatz und Investitionsrückflüssen."
+  crumbs={crumbs}
+>
+  <PageBand crumbs={crumbs} title="Mit Unsicherheit umgehen" lead="Jede Rechnung ist nur so sicher wie ihre Eingaben. Hier lernst du, Beobachtetes von Geschätztem zu trennen und Varianten zu bilden." />
+  <div class="container page-body">
+    <section class="card content-card" aria-labelledby="unterschied">
+      <h2 id="unterschied">Beobachtet oder geschätzt?</h2>
+      <ul class="bullets">
+        <li><strong>Beobachtet:</strong> Der Wert steht in deinen Unterlagen – z. B. die Miete laut Vertrag, der Einkaufspreis laut Rechnung, der Absatz des letzten Monats.</li>
+        <li><strong>Geschätzt:</strong> Der Wert gilt für die Zukunft oder für etwas, das du nicht messen kannst – z. B. der geplante Absatz, die Zahl der Käufe pro Kunde, die Dauer einer Kundenbeziehung, die Rückflüsse einer Investition.</li>
+      </ul>
+      <p>Kennzeichne Schätzungen ausdrücklich. Im <a href="/ablauf/preis-wirtschaftlichkeit/">Ablauf „Preis &amp; Wirtschaftlichkeit“</a> gibt es dafür je Angabe die Auswahl „beobachtet“ oder „geschätzt“; geschätzte Werte erscheinen dann als unsichere Annahmen in der Übersicht.</p>
+    </section>
+
+    <section class="card content-card" aria-labelledby="varianten">
+      <h2 id="varianten">So bildest du Varianten</h2>
+      <ol class="bullets">
+        <li><strong>Unsicherste Größe finden:</strong> Welcher geschätzte Wert beeinflusst das Ergebnis am stärksten?</li>
+        <li><strong>Drei Fälle festlegen:</strong> vorsichtig (eher niedriger Absatz, höhere Kosten), realistisch (deine beste Einschätzung) und optimistisch (günstiger Verlauf). Die Zahlen leitest du aus eigenen Erfahrungen und Daten ab – KPILot gibt keine Prozentwerte oder Marktdaten vor.</li>
+        <li><strong>Nur eine Größe pro Vergleich ändern</strong>, wenn du ihre Wirkung verstehen willst; sonst weißt du nicht, was das Ergebnis bewegt.</li>
+        <li><strong>Gleichen Zeitraum halten:</strong> Alle Varianten müssen sich auf denselben Zeitraum und dieselbe Einheit beziehen.</li>
+        <li><strong>Entscheidungsgrenze benennen:</strong> Ab welchem Wert kippt das Ergebnis (z. B. Mindestabsatz, Mindest-ROAS)?</li>
+      </ol>
+    </section>
+
+    <section class="section" aria-labelledby="beispiele">
+      <h2 id="beispiele">Wo es besonders darauf ankommt</h2>
+      <div class="card content-card">
+        <h3>Customer Lifetime Value (CLV)</h3>
+        <p>Angenommen werden Käufe pro Jahr und Beziehungsdauer – beides oft Schätzungen. Öffne den <a href={topicUrl('clv')}>CLV-Rechner</a> und vergleiche im Szenariovergleich eine kürzere und eine längere Beziehungsdauer.</p>
+      </div>
+      <div class="card content-card">
+        <h3>Absatz</h3>
+        <p>Die geplante Menge ist fast immer eine Annahme. Der <a href={topicUrl('break-even')}>Break-even-Rechner</a> zeigt die Mindestmenge – vergleiche, wie weit deine Planung darüber liegt.</p>
+      </div>
+      <div class="card content-card">
+        <h3>Investitionsrückflüsse</h3>
+        <p><a href={topicUrl('amortisation')}>Amortisationsdauer</a> und <a href={topicUrl('roi')}>Kapitalrendite</a> setzen künftige Überschüsse voraus. Wenn sie geschätzt sind, rechne mit einem vorsichtigen und einem optimistischen Überschuss und achte darauf, ob sich die Entscheidung dadurch ändert.</p>
+      </div>
+    </section>
+
+    <section class="card content-card" aria-labelledby="regeln">
+      <h2 id="regeln">Drei Regeln</h2>
+      <ul class="bullets">
+        <li>Kein Wert ist „null“, nur weil er unbekannt ist – lass ihn leer, bis du ihn kennst.</li>
+        <li>Allgemeine Richtwerte wie „20 % Marge sind gut“ ersetzen keine eigenen Ziele; setze dir ein Ziel und prüfe die Abweichung davon.</li>
+        <li>Notiere bei gespeicherten Berechnungen, welche Werte geschätzt sind (Feld „Notiz zu Annahmen“).</li>
+      </ul>
+    </section>
+  </div>
+</Base>

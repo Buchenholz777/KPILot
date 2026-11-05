@@ -1,0 +1,85 @@
+---
+import Base from '../../layouts/Base.astro';
+import PageBand from '../../components/PageBand.astro';
+import { buildCases } from '../../data/cases';
+import { topicUrl, TOPIC_BY_ID, displayTitle } from '../../data/registry';
+
+const crumbs = [
+  { name: 'Start', href: '/' },
+  { name: 'Praxisfälle', href: '/praxisfaelle/' },
+];
+const cases = buildCases();
+---
+
+<Base
+  title="Praxisfälle: Handel, Dienstleistung, Produktion | KPILot"
+  description="Drei durchgerechnete, ausdrücklich fiktive Fälle mit Ausgangsfrage, Annahmen, Rechnung, Ergebnis, Variantenvergleich und nächstem Prüfschritt – zum Übernehmen in die Rechner."
+  crumbs={crumbs}
+>
+  <PageBand crumbs={crumbs} title="Praxisfälle" lead="Drei vollständig durchgerechnete Fälle. Alle Annahmen sind ausdrücklich fiktiv; alle Zahlen stammen aus denselben Rechenfunktionen wie die Rechner." />
+  <div class="container page-body">
+    <nav aria-label="Fälle" class="case-nav">
+      <ul class="empty-links">{cases.map((c) => <li><a href={`#${c.id}`}>{c.sector}: {c.title.split(': ')[1]}</a></li>)}</ul>
+    </nav>
+    {
+      cases.map((c) => (
+        <article class="card content-card case" id={c.id} aria-labelledby={`${c.id}-h`}>
+          <p class="eyebrow">{c.sector} · fiktives Beispiel</p>
+          <h2 id={`${c.id}-h`}>{c.title}</h2>
+          <p class="case-question"><strong>Ausgangsfrage:</strong> {c.question}</p>
+          <h3>Annahmen (fiktiv)</h3>
+          <ul class="bullets">{c.assumptions.map((a) => <li>{a}</li>)}</ul>
+          <h3>Rechnung</h3>
+          <ol class="case-steps">
+            {c.steps.map((s) => (
+              <li>
+                <h4>{s.title}</h4>
+                <p>{s.text}</p>
+                <ul class="bullets">{s.lines.map((l) => <li>{l}</li>)}</ul>
+                <p class="small"><a href={`${topicUrl(s.calc)}#${s.variant ? `${s.variant}:` : ''}beispiel`}>{displayTitle(TOPIC_BY_ID[s.calc])} öffnen</a></p>
+              </li>
+            ))}
+          </ol>
+          <h3>Ergebnis</h3>
+          <p class="home-example-result">{c.result}</p>
+          <h3>Variantenvergleich</h3>
+          <p class="small">{c.compare.title}. Beide Varianten gelten für denselben Zeitraum (Monat).</p>
+          <div class="table-scroll" tabindex="0" role="region" aria-label={`Variantenvergleich ${c.sector}, bei Bedarf horizontal scrollbar`}>
+            <table class="compare-table">
+              <caption>{c.compare.title}</caption>
+              <thead><tr><th scope="col">Kennzahl</th><th scope="col">{c.compare.names[0]}</th><th scope="col">{c.compare.names[1]}</th><th scope="col">Differenz</th></tr></thead>
+              <tbody>
+                {c.compare.comparison.rows.slice(0, 4).map((r) => (
+                  <tr><th scope="row">{r.label}</th><td>{r.a}</td><td>{r.b}</td><td>{r.diff ?? r.diffNote ?? '–'}</td></tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <h3>Nächster sinnvoller Prüfschritt</h3>
+          <p>{c.next}</p>
+          <p class="step-links">
+            {c.transfers.map((t, i) => (
+              <button type="button" class="btn btn-secondary" data-case-transfer={JSON.stringify({ target: t.target, values: t.values, describe: t.describe })} data-case-url={topicUrl(t.target)} data-case-from={c.id} aria-describedby={`${c.id}-h`}>{t.label}</button>
+            ))}
+          </p>
+          <p class="small muted">Übernommen werden nur die im Fall genannten fiktiven Werte; du kannst sie im Rechner durch eigene ersetzen.</p>
+        </article>
+      ))
+    }
+  </div>
+</Base>
+
+<script>
+  import { setTransfer } from '../../lib/storage';
+  import { track } from '../../lib/analytics';
+  import { toast } from '../../scripts/ui';
+  document.querySelectorAll<HTMLButtonElement>('[data-case-transfer]').forEach((b) =>
+    b.addEventListener('click', () => {
+      const t = JSON.parse(b.dataset.caseTransfer!) as { target: string; values: Record<string, string>; describe: string };
+      const ok = setTransfer({ from: 'praxisfall', fromTitle: 'Praxisfall (fiktive Werte)', target: t.target, values: t.values, describe: t.describe });
+      if (!ok) return toast('Die Übernahme braucht den Sitzungsspeicher des Browsers, der hier nicht verfügbar ist.');
+      track('values_transferred', { calc: 'praxisfall', variant: t.target });
+      location.href = b.dataset.caseUrl!;
+    }),
+  );
+</script>

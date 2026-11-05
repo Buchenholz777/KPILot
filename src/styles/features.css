@@ -508,7 +508,7 @@ textarea:focus {
   padding: 0;
   display: grid;
   gap: var(--space-3);
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 11.5rem), 1fr));
 }
 .task-tile {
   display: flex;
@@ -693,7 +693,12 @@ textarea:focus {
     grid-template-columns: repeat(6, minmax(2.2rem, 1fr));
   }
   .step-name {
-    display: none;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
   }
 }
 .flow-grid {
@@ -944,4 +949,97 @@ body.print-flow-summary .flow-nav {
   .table-scroll {
     overflow: visible;
   }
+}
+
+.chart-box svg {
+  display: block;
+  max-width: 40rem;
+  margin-inline: auto;
+}
+.chart-box .table-scroll {
+  max-width: 40rem;
+  margin-inline: auto;
+}
+
+/* ================= Schmale Bildschirme: nichts darf die Seite verbreitern ================= */
+.scenario,
+.scenario-grid > *,
+.scenario-col,
+.calc-in,
+.calc-out,
+.flow-main,
+.flow-side,
+.case,
+.content-card,
+.task-steps li {
+  min-width: 0;
+}
+.scenario-grid {
+  grid-template-columns: minmax(0, 1fr);
+}
+@media (min-width: 46rem) {
+  .scenario-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+}
+.formula li,
+.formula code,
+.vars dd,
+.vars dt,
+.prose li,
+.prose p,
+.bullets li,
+.content-card p,
+.result-meaning,
+.result-extra dd {
+  overflow-wrap: anywhere;
+}
+.step-links .btn,
+.followups .btn,
+.transfers .btn,
+.empty-actions .btn,
+.feedback .btn {
+  white-space: normal;
+  text-align: left;
+  height: auto;
+  min-height: var(--touch);
+  padding-block: var(--space-2);
+}
+@media (max-width: 30rem) {
+  .main-nav .nav-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+  .main-nav a {
+    padding: 0 10px;
+  }
+  .task-steps li {
+    padding-left: calc(var(--space-4) + 2.4rem);
+    padding-right: var(--space-3);
+  }
+}
+.detail-sections {
+  grid-template-columns: minmax(0, 1fr);
+}
+.detail-sections > *,
+.container > * {
+  min-width: 0;
+}
+.formula {
+  overflow-wrap: anywhere;
+}
+
+.prose .footer-linkbtn,
+.content-card .footer-linkbtn {
+  color: var(--color-accent-text);
+  text-decoration: underline;
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
 }

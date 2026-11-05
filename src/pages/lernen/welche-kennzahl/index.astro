@@ -1,0 +1,110 @@
+---
+import Base from '../../../layouts/Base.astro';
+import PageBand from '../../../components/PageBand.astro';
+import { topicUrl } from '../../../data/registry';
+
+const crumbs = [
+  { name: 'Start', href: '/' },
+  { name: 'Aufgaben', href: '/aufgaben/' },
+  { name: 'Welche Kennzahl beantwortet welche Frage?', href: '/lernen/welche-kennzahl/' },
+];
+const rows = [
+  {
+    name: 'Marge',
+    purpose: 'Zeigt, welcher Anteil des Verkaufspreises nach den Kosten der Ware oder Leistung übrig bleibt.',
+    question: 'Wie viel bleibt von einem Verkaufspreis nach dem Einkaufs- oder Herstellpreis?',
+    needs: 'Verkaufspreis und Kostenbasis (z. B. Einstandspreis), beides netto.',
+    limits: 'Kennt weder Fixkosten noch Menge. Bezieht sich auf den Preis – der Aufschlag auf die Kosten. Bei Kosten 0 € ist sie 100 %.',
+    calc: 'marge',
+    case: null,
+  },
+  {
+    name: 'Deckungsbeitrag',
+    purpose: 'Zeigt, was ein Stück (oder ein Auftrag) zur Deckung der Fixkosten beiträgt.',
+    question: 'Deckt mein Preis die variablen Kosten – und wie viel bleibt für die Fixkosten?',
+    needs: 'Preis und variable Kosten je Einheit; optional die Menge.',
+    limits: 'Ist noch kein Gewinn: Fixkosten sind nicht abgezogen. Ohne richtige Trennung variabel/fix wird er falsch.',
+    calc: 'deckungsbeitrag',
+    case: 'handel',
+  },
+  {
+    name: 'Gewinn',
+    purpose: 'Zeigt, was nach allen Kosten im betrachteten Zeitraum übrig bleibt (im Modell).',
+    question: 'Verdiene ich bei meiner Menge im Zeitraum Geld – oder wie viel muss ich verkaufen?',
+    needs: 'Preis, variable Kosten, Fixkosten und Menge im selben Zeitraum.',
+    limits: 'Modellgewinn mit konstanten Preisen und Kosten – nicht automatisch das Ergebnis im Jahresabschluss. Sagt nichts über das Geld auf dem Konto.',
+    calc: 'gewinn',
+    case: 'produktion',
+  },
+  {
+    name: 'Cashflow',
+    purpose: 'Zeigt Ein- und Auszahlungen im Zeitraum – also was tatsächlich an Geld hinein- und herausfließt.',
+    question: 'Warum habe ich Gewinn, aber wenig Geld auf dem Konto – und reicht das Geld für anstehende Zahlungen?',
+    needs: 'Zahlungsströme (operativ, investiv, Finanzierung) im Zeitraum.',
+    limits: 'Zeigt Zahlungszeitpunkte, keine Rentabilität. Ein positiver Cashflow kann aus Krediten stammen; ein negativer aus einer Investition.',
+    calc: 'cashflow',
+    case: null,
+  },
+];
+const steps = [
+  { t: 'Begriff verstehen', d: 'Lies in der Tabelle, welche Frage die Kennzahl beantwortet und was sie nicht beantwortet.' },
+  { t: 'Beispiel ansehen', d: 'Die Praxisfälle rechnen Deckungsbeitrag, Gewinn und Break-even mit fiktiven Zahlen durch.' },
+  { t: 'Eigene Berechnung', d: 'Öffne den passenden Rechner – „Beispiel einsetzen“ zeigt zuerst, wie ein Ergebnis aussieht – und trage dann deine eigenen Werte ein.' },
+];
+---
+
+<Base
+  title="Welche Kennzahl beantwortet welche Frage? Marge, Deckungsbeitrag, Gewinn, Cashflow | KPILot"
+  description="Marge, Deckungsbeitrag, Gewinn und Cashflow im Vergleich: Zweck, typische Frage, benötigte Werte und Grenzen – mit direkten Wegen zu Rechnern und Praxisfällen."
+  crumbs={crumbs}
+>
+  <PageBand crumbs={crumbs} title="Welche Kennzahl beantwortet welche Frage?" lead="Vier häufig verwechselte Kennzahlen im Vergleich – vom Begriff über ein Beispiel bis zur eigenen Berechnung." />
+  <div class="container page-body">
+    <section class="card content-card" aria-labelledby="reihenfolge">
+      <h2 id="reihenfolge">In dieser Reihenfolge vorgehen</h2>
+      <ol class="task-steps">
+        {steps.map((s) => <li class="card"><h3>{s.t}</h3><p>{s.d}</p></li>)}
+      </ol>
+    </section>
+
+    <section class="section" aria-labelledby="vergleich">
+      <h2 id="vergleich">Die Kennzahlen im Vergleich</h2>
+      <div class="table-scroll" tabindex="0" role="region" aria-label="Vergleichstabelle der Kennzahlen, bei Bedarf horizontal scrollbar">
+        <table class="compare-table choose-table">
+          <caption class="visually-hidden">Marge, Deckungsbeitrag, Gewinn und Cashflow: Zweck, typische Frage, benötigte Werte und Grenzen</caption>
+          <thead>
+            <tr><th scope="col">Kennzahl</th><th scope="col">Zweck</th><th scope="col">Typische Frage</th><th scope="col">Benötigte Werte</th><th scope="col">Grenzen</th><th scope="col">Weiter</th></tr>
+          </thead>
+          <tbody>
+            {
+              rows.map((r) => (
+                <tr>
+                  <th scope="row">{r.name}</th>
+                  <td>{r.purpose}</td>
+                  <td>{r.question}</td>
+                  <td>{r.needs}</td>
+                  <td>{r.limits}</td>
+                  <td>
+                    <a href={`${topicUrl(r.calc)}#beispiel`}>{r.name}-Rechner mit Beispiel</a>
+                    {r.case && <><br /><a href={`/praxisfaelle/#${r.case}`}>Praxisfall ansehen</a></>}
+                  </td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card content-card" aria-labelledby="merksatz">
+      <h2 id="merksatz">Merkhilfe</h2>
+      <ul class="bullets">
+        <li><strong>Marge:</strong> Wie viel vom Preis bleibt nach den Kosten der Ware? (Anteil am Preis)</li>
+        <li><strong>Deckungsbeitrag:</strong> Was bleibt je Stück für die Fixkosten? (Euro je Stück)</li>
+        <li><strong>Gewinn:</strong> Was bleibt nach allen Kosten? (Euro im Zeitraum)</li>
+        <li><strong>Cashflow:</strong> Wie viel Geld fließt tatsächlich? (Zahlungen im Zeitraum)</li>
+      </ul>
+      <p>Weiter: <a href="/lernen/unsicherheit/">Mit unsicheren Annahmen umgehen</a> · <a href="/praxisfaelle/">Praxisfälle</a> · <a href="/ablauf/preis-wirtschaftlichkeit/">Ablauf Preis &amp; Wirtschaftlichkeit</a></p>
+    </section>
+  </div>
+</Base>

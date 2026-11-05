@@ -14,29 +14,29 @@ export interface Fact<T = string> {
 
 export const OPERATOR = {
   /** Vollständiger Name der natürlichen oder juristischen Person. */
-  name: { value: "Alexander Bandel", confirmed: false } as Fact,
-  street: { value: "Graf-Dietrich-Weg 11", confirmed: false } as Fact,
-  city: { value: "33034 Brakel", confirmed: false } as Fact,
-  country: { value: "Deutschland", confirmed: false } as Fact,
+  name: { value: "Alexander Bandel", confirmed: true } as Fact,
+  street: { value: "Graf-Dietrich-Weg 11", confirmed: true } as Fact,
+  city: { value: "33034 Brakel", confirmed: true } as Fact,
+  country: { value: "Deutschland", confirmed: true } as Fact,
   /** Kontaktweg für Impressum, Datenschutzanfragen und die Rückmeldefunktion je Rechner. */
-  email: { value: "alex.bundle2@gmail.com", confirmed: false } as Fact,
+  email: { value: "alexbundle2@gmail.com", confirmed: true } as Fact,
   /** Optional. Leer lassen, wenn keine Telefonnummer veröffentlicht werden soll. */
   phone: { value: undefined, confirmed: true } as Fact,
   /** Nur ausfüllen, wenn zutreffend (Rechtsform, Register, USt-IdNr. …). `confirmed: true` + leer = „nicht zutreffend“. */
-  legalForm: { value: undefined, confirmed: false } as Fact,
-  register: { value: undefined, confirmed: false } as Fact,
-  vatId: { value: undefined, confirmed: false } as Fact,
+  legalForm: { value: undefined, confirmed: true } as Fact,
+  register: { value: undefined, confirmed: true } as Fact,
+  vatId: { value: undefined, confirmed: true } as Fact,
   /** Zuständige Datenschutz-Aufsichtsbehörde – hängt vom bestätigten Sitz ab. */
-  supervisoryAuthority: { value: undefined, confirmed: false } as Fact,
+  supervisoryAuthority: { value: "Landesbeauftragte für Datenschutz und Informationsfreiheit Nordrhein-Westfalen, Kavalleriestraße 2–4, 40213 Düsseldorf.", confirmed: true } as Fact,
   /** Hosting-Anbieter, den der Betreiber tatsächlich nutzt. Die Projektkonfiguration (wrangler.jsonc) weist auf Cloudflare Pages hin. */
-  hostingProvider: { value: "Cloudflare Pages", confirmed: false } as Fact,
-  hostingDetails: { value: undefined, confirmed: false } as Fact,
+  hostingProvider: { value: "Cloudflare Pages, ein Dienst der Cloudflare, Inc., 101 Townsend St., San Francisco, CA 94107, USA", confirmed: true } as Fact,
+  hostingDetails: { value: "Cloudflare verarbeitet die Verbindungsdaten, um die Seiten auszuliefern und vor Angriffen zu schützen. Rechtsgrundlage ist unser berechtigtes Interesse an einer sicheren und zuverlässigen Bereitstellung der Website (Art. 6 Abs. 1 lit. f DSGVO). Cloudflare, Inc. ist nach dem EU-US Data Privacy Framework zertifiziert (Art. 45 DSGVO). Wir selbst werten keine Zugriffsprotokolle aus.", confirmed: true } as Fact,
   /** Speicherdauer der Messdaten in der Google-Analytics-Property. */
-  analyticsRetention: { value: undefined, confirmed: false } as Fact,
+  analyticsRetention: { value: "Ereignisdaten werden in Google Analytics nach 2 Monaten automatisch gelöscht. Die Cookies „_ga“ und „_ga_…“ bleiben bis zu 2 Jahre gespeichert, sofern du sie nicht vorher löschst oder deine Einwilligung widerrufst.", confirmed: true } as Fact,
   /** Grundlage der Datenübermittlung in Drittländer (Google). */
-  analyticsTransferBasis: { value: undefined, confirmed: false } as Fact,
+  analyticsTransferBasis: { value: "Google LLC ist nach dem EU-US Data Privacy Framework zertifiziert; die Übermittlung stützt sich auf den Angemessenheitsbeschluss der EU-Kommission (Art. 45 DSGVO)", confirmed: true } as Fact,
   /** Rechtliche Prüfung der Texte durch den Betreiber bzw. eine fachkundige Stelle. */
-  legalReview: { value: undefined, confirmed: false } as Fact,
+  legalReview: { value: "Vom Betreiber zur Veröffentlichung freigegeben am 05.11.2026", confirmed: true } as Fact,
 };
 
 export type OperatorKey = keyof typeof OPERATOR;

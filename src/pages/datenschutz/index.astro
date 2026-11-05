@@ -87,7 +87,7 @@ const complete = operatorComplete();
       <p>
         Hosting-Anbieter:
         <Fact k="hostingProvider" fallback="Angabe des Betreibers fehlt" />.
-        {OPERATOR.hostingProvider.value && <span> Das Projekt ist für Cloudflare Pages konfiguriert; der Betreiber bestätigt den tatsächlichen Anbieter.</span>}
+        {OPERATOR.hostingProvider.value && !OPERATOR.hostingProvider.confirmed && <span> Das Projekt ist für Cloudflare Pages konfiguriert; der Betreiber bestätigt den tatsächlichen Anbieter.</span>}
         {OPERATOR.hostingDetails.value ? <> {OPERATOR.hostingDetails.value}</> : <span class="fact-flag"> Art, Umfang und Speicherdauer der Verbindungsdaten laut Anbieter sind noch zu ergänzen.</span>}
       </p>
 

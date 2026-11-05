@@ -36,7 +36,10 @@ const websiteLd = site
     </Fragment>
     <Fragment slot="between">
       <section class="home-tasks" aria-labelledby="aufgaben-h">
-        <h2 id="aufgaben-h">Womit möchtest du starten?</h2>
+        <div class="home-tasks-head">
+          <h2 id="aufgaben-h">Womit möchtest du starten?</h2>
+          <a class="home-flow-link" href="/ablauf/preis-wirtschaftlichkeit/">Preis und Gewinn gemeinsam kalkulieren <span aria-hidden="true">→</span></a>
+        </div>
         <TaskTiles />
       </section>
       <Favorites layout="row" />

@@ -447,10 +447,18 @@ async function init(root: HTMLElement) {
   }
 
   /* ---------- Nächste Schritte ---------- */
+  let lastFollowSig = "";
   function renderFollowUps(r: CalcResult) {
     const list = (def.followUps ?? []).filter(
       (f) => (!f.variantId || f.variantId === variant.id) && f.when(last.inputs, r),
     );
+    // Unveränderte Liste nicht neu aufbauen: sonst geht ein Klick verloren, wenn der Fokuswechsel aus dem Eingabefeld gleichzeitig neu berechnet
+    const sig = `${variant.id}:${list.map((f) => f.id).join("|")}`;
+    if (sig === lastFollowSig) {
+      followEl.hidden = list.length === 0;
+      return;
+    }
+    lastFollowSig = sig;
     capacityEl.hidden = true;
     followList.replaceChildren(
       ...list.map((f) => {

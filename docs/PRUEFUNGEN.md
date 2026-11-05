@@ -102,3 +102,23 @@ Selbstprüfung (Chromium/Playwright); keine Screenreader-, Geräte- oder Nutzert
 | Gesamt | `npm test` / `npm run check` / `npm run check:site` | 423 Tests · 0 Fehler · 66 Seiten ohne Befund |
 
 **Nicht geprüft:** Screenreader-Ausgabe der Grafiken (nur aria-Label, Tabelle und Tastaturregler technisch vorhanden), Firefox/Safari, echte Touch-Geräte, Browser-Zoom über 200 %, visuelle Druck-/PDF-Qualität über die Sichtbarkeitsprüfung hinaus, Leistungsmessung. Die Grenzfall-Spalte der Matrix beschreibt die Behandlung im Code; getestet sind die mit „G“ markierten Fälle.
+
+## Folgeauftrag „Qualität und Nutzerführung“, 05.11.2026
+
+Selbstprüfung (Chromium/Playwright, axe-core); keine Screenreader-, Geräte- oder Nutzertests.
+
+| Prüfung | Methode | Ergebnis |
+|---|---|---|
+| Praxisfälle (Handel 100/80/100/1.500 mit Rabattvariante; Dienstleistung in Stunden; Produktion mit Kapazität; Werbung 3.600/900/30 %/20 %) mit unabhängig berechneten Erwartungswerten, alle Schritt-/Fall-Übernahmen berechenbar, Fall → Preisablauf | `tests/cases.test.ts` | 12 Tests bestanden |
+| Einheit „Stunde“: Zahlen unverändert, Texte/Grafik ohne „Stück“; alte Daten ohne Einheit unverändert | `tests/neue-rechner.test.ts` | bestanden |
+| ROAS-Vergleich (1.080/720, +180/−180, −360, 3,3333/5,0-fach); ohne Alternative keine zweite Berechnung | Unit-Test + Browser (Kopierausgabe) | bestanden |
+| Sensitivität (Preis +5 € → +1.000 €; Kosten +2 € → −400 €; Absatz −10 % auf 180 → −400 €), Szenariobeispiel 1.000/0/3.250 € | `tests/workflow.test.ts` + Browser | bestanden |
+| Suchmodus (Aufgaben ausgeblendet, Treffer direkt unter dem Suchfeld, „Deckungsbeitrg“ → Deckungsbeitrag), kompakte Ansicht als Standard, kompakte Aufgabenkacheln | `scripts/e2e-smoke.mjs` | bestanden |
+| Dynamischer Übernahmehinweis (fehlt/vorhanden/fehlt wieder), Praxisfall-Übernahmen im Browser, Stunden-Rechner, Entwurfsschutz im Preisablauf, Abschlussreihenfolge, Druckansicht mit Grafik | `scripts/e2e-smoke.mjs` | bestanden |
+| Alle 55 Modi: Grafik + Tabelle, kein NaN, kein Überlauf (Desktop/375 px) | `scripts/e2e-charts.mjs` | 110 Aufrufe, 0 Befunde |
+| axe-core, 8 Seiten × 1280/375 px | Playwright + axe | 0 Verstöße |
+| Gesamt | `npm test`, `npm run check`, `check:site` (66 Seiten), `check:contrast` | 439 Tests · 0 Fehler · ohne Befund |
+
+Gefundene und behobene Fehler: Klicks auf Weiterrechnen-Buttons gingen verloren, wenn ein Eingabefeld gleichzeitig den Fokus verlor (Liste wurde neu aufgebaut); Muster-Kennungen der Ablauf-Grafiken doppelt vergeben (Flächen unsichtbar); Beschriftungskollisionen in Balkendiagrammen mit negativen Werten.
+
+**Nicht geprüft:** Screenreader, Firefox/Safari, echte Touch-Geräte, Zoom über 200 %, PDF-Seitenumbrüche visuell, Leistungsmessung, fachliche/rechtliche Inhaltsprüfung.

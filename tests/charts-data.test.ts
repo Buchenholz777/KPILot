@@ -48,6 +48,7 @@ describe("Break-even als Referenzdiagramm", () => {
     expect(m.x).toBe(200);
     expect(m.y).toBe(16000);
     expect(m.label).toContain("200 Stück");
+    expect(c.markers!.some((x) => x.label === "Fixkosten: 6.000,00 €")).toBe(true);
     expect(m.label).toContain("16.000,00 €");
     expect(c.explore!.stops.some((s) => s.x === 200)).toBe(true);
     expect(c.table.rows.some((r) => r[0] === "200 Stück" && r[1] === "16.000,00 €" && r[2] === "16.000,00 €")).toBe(true);
@@ -72,7 +73,7 @@ describe("Break-even als Referenzdiagramm", () => {
   });
   it("Prüffall 4: p = v, F > 0 → kein Break-even erfunden, Linien mit Hinweis", async () => {
     const c = lines(await be("50", "50", "3000"));
-    expect(c.markers).toEqual([]);
+    expect(c.markers!.filter((m) => m.kind === "intersection")).toEqual([]);
     expect(c.notice).toMatch(/Kein erreichbarer Break-even/);
     expect(c.caption).toMatch(/nicht bei positiver Menge/);
     expect(c.series).toHaveLength(2);
@@ -82,7 +83,7 @@ describe("Break-even als Referenzdiagramm", () => {
     expect(f0.markers![0]).toMatchObject({ x: 0, y: 0 });
     expect(f0.caption).toMatch(/Ursprung/);
     const under = lines(await be("20", "30", "100"));
-    expect(under.markers).toEqual([]);
+    expect(under.markers!.filter((m) => m.kind === "intersection")).toEqual([]);
     const same = lines(await be("30", "30", "0"));
     expect(same.caption).toMatch(/aufeinander/);
     for (const [p, v, F] of [["0,01", "0,001", "0,5"], ["1000000000", "1", "1000000000000"], ["3", "0", "300,0000000003"]]) {

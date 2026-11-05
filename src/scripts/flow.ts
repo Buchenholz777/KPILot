@@ -55,9 +55,9 @@ function init(root: HTMLElement) {
   let fromCase: { title: string; base: string; assumptions: string[] } | null = null;
   const flowGrid = root.querySelector<HTMLElement>("[data-flow-grid]")!;
   const chartW = () => Math.max(260, Math.min(640, form.clientWidth - 40));
-  const chartHtml = (charts: (ChartSpec | null)[], note?: string) => {
+  const chartHtml = (charts: (ChartSpec | null)[], note: string | undefined, prefix: string) => {
     const list = charts.filter((c): c is ChartSpec => !!c);
-    return list.length ? renderChartArea({ charts: list }, { width: chartW(), idPrefix: "f" }) : note ? `<p class="chart-empty">${esc(note)}</p>` : "";
+    return list.length ? renderChartArea({ charts: list }, { width: chartW(), idPrefix: prefix }) : note ? `<p class="chart-empty">${esc(note)}</p>` : "";
   };
 
   /* ---------- Zustand ↔ Formular ---------- */
@@ -151,7 +151,7 @@ function init(root: HTMLElement) {
     if (l3) {
       let h = "";
       if (!s.blocked) {
-        h += s.base.qMin ? dl(row(`Mindestmenge zur Kostendeckung (${s.period})`, outText(s.base.qMin), true) + (s.base.profitFrom ? row("Positiver Gewinn ab", outText(s.base.profitFrom)) : "")) : problems(s.base) || '<p class="small muted">Für den Mindestabsatz fehlen noch Angaben (siehe Zwischenstand).</p>';
+        h += s.base.qMin ? dl(row(`Mindestmenge zur Kostendeckung (${s.period})`, outText(s.base.qMin), true) + (s.base.profitFrom ? row("Positiver Gewinn ab", outText(s.base.profitFrom)) : "")) : problems(s.base) || '<p class="small muted">Für die Mindestmenge fehlen noch Angaben (siehe Zwischenstand).</p>';
         if (s.targetQty) h += dl(row(`Menge für ${(numOf(state.z) ? formatValue(numOf(state.z)!, "money") : "gewünschten")} Zielgewinn`, outText(s.targetQty.main), true));
         if (s.capacity)
           h += `<p class="capacity-result" data-tone="${s.capacity.enough ? "positive" : "negative"}" role="status">${s.capacity.enough ? `✓ Die Kapazität reicht: ${formatValue(s.capacity.available, "integer", u(s))} verfügbar, ${formatValue(s.capacity.required, "integer", u(s))} erforderlich (Reserve ${formatValue(s.capacity.reserve, "integer", u(s))}, jeweils ${esc(s.period)}).` : `✗ Die Kapazität reicht nicht: Es fehlen ${formatValue(s.capacity.gap, "integer", u(s))} (${esc(s.period)}).`}</p>`;
@@ -171,7 +171,7 @@ function init(root: HTMLElement) {
           ? `<div class="effect"><h4>${esc(label)}</h4>${dl((e.after.qMin ? row(`Mindestmenge`, `${outText(e.after.qMin)} (vorher ${outText(s.base.qMin)})`) : "") + (e.after.profit ? row("Ergebnis bei geplanter Menge", `${outText(e.after.profit.main)} (vorher ${outText(s.base.profit?.main)})`) : ""))}${problems(e.after)}</div>`
           : "";
       l4b.innerHTML =
-        (s.blocked ? "" : chartHtml([sensitivityChart(s)])) +
+        (s.blocked ? "" : chartHtml([sensitivityChart(s)], undefined, "f4")) +
         eff(`Nur der Verkaufspreis ändert sich um ${s.priceEffect ? formatValue(s.priceEffect.delta, "money", "je " + s.unitSg, true) : ""}`, s.priceEffect) +
         eff(`Nur die variablen Kosten ändern sich um ${s.costEffect ? formatValue(s.costEffect.delta, "money", "je " + s.unitSg, true) : ""}`, s.costEffect) +
         eff(`Nur der Absatz ändert sich um ${s.qEffect ? formatValue(s.qEffect.pct, "percent", undefined, true) : ""} (auf ${s.qEffect ? formatValue(s.qEffect.qNew, "integer", u(s)) : ""})`, s.qEffect);
@@ -179,7 +179,7 @@ function init(root: HTMLElement) {
 
     // Schritt 5: Tabelle und Grafik
     const l5 = live("5");
-    if (l5) l5.innerHTML = s.blocked ? "" : compareTable(s) + chartHtml([scenarioChart(s)]);
+    if (l5) l5.innerHTML = s.blocked ? "" : compareTable(s) + chartHtml([scenarioChart(s)], undefined, "f5");
 
     // Schritt 6: Übersicht
     const l6 = live("6");
@@ -230,7 +230,7 @@ function init(root: HTMLElement) {
       <tr class="group"><th scope="rowgroup" colspan="${cases.length + 1}">Eingaben</th></tr>${inputRows}
       <tr class="group"><th scope="rowgroup" colspan="${cases.length + 1}">Ergebnisse</th></tr>
       ${out("Deckungsbeitrag je Einheit", (c) => outText(c.dbUnit))}
-      ${out("Mindestabsatz zur Kostendeckung", (c) => (c.qMin ? outText(c.qMin) : c.breakEvenProblem ? "nicht erreichbar" : "–"))}
+      ${out("Mindestmenge zur Kostendeckung", (c) => (c.qMin ? outText(c.qMin) : c.breakEvenProblem ? "nicht erreichbar" : "–"))}
       ${out("Ergebnis bei geplanter Menge", (c) => (c.profit ? outText(c.profit.main) : "–"))}
     </tbody></table></div>`;
   }
@@ -252,7 +252,7 @@ function init(root: HTMLElement) {
     // 2. Vergleich der Varianten
     if (s.scenarios.length) h += `<h4>Varianten im Vergleich</h4>${compareTable(s)}`;
     // 3. Diagramm
-    h += `<h4>Diagramm</h4>${chartHtml(flowCharts(s, numOf(state.F)).charts, "Sobald Basiswerte und Menge vorhanden sind, erscheint hier die Grafik.")}`;
+    h += `<h4>Diagramm</h4>${chartHtml(flowCharts(s, numOf(state.F)).charts, "Sobald Basiswerte und Menge vorhanden sind, erscheint hier die Grafik.", "f6")}`;
     // 4. Offene und unsichere Annahmen
     h += "<h4>Offene und unsichere Annahmen</h4>";
     h += missingHtml(s, false);

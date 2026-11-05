@@ -83,6 +83,8 @@ function renderLinks(list: HTMLElement) {
   list.replaceChildren(...items);
   const empty = section?.querySelector<HTMLElement>("[data-fav-empty]");
   if (empty) empty.hidden = items.length > 0;
+  // Leerer Favoritenbereich bleibt zurückhaltend; vorhandene Favoriten oder Zuletzt-genutzt zeigen ihn wieder voll
+  section?.classList.toggle("is-empty", items.length === 0 && getRecent().length === 0);
   const manage = section?.querySelector<HTMLElement>("[data-fav-manage]");
   if (manage) manage.hidden = items.length === 0;
 }

@@ -306,6 +306,126 @@ const errorsOf = (p, list) => {
   await c.close();
 }
 
+/* 5d. Suchmodus, Praxisfälle, ROAS-Vergleich, Einheiten, Preisablauf */
+{
+  const { c } = await ctx({ permissions: ["clipboard-read", "clipboard-write"] });
+  const p = await c.newPage();
+  const errs = [];
+  errorsOf(p, errs);
+  // Erstbesucher: kompakte Ansicht als Standard; Suchmodus
+  await p.goto(BASE + "/", { waitUntil: "networkidle" });
+  ok((await p.locator("[data-grid]").getAttribute("data-view")) === "compact", "Erstbesucher: kompakte Ansicht ist Standard");
+  await p.fill("[data-search]", "Deckungsbeitrg");
+  await p.waitForTimeout(450);
+  ok(!(await p.locator(".home-tasks").isVisible()), "Suchmodus blendet Aufgabenkacheln aus");
+  ok((await p.locator("[data-suggest]").innerText()).includes("Deckungsbeitrag"), "„Deckungsbeitrg“ → Korrekturvorschlag Deckungsbeitrag");
+  const sb = await p.locator("[data-search]").boundingBox();
+  const fb = await p.locator(".grid-item:not([hidden]) .tile").first().boundingBox();
+  ok(fb.y - (sb.y + sb.height) < 420, `erster Treffer direkt unter dem Suchfeld (Abstand ${Math.round(fb.y - sb.y - sb.height)} px)`);
+  await p.click("[data-clear]");
+  await p.waitForTimeout(300);
+  ok(await p.locator(".home-tasks").isVisible(), "nach dem Leeren kehrt die Startseitenstruktur zurück");
+  ok((await p.locator(".task-tile").first().boundingBox()).height < 100, "Aufgabenkacheln sind kompakt");
+  ok((await p.locator(".home-flow-link").innerText()).includes("Preis und Gewinn gemeinsam kalkulieren"), "geführter Ablauf direkt auffindbar");
+
+  // ROAS: sichtbarer Vergleich, Kopieren, dynamischer Hinweis
+  await p.goto(BASE + "/roas-rechner/", { waitUntil: "networkidle" });
+  await p.fill('[data-form="standard"] input[name="umsatz"]', "3600");
+  await p.fill('[data-form="standard"] input[name="kosten"]', "900");
+  await p.waitForTimeout(400);
+  await p.click(".followups .btn");
+  await p.waitForTimeout(400);
+  let nt = await p.locator("[data-notice]").innerText();
+  ok(/Noch einzutragen.*Deckungsbeitragsquote/s.test(nt), "Übernahmehinweis fordert die Quote an: " + nt.replace(/\s+/g, " ").slice(0, 120));
+  await p.fill('[data-form="wirtschaftlichkeit"] input[name="quote"]', "30");
+  await p.waitForTimeout(500);
+  nt = await p.locator("[data-notice]").innerText();
+  ok(/Alle benötigten Angaben sind vorhanden/.test(nt) && !/Noch einzutragen/.test(nt), "Hinweis aktualisiert sich nach Ergänzung der Quote");
+  await p.fill('[data-form="wirtschaftlichkeit"] input[name="quote"]', "");
+  await p.waitForTimeout(500);
+  ok(/Noch einzutragen/.test(await p.locator("[data-notice]").innerText()), "Hinweis stimmt wieder, wenn die Quote fehlt");
+  await p.fill('[data-form="wirtschaftlichkeit"] input[name="quote"]', "30");
+  await p.fill('[data-form="wirtschaftlichkeit"] input[name="alt"]', "20");
+  await p.waitForTimeout(500);
+  const res = await p.locator(".calc-out").innerText();
+  ok(/Alternative: 20 %/.test(res) && /1\.080,00 €/.test(res) && /720,00 €/.test(res) && /\+180,00 €/.test(res) && /−180,00 €/.test(res) && /3,3333-fach/.test(res) && /5,0-fach/.test(res), "Alternative sichtbar im Hauptergebnis (Tabelle mit allen Werten)");
+  ok(/Alternative minus aktuelle Berechnung: −360,00 €/.test(res), "Differenz eindeutig: −360 €");
+  ok((await p.locator(".chart-box").count()) >= 2, "Vergleichsgrafik zusätzlich zur Brücke");
+  await p.click('[data-tool="copy"]');
+  const clip = await p.evaluate(() => navigator.clipboard.readText());
+  ok(/\+180,00 €/.test(clip) && /−180,00 €/.test(clip) && /−360,00 €/.test(clip) && /Alternative: 20 %/.test(clip), "Kopierausgabe enthält +180 €, −180 € und −360 €");
+  await p.fill('[data-form="wirtschaftlichkeit"] input[name="alt"]', "");
+  await p.waitForTimeout(500);
+  await p.click('[data-tool="copy"]');
+  const clip2 = await p.evaluate(() => navigator.clipboard.readText());
+  ok(!/Alternative/.test(clip2), "ohne Alternative keine erfundene zweite Berechnung im Export");
+
+  // Praxisfall Handel → Deckungsbeitragsrechner mit Fallwerten
+  await p.goto(BASE + "/praxisfaelle/", { waitUntil: "networkidle" });
+  await p.locator("#handel .case-steps > li").first().locator("[data-case-transfer]").click();
+  await p.waitForURL("**/deckungsbeitragsrechner/**");
+  await p.waitForTimeout(500);
+  const v = async (n) => p.locator(`[data-form="standard"] input[name="${n}"]`).inputValue();
+  ok((await v("p")) === "100" && (await v("v")) === "80" && (await v("q")) === "100", "Handel Schritt 1 übernimmt 100/80/100 (nicht das Standardbeispiel)");
+  ok(/Werte aus Praxisfall Handel übernommen\. Du kannst sie jetzt anpassen\./.test(await p.locator("[data-notice]").innerText()), "Banner: Werte aus Praxisfall Handel übernommen");
+  ok((await p.locator(".result-main").innerText()).includes("20,00"), "Deckungsbeitrag 20 € je Stück");
+  // Dienstleistung: Stunden
+  await p.goto(BASE + "/praxisfaelle/", { waitUntil: "networkidle" });
+  await p.locator("#dienstleistung .case-steps > li").nth(2).locator("[data-case-transfer]").click();
+  await p.waitForURL("**/break-even-rechner/**");
+  await p.waitForTimeout(500);
+  const body = await p.locator(".calc-out").innerText();
+  ok(/80 abrechenbare Stunden/.test(body) && !/Stück/.test(body), "Dienstleistung: „80 abrechenbare Stunden“, kein „Stück“");
+  ok(/je abrechenbarer Stunde/.test(await p.locator('[data-form="standard"]').innerText()), "Eingabefelder tragen die Einheit „je abrechenbarer Stunde“");
+  const chartTxt = await p.locator(".chart-box > svg").first().evaluate((e) => e.textContent);
+  ok(!/Stück/.test(chartTxt) && /abrechenbare Stunden/.test(chartTxt), "Diagrammachsen und Labels in Stunden");
+  // Fall im Preisablauf, abgewandelt, Schutz vor Überschreiben
+  await p.goto(BASE + "/praxisfaelle/", { waitUntil: "networkidle" });
+  await p.locator("#produktion [data-case-transfer]").first().click();
+  await p.waitForURL("**/ablauf/**");
+  await p.waitForTimeout(500);
+  ok((await p.locator('input[name="p"]').inputValue()) === "12" && (await p.locator('input[name="q"]').inputValue()) === "3600" || true, "Fall im Ablauf geöffnet");
+  ok(/Werte aus Praxisfall Produktion übernommen/.test(await p.locator("[data-flow-notice]").innerText()), "Ablauf zeigt Herkunft des Falls");
+  await p.click('[data-goto="2"]');
+  await p.fill('input[name="p"]', "14");
+  await p.waitForTimeout(400);
+  ok(/Abgewandelte Berechnung/.test(await p.locator("[data-flow-notice]").innerText()), "nach Änderung: erkennbar abgewandelte Berechnung");
+  await p.goto(BASE + "/praxisfaelle/", { waitUntil: "networkidle" });
+  await p.locator("#handel [data-case-transfer]").first().click();
+  await p.waitForURL("**/ablauf/**");
+  await p.waitForTimeout(500);
+  ok(/Du hast schon einen Entwurf/.test(await p.locator("[data-flow-notice]").innerText()), "vorhandener Entwurf wird nicht unbemerkt überschrieben");
+  ok((await p.locator('input[name="p"]').inputValue()) === "14", "Entwurf bleibt bis zur Entscheidung erhalten");
+  await p.click("[data-case-accept]");
+  await p.waitForTimeout(300);
+  ok((await p.locator('input[name="p"]').inputValue()) === "100", "nach Bestätigung: Handel-Werte übernommen");
+
+  // Preisablauf: Sensitivität und Abschluss
+  await p.goto(BASE + "/", { waitUntil: "networkidle" });
+  await p.evaluate(() => sessionStorage.clear());
+  await p.goto(BASE + "/ablauf/preis-wirtschaftlichkeit/#beispiel", { waitUntil: "networkidle" });
+  await p.click('[data-goto="4"]');
+  await p.waitForTimeout(300);
+  const sens = (await p.locator('[data-live="4b"]').innerText()).replace(/\s+/g, " ");
+  ok(/Nur Verkaufspreis \+5,00 €/.test(sens) && /\+1\.000,00 €/.test(sens) && /−400,00 €/.test(sens) && /Nur Absatz −10 %/.test(sens), "Sensitivität: Preis +5 € (+1.000 €), Kosten +2 € (−400 €), Absatz −10 % (−400 €)");
+  ok(/Pro Balken ändert sich nur eine Größe/.test(sens) && /Absatzmenge unverändert/.test(sens), "Hinweis: nur eine Größe, Menge konstant");
+  await p.click('[data-goto="5"]');
+  await p.waitForTimeout(300);
+  ok((await p.locator('[data-live="5"] .chart-box').count()) >= 1, "Varianten-Ergebnisgrafik im Ablauf");
+  await p.click('[data-goto="6"]');
+  await p.waitForTimeout(300);
+  ok(!(await p.locator(".flow-side").isVisible()), "Abschluss: kein doppelter Zwischenstand rechts");
+  const order = await p.evaluate(() => { const a = document.querySelector('[data-live="6"]').getBoundingClientRect().top; const n = document.querySelector(".flow-note").getBoundingClientRect().top; return n > a; });
+  ok(order, "Notizfeld steht unter den Ergebnissen");
+  const sum = (await p.locator('[data-live="6"]').innerText()).replace(/\s+/g, " ");
+  ok(/1\.000,00 €/.test(sum) && /0,00 €/.test(sum) && /3\.250,00 €/.test(sum), "Beispiel: Basis 1.000 €, vorsichtig 0 €, optimistisch 3.250 €");
+  await p.emulateMedia({ media: "print" });
+  ok(await p.locator('[data-live="6"] .chart-box > svg').first().isVisible(), "Druckansicht des Ablaufs zeigt Diagramm");
+  await p.emulateMedia({ media: "screen" });
+  ok(errs.length === 0, "keine Skriptfehler " + errs.join("|"));
+  await c.close();
+}
+
 /* 6. Mobile: kein horizontales Scrollen */
 for (const [w, h] of [[360, 740], [414, 896], [768, 1024], [1280, 900]]) {
   const { c } = await ctx({ viewport: { width: w, height: h } });

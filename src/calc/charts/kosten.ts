@@ -54,7 +54,7 @@ const breakEven: Builder = (i, r) => {
     const qMin = (r as import("./kit").Ok).main.value;
     const from = outOf(r, "Positiver Gewinn ab")!.value;
     const y = pn * num(q);
-    chart.markers!.push({ x: num(q), y, kind: "intersection", label: `Schnittpunkt: ${stk(q)} · ${eur(p.mul(q))}` });
+    chart.markers!.push({ x: num(q), y, kind: "intersection", label: `Theoretischer Schnittpunkt: ${stk(q)} · ${eur(p.mul(q))}` });
     chart.regions!.push(
       { points: [{ x: 0, y: 0 }, { x: 0, y: Fn }, { x: num(q), y }], label: "Verlust (Kosten > Umsatz)", pattern: "loss", labelAt: { x: num(q) * 0.3, y: Fn * 0.5 } },
       { points: [{ x: num(q), y }, { x: xMax, y: Y(xMax, "u") }, { x: xMax, y: Y(xMax, "k") }], label: "Gewinn (Umsatz > Kosten)", pattern: "gain", labelAt: { x: num(q) + (xMax - num(q)) * 0.6, y: (Y(xMax, "u") + Y(xMax, "k")) / 2 + (Y(xMax, "u") - Y(xMax, "k")) * 0.0 } },
@@ -90,6 +90,7 @@ const breakEven: Builder = (i, r) => {
     tableQs.push(D(xMax));
   }
   const seenQ = new Set<string>();
+  if (F.gt(0)) chart.markers!.push({ x: 0, y: Fn, kind: "point", pos: "tr", label: `Fixkosten: ${eur(F)}` });
   chart.table.rows = tableQs.filter((q) => !seenQ.has(q.toString()) && !!seenQ.add(q.toString())).map(rowFor);
   return one(chart);
 };

@@ -80,8 +80,8 @@ const qId = `q-${mode}`;
       <h2 id={headingId} data-catalog-heading>{`Alle ${TOPICS.length} Rechner`}</h2>
       <fieldset class="view-toggle" data-view-toggle>
         <legend>Ansicht</legend>
-        <button type="button" class="view-btn" data-view-btn="explain" aria-pressed="true">Mit Erklärungen</button>
-        <button type="button" class="view-btn" data-view-btn="compact" aria-pressed="false">Kompakt</button>
+        <button type="button" class="view-btn" data-view-btn="compact" aria-pressed="true">Kompakt</button>
+        <button type="button" class="view-btn" data-view-btn="explain" aria-pressed="false">Mit Erklärungen</button>
       </fieldset>
       <div class="catalog-status" role="status" aria-live="polite" data-status>
         <span data-count><strong>{`${TOPICS.length} von ${TOPICS.length} Rechnern`}</strong></span>
@@ -93,7 +93,7 @@ const qId = `q-${mode}`;
 
     <p class="suggest" data-suggest role="status" hidden></p>
 
-    <div class="grid" data-grid data-view="explain">
+    <div class="grid" data-grid data-view="compact">
       {
         TOPICS.map((t) => (
           <div class="grid-item" data-item={t.id} data-cat={t.category}>
@@ -232,6 +232,8 @@ const qId = `q-${mode}`;
       widenBtn.hidden = !v.narrowed || n === 0;
       resetBtn.hidden = !q && state.cat === ALL;
       clearBtn.hidden = !state.q;
+      // Suchmodus: Einstiegsinhalte weichen, damit die Treffer direkt unter dem Suchfeld stehen
+      root.toggleAttribute('data-searching', !!q);
 
       empty.hidden = n > 0;
       if (!n && q) track('search_no_results');

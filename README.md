@@ -93,6 +93,10 @@ Kategorien: Prozent & Grundlagen · Kostenrechnung & Preise · Finanzen & Liquid
 
 Die Startseite zeigt standardmäßig den **vollständigen Katalog** (alle Rechner aus `src/data/registry.ts`, ohne Aufklappen oder „Mehr anzeigen“); Anzahl und Trefferzahlen werden aus dem Register abgeleitet. Ein neuer Rechner erscheint automatisch dort.
 
+## Mengeneinheit
+
+Break-even, Gewinn, Deckungsbeitrag, der Preisablauf und die Praxisfälle führen die Einheit der Menge mit (Stück, abrechenbare Stunde, Auftrag, Paket, Einheit; `src/calc/units.ts`). Die Rechenmodule formulieren mit „Stück“; `localize` ersetzt Fachwörter nach einer festen Tabelle, Zahlen und Rundung (aufrunden auf ganze Einheiten) bleiben identisch. Die Einheit ist Teil von Übernahmen, Speicherung, Szenariovergleich (gemeinsam) und Grafiken.
+
 ## Ergebnisgrafiken
 
 Jeder Rechner und Modus zeigt direkt unter der Hauptzahl „Deine Berechnung als Diagramm“ (aus den aktuellen Eingaben, ohne Klick). Aufbau: Datenaufbereitung `src/calc/charts/<kategorie>.ts` (liefert `ChartSpec`, siehe `src/calc/chart-types.ts`), Zeichnung `src/scripts/charts.ts` (SVG, Tabellenalternative, Punktauswahl per Regler), Einbindung `src/scripts/calculator.ts`. Die Aufbereitung wird je Kategorie erst auf der Rechnerseite nachgeladen (nicht auf der Startseite). Matrix aller Modi: [`docs/DIAGRAMM-MATRIX.md`](docs/DIAGRAMM-MATRIX.md). Neuer Rechner → Eintrag in der passenden Kategoriedatei ergänzen (`tests/charts-data.test.ts` prüft, dass jeder Rechner und Modus eine Grafik liefert).

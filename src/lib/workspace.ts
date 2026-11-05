@@ -599,7 +599,8 @@ export interface Prefs {
 }
 export function getPrefs(): Prefs {
   const d = readJson<{ v?: number; catalogView?: unknown }>(localStore(), PREFS_KEY);
-  return { catalogView: d?.v === 1 && d.catalogView === "compact" ? "compact" : "explain" };
+  // Erstbesucher: kompakte Ansicht; eine bewusst gespeicherte Wahl hat Vorrang
+  return { catalogView: d?.v === 1 && d.catalogView === "explain" ? "explain" : "compact" };
 }
 export function setPrefs(p: Partial<Prefs>): boolean {
   return writeJson(localStore(), PREFS_KEY, { v: 1, ...getPrefs(), ...p });

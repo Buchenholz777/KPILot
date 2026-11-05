@@ -23,3 +23,10 @@ Stand der Überarbeitung: 05.11.2026. Alle Angaben stehen zentral in [`src/confi
 - Seitenaufruf wird ohne Adressfragment und ohne Parameter gesendet; Google-Signale und personalisierte Werbung sind ausgeschaltet.
 - Ereignisse enthalten nur Rechner-, Modus- oder Aufgabenkennung (siehe `docs/MESSKONZEPT.md`); Rechenwerte, Suchtexte, Namen, Notizen und importierte Inhalte werden nicht übertragen.
 - Über-Seite, Footer, Cookie-Hinweis und Datenschutzhinweise beschreiben dasselbe Verhalten.
+
+## Ergänzung 05.11.2026 (Folgeauftrag): was verifiziert ist und was nicht
+
+- **Im Code verifiziert (aber keine Bestätigung des Betreibers):** Google Analytics 4 mit Mess-ID in `src/config/site.ts`, `send_page_view: false`, Seitenaufruf nur mit Pfad ohne Fragment/Parameter, `allow_google_signals: false`, `allow_ad_personalization_signals: false`, Laden erst nach Einwilligung. Ob dieselben Einstellungen in der Google-Analytics-Property selbst gelten (Datenerhebung, Aufbewahrung, Datenfreigabe), kann nur der Betreiber bestätigen.
+- **Hosting:** Die Projektkonfiguration (`wrangler.jsonc`) ist für Cloudflare Pages ausgelegt. Das beweist nicht, dass die Produktionsseite dort läuft oder wie Verbindungsdaten gespeichert werden → weiter offen (Punkt 5).
+- **Verbindungsdaten:** Art, Umfang und Dauer der Speicherung beim Hosting-Anbieter sind unbekannt → offen (Punkt 5).
+- Alle neun Punkte oben bleiben offen; die Hinweise „in Vorbereitung“/„nicht bestätigt“ bleiben, bis `confirmed: true` gesetzt ist.

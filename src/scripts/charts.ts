@@ -73,7 +73,7 @@ export function wrap(s: string, n: number): string[] {
   if (line) out.push(line);
   return out;
 }
-const charsFor = (px: number, size = FS) => Math.max(4, Math.floor(px / (size * 0.52)));
+const charsFor = (px: number, size = FS) => Math.max(4, Math.floor(px / (size * 0.56)));
 const lines = (x: number, y: number, ls: string[], o: TextOpts = {}) =>
   ls.map((l, k) => text(x, y + k * (o.lh ?? 14), l, o)).join("");
 
@@ -216,13 +216,13 @@ function renderBars(c: BarsChart, id: string, W: number) {
         const labelY = b.value < 0 ? zero + hh + 14 : yTop - 6;
         g += text(cx, labelY, b.text, { size: 12, weight: 700, anchor: "middle" });
         const m = meta[k].labs[bi];
-        const base = top + plotH + 18;
+        const base = top + plotH + 18 + (vmin < 0 ? 16 : 0);
         g += lines(cx, base, m.l, { size: 12, anchor: "middle", fill: C.ink });
         g += lines(cx, base + m.l.length * 14, m.s, { size: 10.5, anchor: "middle", fill: C.muted, lh: 12 });
       });
       if (p.ref) g += `<line x1="${x0}" y1="${Yv(p.ref.value).toFixed(1)}" x2="${x0 + pw}" y2="${Yv(p.ref.value).toFixed(1)}" stroke="${C.ink}" stroke-dasharray="5 4" stroke-width="1.6"/>` + text(x0 + pw - 2, Yv(p.ref.value) - 5, p.ref.label, { size: 11, anchor: "end", weight: 700 });
     });
-    yOff = top + plotH + 18 + maxLab * 14 + 14;
+    yOff = top + plotH + 18 + (rowPanels.some((p) => p.bars.some((b) => b.value < 0)) ? 16 : 0) + maxLab * 14 + 14;
   }
   return { svg: shell(W, Math.ceil(yOff), id, c.summary, g), legend: legendBars(c, id), H: yOff };
 }
@@ -378,8 +378,8 @@ function renderHBars(c: HBarsChart, id: string, W: number) {
     right = Math.min(120, W * 0.3);
   const w = W - left - right;
   const X = (v: number) => left + ((v - nt.min) / (nt.max - nt.min)) * w;
-  const rowH = 54,
-    top = 22;
+  const rowH = 68,
+    top = 26;
   let g = text(X(0), 12, c.zeroLabel, { size: 11, anchor: "middle", weight: 700 });
   c.rows.forEach((r, k) => {
     const y = top + k * rowH;
@@ -389,7 +389,7 @@ function renderHBars(c: HBarsChart, id: string, W: number) {
     g += `<rect x="${Math.min(x1, x2).toFixed(1)}" y="${y + 20}" width="${Math.max(2, Math.abs(x2 - x1)).toFixed(1)}" height="18" fill="${r.value < 0 ? F.rose : F.teal}" stroke="${r.value < 0 ? C.rose : C.teal}" stroke-width="1.6"/>`;
     const end = Math.max(x1, x2);
     g += text(end + 6, y + 34, r.text, { weight: 700 });
-    if (r.sub) g += text(left, y + 50, r.sub, { size: 11, fill: C.muted });
+    if (r.sub) g += lines(left, y + 54, wrap(r.sub, charsFor(W - 12, 11)), { size: 11, fill: C.muted, lh: 12 });
   });
   const bottom = top + c.rows.length * rowH;
   g += `<line x1="${X(0).toFixed(1)}" y1="${top - 4}" x2="${X(0).toFixed(1)}" y2="${bottom}" stroke="${C.ink}" stroke-width="1.6"/>`;

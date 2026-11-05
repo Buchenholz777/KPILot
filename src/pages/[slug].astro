@@ -73,7 +73,7 @@ const examples = calc.variants.map((v) => {
         </div>
         <figure class="figure intro-figure">
           <img src={illustrationPath(t.id, true)} width="640" height="360" alt={t.image.alt} decoding="async" fetchpriority="high" />
-          <figcaption>{t.image.caption}</figcaption>
+          <figcaption><span class="badge">Beispielgrafik · feste Beispielwerte</span> {t.image.caption} <span class="muted">Deine eigene Berechnung erscheint beim Ergebnis unter „Deine Berechnung als Diagramm“.</span></figcaption>
         </figure>
       </section>
 
@@ -96,8 +96,8 @@ const examples = calc.variants.map((v) => {
         </dl>
       </section>
 
-      <section class="card content-card" aria-labelledby="beispiel">
-        <h2 id="beispiel">Beispiel und Rechenweg</h2>
+      <section class="card content-card" aria-labelledby="rechenweg-beispiel">
+        <h2 id="rechenweg-beispiel">Beispiel und Rechenweg</h2>
         <p class="small muted">Diese Zahlen sind ein dokumentiertes Beispiel – dieselben Werte setzt „Beispiel einsetzen“ ein, und sie stimmen mit dem Bild überein.</p>
         {
           examples.map(({ v, r, inputs }) => (

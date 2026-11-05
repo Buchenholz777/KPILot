@@ -21,6 +21,7 @@ npm run build        # statisches Build nach dist/
 npm run check:site   # prüft dist/: Links, Titel, Descriptions, Canonicals, noindex, Sitemap
 npm run preview      # fertiges Build lokal ansehen
 NODE_PATH=$(npm root -g) node scripts/e2e-smoke.mjs   # Browserprüfung der Nutzerwege (Playwright, Preview muss laufen)
+NODE_PATH=$(npm root -g) node scripts/e2e-charts.mjs  # alle Rechner und Modi: Grafik, kein NaN, kein Überlauf (Desktop + 375 px)
 ```
 
 Benötigt Node.js ≥ 22.
@@ -90,7 +91,11 @@ Die 41 Themen stehen in `src/data/registry.ts` (Reihenfolge und Texte) und `src/
 
 Kategorien: Prozent & Grundlagen · Kostenrechnung & Preise · Finanzen & Liquidität · Marketing & Vertrieb · Produkt & Kunden · Controlling & Planung.
 
-„Empfohlen“ auf der Startseite ist eine redaktionelle Auswahl (`recommended: true` im Thema), keine gemessene Beliebtheit.
+Die Startseite zeigt standardmäßig den **vollständigen Katalog** (alle Rechner aus `src/data/registry.ts`, ohne Aufklappen oder „Mehr anzeigen“); Anzahl und Trefferzahlen werden aus dem Register abgeleitet. Ein neuer Rechner erscheint automatisch dort.
+
+## Ergebnisgrafiken
+
+Jeder Rechner und Modus zeigt direkt unter der Hauptzahl „Deine Berechnung als Diagramm“ (aus den aktuellen Eingaben, ohne Klick). Aufbau: Datenaufbereitung `src/calc/charts/<kategorie>.ts` (liefert `ChartSpec`, siehe `src/calc/chart-types.ts`), Zeichnung `src/scripts/charts.ts` (SVG, Tabellenalternative, Punktauswahl per Regler), Einbindung `src/scripts/calculator.ts`. Die Aufbereitung wird je Kategorie erst auf der Rechnerseite nachgeladen (nicht auf der Startseite). Matrix aller Modi: [`docs/DIAGRAMM-MATRIX.md`](docs/DIAGRAMM-MATRIX.md). Neuer Rechner → Eintrag in der passenden Kategoriedatei ergänzen (`tests/charts-data.test.ts` prüft, dass jeder Rechner und Modus eine Grafik liefert).
 
 ## Neuen Rechner ergänzen
 

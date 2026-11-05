@@ -26,7 +26,7 @@ const scenPeriod = scenVariant?.fields.find((f) => f.key === 'zeitraum');
 const scenNames = ['Vorsichtig', 'Realistisch', 'Optimistisch'];
 ---
 
-<section class="calc" id="rechner" data-calc={id} data-title={displayTitle(topic)} aria-labelledby="calc-h">
+<section class="calc" id="rechner" data-calc={id} data-cat={topic.category} data-title={displayTitle(topic)} aria-labelledby="calc-h">
   <div class="calc-head">
     <h2 id="calc-h">Rechner</h2>
     <span class="badge">Startet leer · rechnet automatisch</span>
@@ -220,8 +220,6 @@ const scenNames = ['Vorsichtig', 'Realistisch', 'Optimistisch'];
   </div>
 
   <div class="calc-wide">
-    <div data-chart></div>
-
     {
       scenVariant && (
         <details class="scenario card" data-scenario={scenVariant.id}>
@@ -262,6 +260,7 @@ const scenNames = ['Vorsichtig', 'Realistisch', 'Optimistisch'];
             ))}
           </datalist>
           <div class="scn-result" data-scn-result aria-live="polite" />
+          <div class="scn-chart" data-scn-chart />
         </details>
       )
     }

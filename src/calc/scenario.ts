@@ -18,6 +18,11 @@ export interface ScenarioRow {
   label: string;
   a?: string;
   b?: string;
+  /** Zahlenwerte und Einheit für Grafiken (nur wenn beide Szenarien einen Wert haben). */
+  av?: number;
+  bv?: number;
+  unit?: string;
+  format?: Out["format"];
   /** Formatierte Differenz B − A, oder undefined, wenn keine sinnvolle Differenz existiert. */
   diff?: string;
   /** Erklärung, warum keine Differenz gezeigt wird. */
@@ -124,6 +129,10 @@ export function compareScenarios(
       b: ob ? fmt(ob) : b?.status === "ok" ? "–" : missing(b),
     };
     if (oa && ob) {
+      row.av = oa.value.toNumber();
+      row.bv = ob.value.toNumber();
+      row.unit = oa.unit;
+      row.format = oa.format;
       const comparable =
         oa.format === ob.format &&
         oa.unit === ob.unit &&

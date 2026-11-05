@@ -1418,10 +1418,6 @@
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
 }
-.chart-box svg {
-  width: 100%;
-  height: auto;
-}
 .chart-box table {
   width: 100%;
   border-collapse: collapse;

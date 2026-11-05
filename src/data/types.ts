@@ -22,8 +22,6 @@ export interface Topic {
   /** Ausgeschriebener Fachbegriff, falls vom Titel abweichend. */
   fullTerm?: string;
   category: CategoryId;
-  /** Redaktionell empfohlen für die Startseite (keine gemessene Beliebtheit). */
-  recommended?: boolean;
   /** 1–2 kurze Sätze für die Kachel. */
   short: string;
   /** Typische Nutzerfrage. */

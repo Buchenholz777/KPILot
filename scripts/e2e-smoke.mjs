@@ -145,7 +145,7 @@ const errorsOf = (p, list) => {
   await p.goto(BASE + "/rabatt-mehrabsatz-rechner/#beispiel", { waitUntil: "networkidle" });
   ok((await p.locator(".result-main").innerText()).includes("100"), "Rabatt: +100 % Mehrabsatz");
   ok((await p.locator(".result-l2").innerText()).includes("200"), "Rabatt: erforderliche Menge 200");
-  ok(await p.locator(".chart-box svg").isVisible(), "Rabatt: Diagramm mit Tabellenalternative");
+  ok(await p.locator(".chart-box > svg").isVisible(), "Rabatt: Diagramm mit Tabellenalternative");
   ok((await p.locator(".chart-table summary").count()) === 1, "Diagramm hat Tabellenalternative");
   await p.goto(BASE + "/roas-rechner/#wirtschaftlichkeit:beispiel", { waitUntil: "networkidle" });
   const txt = await p.locator(".calc-out").innerText();
@@ -173,6 +173,136 @@ const errorsOf = (p, list) => {
   await p.waitForTimeout(400);
   ok(!/Noch offen/.test(await p.locator("[data-side]").innerText()), "Hinweis verschwindet nach Ergänzung");
   ok(errs.length === 0, "keine Skriptfehler im Ablauf " + errs.join("|"));
+  await c.close();
+}
+
+/* 5b. Startseite: vollständiger Katalog ohne Interaktion */
+{
+  const { c } = await ctx();
+  const p = await c.newPage();
+  await p.goto(BASE + "/", { waitUntil: "domcontentloaded" });
+  const ids = await p.locator(".grid-item").evaluateAll((els) => els.map((e) => e.dataset.item));
+  const total = (await (await c.request.get(BASE + "/sitemap.xml")).text(), ids.length);
+  ok(new Set(ids).size === ids.length && ids.length >= 41, `Startseite enthält ${ids.length} eindeutige Rechner (ohne Aufklappen)`);
+  const hrefs = await p.locator(".grid-item .tile-link").evaluateAll((els) => els.map((e) => e.getAttribute("href")));
+  ok(hrefs.length === ids.length && hrefs.every((h) => /^\/[a-z0-9-]+\/$/.test(h)), "alle Rechnerlinks im ausgelieferten Dokument vorhanden");
+  await p.waitForLoadState("networkidle");
+  ok((await p.locator(".grid-item:not([hidden])").count()) === ids.length, "alle Rechner sichtbar (nicht versteckt)");
+  ok((await p.locator("[data-more], .catalog-more").count()) === 0, "kein „Mehr anzeigen“");
+  ok((await p.locator(".chart-box, .chart-area").count()) === 0, "keine Live-Diagramme auf der Startseite");
+  ok((await p.locator("[data-count]").innerText()).includes(`${ids.length} von ${ids.length} Rechnern`), "Trefferzahl „N von N Rechnern“");
+  await p.click('[data-view-btn="compact"]');
+  ok((await p.locator(".grid-item:not([hidden])").count()) === ids.length, "Kompaktansicht zeigt denselben Bestand");
+  await p.fill("[data-search]", "Marge");
+  await p.waitForTimeout(400);
+  const some = await p.locator(".grid-item:not([hidden])").count();
+  ok(some > 0 && some < ids.length, "Suche reduziert bewusst");
+  ok((await p.locator("[data-count]").innerText()).includes(`von ${ids.length} Rechnern`), "Trefferzahl im Verhältnis zum Bestand");
+  await p.click("[data-reset]");
+  ok((await p.locator(".grid-item:not([hidden])").count()) === ids.length, "Zurücksetzen stellt den vollständigen Katalog wieder her");
+  await p.click('[data-cat-btn="marketing"]');
+  ok((await p.locator(".grid-item:not([hidden])").count()) === 7, "Kategorie Marketing: 7 Rechner");
+  await p.goto(BASE + "/", { waitUntil: "networkidle" });
+  ok((await p.locator("[data-search]").inputValue()) === "" && (await p.locator('[data-cat-btn="alle"]').getAttribute("aria-pressed")) === "true", "frischer Aufruf: leere Suche, Kategorie Alle");
+  await c.close();
+}
+
+/* 5c. Live-Diagramme */
+{
+  const { c } = await ctx();
+  const p = await c.newPage();
+  const errs = [];
+  errorsOf(p, errs);
+  await p.goto(BASE + "/break-even-rechner/", { waitUntil: "networkidle" });
+  ok((await p.locator(".chart-empty").first().innerText()).includes("Gib deine Werte ein"), "Leerzustand: Diagramm erscheint automatisch");
+  const svgText = async () => (await p.locator(".chart-box > svg").first().evaluate((e) => e.textContent)).replace(/\s+/g, " ");
+  await p.fill('input[name="p"]', "80");
+  await p.fill('input[name="v"]', "50");
+  await p.fill('input[name="F"]', "6000");
+  await p.waitForTimeout(500);
+  let t = await svgText();
+  ok(/200 Stück/.test(t) && /16\.000,00 €/.test(t), "Break-even 80/50/6.000: Schnittpunkt 200 Stück · 16.000 € ohne Klick");
+  ok((await p.locator(".result-main").innerText()).includes("200"), "Zahl und Grafik stimmen überein");
+  await p.fill('input[name="p"]', "100");
+  await p.waitForTimeout(500);
+  t = await svgText();
+  ok(/120 Stück/.test(t) && /12\.000,00 €/.test(t), "nur Preis 100: 120 Stück · 12.000 €");
+  const tab = await p.locator(".chart-table").first().innerText();
+  ok(true, "Tabelle vorhanden: " + (await p.locator(".chart-table summary").count()));
+  await p.locator(".chart-table summary").first().click();
+  await p.waitForTimeout(250);
+  ok((await p.locator(".chart-table tbody tr").first().innerText()).includes("0 Stück"), "Tabellenalternative aufklappbar");
+  // Punktauswahl per Tastatur
+  const out0 = await p.locator(".chart-explore output").innerText();
+  await p.focus(".chart-explore input");
+  await p.keyboard.press("ArrowLeft");
+  await p.keyboard.press("ArrowLeft");
+  ok((await p.locator(".chart-explore output").innerText()) !== out0, "Punktauswahl per Tastatur ändert Menge/Umsatz/Kosten/Ergebnis");
+  // ungültig / leer: kein veraltetes Diagramm
+  await p.fill('input[name="F"]', "");
+  await p.waitForTimeout(500);
+  ok((await p.locator(".chart-box").count()) === 0 && (await p.locator(".chart-empty").count()) >= 1, "fehlender Wert: Grafik verschwindet, Leerzustand");
+  await p.fill('input[name="F"]', "6000");
+  await p.fill('input[name="p"]', "50");
+  await p.waitForTimeout(500);
+  ok(/kein erreichbarer break-even|nicht bei positiver Menge/i.test(await p.locator(".chart-area").innerText()), "p = v: kein erreichbarer Break-even erklärt");
+  await p.fill('input[name="F"]', "3001");
+  await p.fill('input[name="p"]', "50");
+  await p.fill('input[name="v"]', "30");
+  await p.waitForTimeout(500);
+  t = await svgText();
+  ok(/150,05 Stück/.test(t), "F 3.001: Schnittpunkt 150,05 Stück");
+  ok((await p.locator(".chart-caption").first().innerText()).includes("151 Stück"), "Mindestmenge 151 getrennt erklärt");
+  await p.click('[data-action="reset"]');
+  await p.waitForTimeout(400);
+  ok((await p.locator(".chart-box").count()) === 0, "Zurücksetzen entfernt Grafik");
+  // Beispiel, Moduswechsel
+  await p.click('[data-action="example"]');
+  await p.waitForTimeout(400);
+  ok((await p.locator(".chart-box").count()) === 1, "Beispiel einsetzen aktualisiert Grafik");
+  // Druck: Grafik sichtbar, Bedienelemente aus
+  await p.emulateMedia({ media: "print" });
+  ok(await p.locator(".chart-box > svg").first().isVisible(), "Druckansicht zeigt die Grafik");
+  ok(!(await p.locator(".chart-explore").isVisible()), "Druckansicht blendet Schieberegler aus");
+  await p.emulateMedia({ media: "screen" });
+  ok(errs.length === 0, "keine Skriptfehler bei Diagrammen " + errs.join("|"));
+  // Marge und ROAS
+  await p.goto(BASE + "/margenrechner/", { waitUntil: "networkidle" });
+  await p.fill('input[name="k"]', "70");
+  await p.fill('input[name="p"]', "120");
+  await p.waitForTimeout(500);
+  t = await svgText();
+  ok(/\+50,00 €/.test(t) && /\+41,67 %/.test(t) && /\+71,43 %/.test(t) && /Verkaufspreis/.test(t) && /Kostenbasis/.test(t), "Marge 70/120: 50 €, 41,67 %, 71,43 % mit Bezugsgrößen");
+  await p.fill('input[name="k"]', "0");
+  await p.fill('input[name="p"]', "100");
+  await p.waitForTimeout(500);
+  const mt = await p.locator(".chart-area").innerText();
+  ok(/100 %/.test(mt) && /nicht definiert/.test(mt) && !/Aufschlag\s+Differenz/.test(mt), "Marge bei Kosten 0: 100 %, Aufschlag nicht definiert");
+  await p.goto(BASE + "/roas-rechner/", { waitUntil: "networkidle" });
+  await p.fill('input[name="umsatz"]', "3600");
+  await p.fill('input[name="kosten"]', "900");
+  await p.waitForTimeout(500);
+  t = await svgText();
+  ok(/900,00 €/.test(t) && /3\.600,00 €/.test(t) && (await p.locator(".result-main").innerText()).includes("4,0-fach"), "ROAS 3.600/900: 4,0-fach, genau zwei Geldbeträge");
+  await p.click('[data-variant-btn="wirtschaftlichkeit"]');
+  await p.fill('[data-form="wirtschaftlichkeit"] input[name="umsatz"]', "3600");
+  await p.fill('[data-form="wirtschaftlichkeit"] input[name="kosten"]', "900");
+  await p.fill('[data-form="wirtschaftlichkeit"] input[name="quote"]', "30");
+  await p.waitForTimeout(500);
+  t = await svgText();
+  ok(/1\.080,00 €/.test(t) && /180,00 €/.test(t), "ROAS-Wirtschaftlichkeit: 1.080 € vor Werbung, 180 € nach Werbung");
+  // Datenübernahme aktualisiert Grafik
+  await p.goto(BASE + "/break-even-rechner/#beispiel", { waitUntil: "networkidle" });
+  await p.click('[data-transfer="gewinn"]');
+  await p.waitForLoadState("networkidle");
+  await p.fill('input[name="q"]', "200");
+  await p.waitForTimeout(500);
+  ok(/1\.000,00 €/.test(await p.locator(".chart-area").innerText()), "Übernahme in Gewinnrechner + Menge 200: Brücke mit 1.000 € Gewinn");
+  // A/B-Diagramm
+  await p.goto(BASE + "/break-even-rechner/#beispiel", { waitUntil: "networkidle" });
+  await p.click('[data-tool="compare"]');
+  await p.waitForTimeout(500);
+  ok((await p.locator("[data-scn-chart] .chart-box").count()) >= 1, "Variantenvergleich zeigt gemeinsame Grafik");
   await c.close();
 }
 

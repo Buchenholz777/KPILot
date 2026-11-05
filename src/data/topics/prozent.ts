@@ -6,7 +6,6 @@ export const prozentTopics: Topic[] = [
     slug: "prozentrechner",
     title: "Prozentrechner",
     category: "prozent",
-    recommended: true,
     short:
       "Berechne Prozentwert, Prozentsatz oder Grundwert – je nachdem, welche zwei Angaben du kennst.",
     question: "Wie viel sind 20 % von 250 €?",
@@ -62,7 +61,6 @@ export const prozentTopics: Topic[] = [
     slug: "prozentuale-veraenderung",
     title: "Prozentuale Veränderung",
     category: "prozent",
-    recommended: true,
     short:
       "Um wie viel Prozent ist ein Wert gestiegen oder gefallen? Absolut und relativ.",
     question: "Um wie viel Prozent ist der Umsatz von 80 auf 100 gestiegen?",
@@ -116,7 +114,6 @@ export const prozentTopics: Topic[] = [
     slug: "rabattrechner",
     title: "Rabatt & Erhöhung",
     category: "prozent",
-    recommended: true,
     short:
       "Preis nach Rabatt oder Erhöhung, ursprünglichen Preis zurückrechnen, zwei Änderungen kombinieren.",
     question: "Was kostet es nach 20 % Rabatt – und was vorher?",

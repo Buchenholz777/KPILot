@@ -19,7 +19,7 @@ const H = `h${headingLevel}` as 'h2' | 'h3';
 const showAbbr = t.abbr && !t.title.includes(t.abbr);
 ---
 
-<article class="tile" data-id={t.id} data-cat={t.category} data-recommended={t.recommended ? '' : undefined}>
+<article class="tile" data-id={t.id} data-cat={t.category}>
   <div class="tile-media">
     <img src={illustrationPath(t.id, false)} width="320" height="180" alt={t.image.alt} loading={eager ? 'eager' : 'lazy'} decoding="async" />
     <FavButton id={t.id} name={`${t.title}${showAbbr ? ` (${t.abbr})` : ''}`} class="tile-fav" />

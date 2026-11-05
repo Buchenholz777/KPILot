@@ -8,7 +8,6 @@ export const marketingTopics: Topic[] = [
     abbr: "CR",
     fullTerm: "Konversionsrate",
     category: "marketing",
-    recommended: true,
     short:
       "Anteil der Besuche oder Interaktionen, die zu einem definierten Ziel führen.",
     question: "Wie viele meiner Besucher kaufen tatsächlich?",
@@ -222,7 +221,6 @@ export const marketingTopics: Topic[] = [
     title: "ROAS",
     fullTerm: "Return on Advertising Spend",
     category: "marketing",
-    recommended: true,
     short:
       "Zugeordneter Umsatz je Werbe-Euro – als Faktor und in Prozent. Kein Gewinn.",
     question: "Wie viel Umsatz bringt mir ein Euro Werbung?",

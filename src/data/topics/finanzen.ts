@@ -13,7 +13,6 @@ export const finanzenTopics: Topic[] = [
     fullTerm:
       "Earnings Before Interest and Taxes – Ergebnis vor Zinsen und Ertragsteuern",
     category: "finanzen",
-    recommended: true,
     short:
       "Operatives Ergebnis vor Zinsen und Ertragsteuern – kein Kontostand.",
     question: "Was verdient mein operatives Geschäft vor Zinsen und Steuern?",
@@ -209,7 +208,6 @@ export const finanzenTopics: Topic[] = [
     slug: "cashflow-rechner",
     title: "Cashflow",
     category: "finanzen",
-    recommended: true,
     short:
       "Tatsächliche Ein- und Auszahlungen eines Zeitraums – operativ oder mit Investition und Finanzierung.",
     question: "Wie viel Geld ist tatsächlich zu- oder abgeflossen?",

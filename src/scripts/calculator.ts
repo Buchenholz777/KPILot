@@ -21,7 +21,10 @@ import {
   updateSaved,
 } from "../lib/workspace";
 import { track } from "../lib/analytics";
-import { barsChart, breakEvenChart } from "./charts";
+import { chartPlaceholder, hydrateCharts, renderChartArea } from "./charts";
+import { buildCharts, loadChartBuilders, type ChartBuilders } from "../calc/charts";
+import { scenarioCharts } from "../calc/charts/scenario";
+import type { ChartOutcome } from "../calc/chart-types";
 import { esc, toast } from "./ui";
 
 type Ok = Extract<CalcResult, { status: "ok" }>;
@@ -44,7 +47,17 @@ async function init(root: HTMLElement) {
   const toolsEl = root.querySelector<HTMLElement>("[data-tools]")!;
   const transfersEl = root.querySelector<HTMLElement>("[data-transfers]");
   const noticeEl = root.querySelector<HTMLElement>("[data-notice]")!;
-  const chartEl = root.querySelector<HTMLElement>("[data-chart]")!;
+  /** Ergebnisgrafiken: Aufbereitung wird je Kategorie nachgeladen; Auswahl der Punktauswahl bleibt bis Reset/Moduswechsel erhalten. */
+  let chartBuilders: ChartBuilders | null = null;
+  let lastOutcome: ChartOutcome | null = null;
+  const chartSel = new Map<string, number>();
+  const openTables = new Set<string>();
+  void loadChartBuilders(root.dataset.cat!).then((b) => {
+    chartBuilders = b;
+    update();
+  }).catch(() => undefined);
+  let lastChartWidth = 0;
+  const chartWidth = () => Math.max(260, Math.min(640, resultEl.clientWidth - 48));
   const followEl = root.querySelector<HTMLElement>("[data-followups]")!;
   const followList = followEl.querySelector<HTMLElement>("[data-followup-list]")!;
   const capacityEl = followEl.querySelector<HTMLElement>("[data-capacity]")!;
@@ -247,19 +260,20 @@ async function init(root: HTMLElement) {
       toolsEl.hidden = true;
       if (transfersEl) transfersEl.hidden = true;
       followEl.hidden = true;
-      chartEl.innerHTML = "";
+      lastOutcome = null;
+
       if (opts.announce)
         announce(
           "Noch kein Ergebnis – bitte Eingaben vervollständigen oder prüfen.",
         );
       return;
     }
+    lastOutcome = chartBuilders ? buildCharts(chartBuilders, def.id, variant.id, validation.inputs, result) : null;
     renderResult(result, raw);
     const ok = result.status === "ok";
     toolsEl.hidden = !ok;
     if (transfersEl) transfersEl.hidden = !ok;
     if (ok) track("calc_result", analyticsId());
-    renderChart(result);
     renderFollowUps(result);
     const summary =
       result.status === "ok"
@@ -275,9 +289,18 @@ async function init(root: HTMLElement) {
     window.setTimeout(() => (announceEl.textContent = text), 60);
   }
 
+  /**
+   * Schreibt den Ergebnisbereich nur bei geänderter Ausgabe neu. So bleiben Fokus, aufgeklappte Bereiche und
+   * Schieberegler stabil, und ein Klick auf Elemente im Ergebnis geht nicht verloren, wenn gleichzeitig das
+   * Eingabefeld den Fokus verliert (blur löst eine erneute Berechnung mit identischem Ergebnis aus).
+   */
+  let lastResultHtml = "";
   function setResult(state: string, html: string) {
+    const full = state === "empty" ? html + chartPlaceholder() : html;
+    if (resultEl.dataset.state === state && lastResultHtml === full) return;
+    lastResultHtml = full;
     resultEl.dataset.state = state;
-    resultEl.innerHTML = html;
+    resultEl.innerHTML = full;
   }
 
   /** Zeitraum und Einheit des Ergebnisses (Ebene 2: Einordnung). */
@@ -306,6 +329,7 @@ async function init(root: HTMLElement) {
         ? `<ul class="result-notes">${r.notes.map((n) => `<li>${esc(n)}</li>`).join("")}</ul>`
         : "";
       const tag = exampleActive ? "Ergebnis mit Beispielwerten" : "Dein Ergebnis";
+      const chart = chartHtml();
       setResult(
         "ok",
         `<div class="result-l1">
@@ -314,6 +338,7 @@ async function init(root: HTMLElement) {
           <p class="result-main"${r.tone ? ` data-tone="${r.tone}"` : ""}>${esc(fmt(r.main))}</p>
           <p class="result-meaning">${esc(r.meaning)}</p>
         </div>
+        ${chart}
         <div class="result-l2">
           ${key.length ? `<h4 class="result-sub">Einordnung</h4>${dl(key)}` : ""}
           ${ctx ? `<p class="result-context">${esc(ctx)}</p>` : ""}${notes}
@@ -335,20 +360,36 @@ async function init(root: HTMLElement) {
         "partial" in r && r.partial?.length ? dl(r.partial) : "";
       setResult(
         r.status === "invalid" ? "error" : "info",
-        `<p class="result-tag">${head}</p><p>${esc(r.message)}</p>${partial}`,
+        `<p class="result-tag">${head}</p><p>${esc(r.message)}</p>${partial}${chartHtml()}`,
       );
     }
+    hydrateCharts(resultEl, chartSel, openTables);
   }
 
-  function renderChart(r: CalcResult) {
-    if (r.status !== "ok" || !r.chart) {
-      chartEl.innerHTML = "";
-      return;
-    }
-    chartEl.innerHTML =
-      r.chart.kind === "break-even"
-        ? breakEvenChart(r.chart)
-        : barsChart(r.chart);
+  /** Diagrammbereich direkt unter der Hauptzahl; ohne geladene Aufbereitung zunächst der Leerzustand. */
+  function chartHtml(): string {
+    if (!lastOutcome) return chartPlaceholder();
+    lastChartWidth = chartWidth();
+    return renderChartArea(lastOutcome, { width: chartWidth(), selection: chartSel, openTables });
+  }
+
+  /** Nur die Grafik neu zeichnen (z. B. nach Größenänderung), ohne Eingaben oder Ergebnis anzufassen. */
+  function redrawChartsOnly() {
+    const area = resultEl.querySelector<HTMLElement>(".chart-area");
+    if (!area || !lastOutcome) return;
+    const w = chartWidth();
+    if (Math.abs(w - lastChartWidth) < 24) return;
+    lastChartWidth = w;
+    area.outerHTML = renderChartArea(lastOutcome, { width: w, selection: chartSel, openTables });
+    lastResultHtml = ""; // nächster Render schreibt neu, weil die Grafik jetzt eine andere Breite hat
+    hydrateCharts(resultEl, chartSel, openTables);
+  }
+  if (typeof ResizeObserver !== "undefined") {
+    let raf = 0;
+    new ResizeObserver(() => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(redrawChartsOnly);
+    }).observe(resultEl);
   }
 
   /* ---------- Nächste Schritte ---------- */
@@ -468,6 +509,7 @@ async function init(root: HTMLElement) {
       .querySelectorAll<HTMLElement>("[data-variant-fav]")
       .forEach((s) => (s.hidden = s.dataset.variantFav !== id));
     touched.clear();
+    chartSel.clear();
     setExample(false);
     if (updateHash && def.variants.length > 1)
       history.replaceState(null, "", `#${id}`);
@@ -521,6 +563,7 @@ async function init(root: HTMLElement) {
       .addEventListener("click", () => {
         writeRaw(form, v, {});
         touched.clear();
+        chartSel.clear();
         noticeEl.hidden = true;
         opened = null;
         setExample(false);
@@ -559,6 +602,7 @@ async function init(root: HTMLElement) {
       .querySelectorAll("[data-transferred]")
       .forEach((el) => el.removeAttribute("data-transferred"));
     touched.clear();
+    chartSel.clear();
     opened = null;
     setExample(true);
     track("calc_started", { calc: def.id, variant: v.id });
@@ -836,6 +880,7 @@ async function init(root: HTMLElement) {
     const formB = scn.querySelector<HTMLFormElement>('[data-scn="B"]')!;
     const shared = scn.querySelector<HTMLSelectElement>(`select[name="${PERIOD_KEY}"]`);
     const outEl = scn.querySelector<HTMLElement>("[data-scn-result]")!;
+    const scnChartEl = scn.querySelector<HTMLElement>("[data-scn-chart]")!;
     const nameOf = (f: HTMLFormElement, fallback: string) =>
       (f.elements.namedItem("scnName") as HTMLInputElement).value.trim() || fallback;
     const scnRaw = (f: HTMLFormElement): RawInputs => {
@@ -859,6 +904,7 @@ async function init(root: HTMLElement) {
       if (c.state === "empty") {
         outEl.innerHTML =
           '<p class="small muted">Trage in beiden Szenarien Werte ein, um sie zu vergleichen.</p>';
+        scnChartEl.innerHTML = "";
         return;
       }
       const head = (n: string, s: string) => (n === s ? s : `${s}: ${n}`);
@@ -875,6 +921,12 @@ async function init(root: HTMLElement) {
         .join("");
       outEl.innerHTML = `${warn}${same}${period}<div class="table-scroll" tabindex="0" role="region" aria-label="Szenariovergleich – bei Bedarf horizontal scrollbar"><table class="compare-table"><caption>Deine Szenarien im Vergleich</caption><thead><tr><th scope="col">Kennzahl</th><th scope="col">${esc(head(nA, "A"))}${c.periodsMatch ? "" : ` (${esc(c.periodA ?? "")})`}</th><th scope="col">${esc(head(nB, "B"))}${c.periodsMatch ? "" : ` (${esc(c.periodB ?? "")})`}</th><th scope="col">${esc(nB)} − ${esc(nA)}</th></tr></thead><tbody>${rows}</tbody></table></div>`;
       if (c.state === "ok") track("scenario_used", { calc: def.id, variant: sv.id });
+      // Grafik des Vergleichs: gleiche Skala, nur bei gemeinsamem Zeitraum
+      const ra = run(sv, a),
+        rb = run(sv, b);
+      const oc = scenarioCharts(def.id, sv, c, { raw: a, inputs: ra.validation.inputs, result: ra.result }, { raw: b, inputs: rb.validation.inputs, result: rb.result }, [nA, nB]);
+      scnChartEl.innerHTML = renderChartArea(oc, { width: Math.max(260, Math.min(640, scnChartEl.clientWidth || 560)), selection: chartSel, openTables, idPrefix: "s" });
+      hydrateCharts(scnChartEl, chartSel, openTables);
     };
     for (const f of [formA, formB]) {
       f.addEventListener("input", compare);

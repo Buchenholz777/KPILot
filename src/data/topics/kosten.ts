@@ -7,7 +7,6 @@ export const kostenTopics: Topic[] = [
     title: "Deckungsbeitrag",
     abbr: "DB",
     category: "kosten",
-    recommended: true,
     short:
       "Was bleibt pro Stück nach den variablen Kosten, um die Fixkosten zu decken?",
     question: "Was bleibt mir pro verkauftem Stück übrig?",
@@ -64,7 +63,6 @@ export const kostenTopics: Topic[] = [
     title: "Break-even",
     fullTerm: "Gewinnschwelle",
     category: "kosten",
-    recommended: true,
     short:
       "Ab welcher Stückzahl sind alle Kosten gedeckt? Mit Grafik, Tabelle und Szenariovergleich.",
     question: "Wie viel muss ich verkaufen, damit sich das Geschäft trägt?",
@@ -178,7 +176,6 @@ export const kostenTopics: Topic[] = [
     slug: "margenrechner",
     title: "Marge & Aufschlag",
     category: "kosten",
-    recommended: true,
     short:
       "Handelsspanne und Aufschlag aus Kosten und Verkaufspreis – und warum sie sich unterscheiden.",
     question: "Wie viel Prozent verdiene ich am Verkaufspreis?",
@@ -436,7 +433,6 @@ export const kostenTopics: Topic[] = [
     slug: "rabatt-mehrabsatz-rechner",
     title: "Rabatt: nötiger Mehrabsatz",
     category: "kosten",
-    recommended: true,
     short:
       "Wie viel mehr muss ich verkaufen, damit ein Rabatt denselben Gesamtdeckungsbeitrag bringt?",
     question: "Wie viel mehr muss ich verkaufen, wenn ich 10 % Rabatt gebe?",

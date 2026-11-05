@@ -16,7 +16,6 @@ describe("Rabatt: nötiger Mehrabsatz", () => {
     expect(extra(r, "Stückdeckungsbeitrag nachher")).toBe("10");
     expect(extra(r, "Veränderung des Stückdeckungsbeitrags")).toBe("-10");
     expect(extra(r, "Erforderliche neue Menge")).toBe("200");
-    expect(r.chart?.kind).toBe("bars");
   });
   it("beide Modi liefern bei gleichem Preis dasselbe Ergebnis", () => {
     const a = okCalc("rabatt-absatz", "prozent", base);

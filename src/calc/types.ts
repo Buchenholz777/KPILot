@@ -56,24 +56,6 @@ export interface Out {
   detail?: boolean;
 }
 
-export interface BarsChart {
-  kind: "bars";
-  /** Kurzbeschreibung für Screenreader. */
-  summary: string;
-  panels: {
-    title: string;
-    bars: { label: string; value: number; text: string; emphasis?: boolean }[];
-  }[];
-  /** Tabellenalternative zum Diagramm. */
-  table: { head: string[]; rows: string[][] };
-}
-
-export interface ChartPoint {
-  q: number;
-  revenue: number;
-  cost: number;
-}
-
 export type CalcResult =
   | {
       status: "ok";
@@ -86,9 +68,8 @@ export type CalcResult =
       /** Interpretationsgrenzen direkt am Ergebnis. */
       notes?: string[];
       tone?: "neutral" | "positive" | "negative";
-      chart?:
-        | { kind: "break-even"; points: ChartPoint[]; breakEven?: number }
-        | BarsChart;
+      /** Zwischenwerte, die für Grafiken gebraucht werden (z. B. Beitrag je Tarif). */
+      breakdown?: Out[];
     }
   | {
       status: "undefined" | "impossible" | "ambiguous";

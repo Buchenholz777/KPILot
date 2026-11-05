@@ -7,16 +7,15 @@ import Icon from './Icon.astro';
 import CategoryIcon from './CategoryIcon.astro';
 import BandLines from './BandLines.astro';
 import { TASKS, taskUrl } from '../data/tasks';
-import { HOME_ORDER } from '../data/home';
 
 interface Props {
-  /** home: zeigt ohne Suche/Filter nur „Empfohlen“; all: kompletter Katalog. */
+  /** home und all zeigen standardmäßig denselben vollständigen Katalog; die Seite unterscheidet nur die Einleitung. */
   mode: 'home' | 'all';
   headingId?: string;
 }
 const { mode, headingId = 'katalog-h' } = Astro.props;
 const index = JSON.stringify(buildSearchIndex());
-const firstVisible = new Set((mode === 'home' ? HOME_ORDER.map((id) => TOPICS.find((t) => t.id === id)!) : TOPICS).slice(0, 6).map((t) => t.id));
+const firstVisible = new Set(TOPICS.slice(0, 6).map((t) => t.id));
 const qId = `q-${mode}`;
 ---
 
@@ -78,14 +77,14 @@ const qId = `q-${mode}`;
     </fieldset>
 
     <div class="catalog-head">
-      <h2 id={headingId} data-catalog-heading>{mode === 'home' ? 'Nützliche Rechner für den Start' : 'Alle Rechner'}</h2>
+      <h2 id={headingId} data-catalog-heading>{`Alle ${TOPICS.length} Rechner`}</h2>
       <fieldset class="view-toggle" data-view-toggle>
         <legend>Ansicht</legend>
         <button type="button" class="view-btn" data-view-btn="explain" aria-pressed="true">Mit Erklärungen</button>
         <button type="button" class="view-btn" data-view-btn="compact" aria-pressed="false">Kompakt</button>
       </fieldset>
       <div class="catalog-status" role="status" aria-live="polite" data-status>
-        <span data-count><strong>{mode === 'home' ? 'Redaktionelle Auswahl – Geschäftsnutzen und Grundlagen' : `${TOPICS.length} Rechner`}</strong></span>
+        <span data-count><strong>{`${TOPICS.length} von ${TOPICS.length} Rechnern`}</strong></span>
         <span class="scope" data-scope hidden></span>
         <button type="button" class="btn btn-ghost" data-widen hidden>In allen Kategorien suchen</button>
         <button type="button" class="btn btn-ghost" data-reset hidden><Icon name="x" />Zurücksetzen</button>
@@ -97,7 +96,7 @@ const qId = `q-${mode}`;
     <div class="grid" data-grid data-view="explain">
       {
         TOPICS.map((t) => (
-          <div class="grid-item" data-item={t.id} data-cat={t.category} data-home-rank={HOME_ORDER.indexOf(t.id) >= 0 ? HOME_ORDER.indexOf(t.id) : 99} hidden={mode === 'home' && !t.recommended ? true : undefined}>
+          <div class="grid-item" data-item={t.id} data-cat={t.category}>
             <Tile topic={t} eager={firstVisible.has(t.id)} />
           </div>
         ))
@@ -121,15 +120,6 @@ const qId = `q-${mode}`;
       </ul>
     </div>
 
-    {
-      mode === 'home' && (
-        <p class="catalog-more" data-more>
-          <a class="btn btn-secondary" href="/rechner/">
-            Alle {TOPICS.length} Rechner anzeigen <Icon name="arrow" />
-          </a>
-        </p>
-      )
-    }
   </div>
   <script type="application/json" data-search-index set:html={index} />
 </div>
@@ -157,7 +147,6 @@ const qId = `q-${mode}`;
     const entries = JSON.parse(root.querySelector('[data-search-index]')!.textContent!) as SearchEntry[];
     const chips = [...root.querySelectorAll<HTMLButtonElement>('[data-cat-btn]')];
     const titles = Object.fromEntries(chips.map((b) => [b.dataset.catBtn!, b.textContent!.trim()]));
-    const recommended = new Set([...root.querySelectorAll<HTMLElement>('.tile[data-recommended]')].map((t) => t.dataset.id!));
     const input = root.querySelector<HTMLInputElement>('[data-search]')!;
     const clearBtn = root.querySelector<HTMLButtonElement>('[data-clear]')!;
     const items = new Map([...root.querySelectorAll<HTMLElement>('[data-item]')].map((el) => [el.dataset.item!, el]));
@@ -170,12 +159,10 @@ const qId = `q-${mode}`;
     const emptyText = root.querySelector<HTMLElement>('[data-empty-text]')!;
     const emptyAll = root.querySelector<HTMLButtonElement>('[data-empty-allcats]')!;
     const heading = root.querySelector<HTMLElement>('[data-catalog-heading]')!;
-    const more = root.querySelector<HTMLElement>('[data-more]');
     const jump = root.querySelector<HTMLAnchorElement>('[data-jump]');
     const catSelect = root.querySelector<HTMLSelectElement>('[data-cat-select]');
     const suggestEl = root.querySelector<HTMLElement>('[data-suggest]')!;
     const emptyReset = root.querySelector<HTMLButtonElement>('[data-empty-reset]')!;
-    const rank = new Map([...items].map(([id, el]) => [id, Number(el.dataset.homeRank ?? 99)]));
     const viewBtns = [...root.querySelectorAll<HTMLButtonElement>('[data-view-btn]')];
     // Ansicht „Mit Erklärungen“ / „Kompakt“: lokal gemerkt, ändert Suche und Filter nicht
     function setView(v: CatalogView, persist = true) {
@@ -191,19 +178,21 @@ const qId = `q-${mode}`;
       render();
     });
 
-    let state: CatalogState = restore(getCatalogState(), Object.keys(titles));
+    // Ein frischer Aufruf startet mit leerer Suche und „Alle“; nur beim Zurück-Gehen wird der letzte Stand wiederhergestellt.
+    const nav = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined;
+    let state: CatalogState = restore(nav?.type === 'back_forward' ? getCatalogState() : null, Object.keys(titles));
     input.value = state.q;
 
     function render(persist = true) {
       const q = state.q.trim();
-      const v = computeView(state, entries, { mode, recommended });
+      const v = computeView(state, entries);
       chips.forEach((c) => c.setAttribute('aria-pressed', String(c.dataset.catBtn === state.cat)));
       if (catSelect) catSelect.value = state.cat;
 
       const order = new Set(v.visible);
       for (const [id, el] of items) el.hidden = !order.has(id);
       // Reihenfolge nach Relevanz auch für Tastatur und Screenreader
-      (q ? v.visible : v.homeDefault ? [...v.visible].sort((a, b) => (rank.get(a) ?? 99) - (rank.get(b) ?? 99)) : entries.map((e) => e.id)).forEach((id) => grid.appendChild(items.get(id)!));
+      (q ? v.visible : entries.map((e) => e.id)).forEach((id) => grid.appendChild(items.get(id)!));
 
       // Tippfehler: Vorschlag mit direkt erreichbaren Treffern
       suggestEl.hidden = !v.suggestion;
@@ -224,16 +213,15 @@ const qId = `q-${mode}`;
       }
 
       const catName = state.cat === ALL ? '' : titles[state.cat];
-      heading.textContent = v.homeDefault ? 'Nützliche Rechner für den Start' : q ? 'Suchergebnisse' : state.cat === ALL ? 'Alle Rechner' : catName;
+      heading.textContent = q ? 'Suchergebnisse' : state.cat === ALL ? `Alle ${entries.length} Rechner` : catName;
       const n = v.visible.length;
-      countEl.innerHTML = v.homeDefault
-        ? '<strong>Redaktionelle Auswahl – Geschäftsnutzen und Grundlagen</strong>'
-        : q
-          ? `<strong>${n} Treffer</strong> für „${esc(v.suggestion ?? q)}“`
-          : `<strong>${n} Rechner</strong>`;
+      // Trefferzahl immer im Verhältnis zum Gesamtbestand
+      countEl.innerHTML = q
+        ? `<strong>${n} von ${entries.length} Rechnern</strong> für „${esc(v.suggestion ?? q)}“`
+        : `<strong>${n} von ${entries.length} Rechnern</strong>`;
 
       // Suchumfang sichtbar machen
-      scopeEl.hidden = v.homeDefault;
+      scopeEl.hidden = false;
       if (v.narrowed) {
         scopeEl.dataset.narrowed = '';
         scopeEl.textContent = `Eingegrenzt auf „${catName}“ · ${n} von ${v.globalCount} Treffern`;
@@ -254,7 +242,6 @@ const qId = `q-${mode}`;
           ? `In „${catName}“ gibt es keinen Treffer für „${q}“ – in allen Kategorien zusammen aber ${elsewhere}.`
           : 'Versuche einen anderen Begriff, z. B. eine Abkürzung wie „ROI“ oder eine Frage wie „Was bleibt vom Umsatz?“.';
       }
-      if (more) more.hidden = !v.homeDefault;
       if (jump) {
         jump.hidden = !q;
         jump.textContent = n ? `${n} Treffer anzeigen ↓` : 'Keine Treffer – Hinweise anzeigen ↓';

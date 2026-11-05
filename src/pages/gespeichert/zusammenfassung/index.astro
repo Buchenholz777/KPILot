@@ -1,0 +1,57 @@
+---
+import Base from '../../../layouts/Base.astro';
+import PageBand from '../../../components/PageBand.astro';
+import Icon from '../../../components/Icon.astro';
+import { TOPICS, topicUrl, displayTitle } from '../../../data/registry';
+import { CALCS } from '../../../calc/all';
+import { FLOW_ID, FLOW_SCHEMA } from '../../../calc/workflow';
+
+const crumbs = [
+  { name: 'Start', href: '/' },
+  { name: 'Meine Berechnungen', href: '/gespeichert/' },
+  { name: 'Zusammenfassung', href: '/gespeichert/zusammenfassung/' },
+];
+const meta = {
+  ...Object.fromEntries(
+    TOPICS.map((t) => [
+      t.id,
+      {
+        title: displayTitle(t),
+        url: topicUrl(t),
+        schema: CALCS[t.id].schema,
+        variants: Object.fromEntries(CALCS[t.id].variants.map((v) => [v.id, v.label])),
+        assumptions: t.assumptions,
+        misconceptions: t.misconceptions.slice(0, 1),
+      },
+    ]),
+  ),
+  [FLOW_ID]: {
+    title: 'Ablauf: Preis & Wirtschaftlichkeit',
+    url: '/ablauf/preis-wirtschaftlichkeit/',
+    schema: FLOW_SCHEMA,
+    variants: { standard: 'Geführter Ablauf' },
+    assumptions: ['Konstante Preise und Kosten im Zeitraum.', 'Nettobeträge ohne Umsatzsteuer.', 'Ganze Einheiten einer gleichartigen Leistung.'],
+    misconceptions: [],
+  },
+};
+---
+
+<Base title="Zusammenfassung eines Vorhabens | KPILot" description="Lesbare Zusammenfassung zusammengehöriger Berechnungen – zum Kopieren und Drucken." noindex>
+  <PageBand crumbs={crumbs} title="Zusammenfassung" lead="Zusammengehörige Berechnungen eines Vorhabens in einer lesbaren Übersicht – zum Kopieren oder als PDF über die Druckfunktion deines Browsers." />
+  <div class="container page-body">
+    <div class="no-print tools-row" role="group" aria-label="Zusammenfassung nutzen">
+      <button type="button" class="btn btn-secondary" data-sum-copy><Icon name="copy" />Kopieren</button>
+      <button type="button" class="btn btn-primary" data-sum-print><Icon name="print" />Drucken / als PDF speichern</button>
+      <a class="btn btn-ghost" href="/gespeichert/">← Meine Berechnungen</a>
+    </div>
+    <p class="small muted no-print">Tipp für das PDF: Im Druckdialog „Als PDF speichern“ wählen. Dies ist kein Freigabelink – die Daten bleiben auf diesem Gerät. Für einen Gerätewechsel nutze die Sicherung unter „Meine Berechnungen“.</p>
+    <article class="card content-card summary-doc" data-sum-root aria-live="polite">
+      <p class="muted">Zusammenfassung wird geladen …</p>
+    </article>
+    <script type="application/json" id="kr-calcs" set:html={JSON.stringify(meta)} />
+  </div>
+</Base>
+
+<script>
+  import '../../../scripts/summary-page';
+</script>

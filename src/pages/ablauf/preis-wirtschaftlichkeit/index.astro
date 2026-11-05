@@ -1,0 +1,230 @@
+---
+import Base from '../../../layouts/Base.astro';
+import PageBand from '../../../components/PageBand.astro';
+import Field from '../../../components/Field.astro';
+import Icon from '../../../components/Icon.astro';
+import { fieldGuide } from '../../../data/field-guides';
+import { PERIODS } from '../../../calc/workflow';
+import { topicUrl } from '../../../data/registry';
+import type { FieldDef } from '../../../calc/types';
+
+const crumbs = [
+  { name: 'Start', href: '/' },
+  { name: 'Aufgaben', href: '/aufgaben/' },
+  { name: 'Preis & Wirtschaftlichkeit', href: '/ablauf/preis-wirtschaftlichkeit/' },
+];
+const STEPS = [
+  { n: 1, short: 'Kosten', title: 'Kosten erfassen', why: 'Ohne Kosten gibt es keinen Mindestpreis und keine Gewinnschwelle. Hier trennst du, was mit jeder Einheit entsteht (variabel) von dem, was im Zeitraum ohnehin anfällt (fix).' },
+  { n: 2, short: 'Preis', title: 'Preis bestimmen', why: 'Der Preis entscheidet, wie viel jede Einheit zur Deckung der Fixkosten beiträgt (Deckungsbeitrag).' },
+  { n: 3, short: 'Absatz', title: 'Absatz planen', why: 'Aus Beitrag und Fixkosten folgt die Mindestmenge. Deine geplante Menge zeigt, ob du darüber liegst.' },
+  { n: 4, short: 'Gewinn', title: 'Gewinn beurteilen', why: 'Gewinn oder Verlust bei der geplanten Menge – und wie empfindlich er auf Preis- und Kostenänderungen reagiert.' },
+  { n: 5, short: 'Varianten', title: 'Varianten vergleichen', why: 'Vorsichtige, realistische und optimistische Annahmen nebeneinander – mit deinen eigenen Zahlen.' },
+  { n: 6, short: 'Übersicht', title: 'Ergebnisübersicht', why: 'Alles gemeinsam, mit Zeitraum, Einheit, offenen Annahmen und Modellgrenzen.' },
+];
+const money = (key: string, label: string, extra: Partial<FieldDef> = {}): FieldDef => ({ key, label, unit: '€', min: 'nonneg', ...extra });
+const fV = money('v', 'Variable Kosten je Einheit', { unit: '€ je Einheit', help: 'Kosten, die mit jeder zusätzlich verkauften Einheit entstehen (z. B. Wareneinsatz, Material, Versand).' });
+const fF = money('F', 'Fixkosten im Zeitraum', { help: 'Kosten, die im gewählten Zeitraum unabhängig von der Menge anfallen (z. B. Miete, Gehälter).' });
+const fP = money('p', 'Verkaufspreis netto je Einheit', { unit: '€ je Einheit', help: 'Dein geplanter oder aktueller Preis ohne Umsatzsteuer.' });
+const fQ: FieldDef = { key: 'q', label: 'Geplante Absatzmenge im Zeitraum', unit: 'Einheiten', min: 'nonneg', integer: true, optional: true, help: 'Wie viele Einheiten du im Zeitraum verkaufen willst. Leer lassen, wenn noch unbekannt – es wird nicht als 0 gerechnet.' };
+const fZ = money('z', 'Gewünschter Gewinn im Zeitraum (optional)', { optional: true, help: 'Daraus ergibt sich die dafür nötige Menge. 0 € wäre nur Kostendeckung.' });
+const fCap: FieldDef = { key: 'cap', label: 'Verfügbare Kapazität im Zeitraum (optional)', unit: 'Einheiten', min: 'nonneg', integer: true, optional: true, help: 'Wie viele Einheiten du im selben Zeitraum höchstens liefern kannst – gleiche Einheit wie oben.' };
+const fPd: FieldDef = { key: 'priceDelta', label: 'Preisänderung (optional)', unit: '€ je Einheit', min: 'any', optional: true, help: 'Dein Gedankenspiel, z. B. 2 für +2 € oder −1,50 für −1,50 €. KPILot gibt hier keinen Wert vor.' };
+const fCd: FieldDef = { key: 'costDelta', label: 'Änderung der variablen Kosten (optional)', unit: '€ je Einheit', min: 'any', optional: true, help: 'Z. B. teurerer Einkauf: 1,50. Auch negativ möglich.' };
+const origin = (k: string) => ({ k, label: 'Art der Angabe' });
+const g = (k: string) => fieldGuide('break-even', k);
+---
+
+<Base
+  title="Preis & Wirtschaftlichkeit: geführter Ablauf | KPILot"
+  description="Von den Kosten über Preis und Absatz bis zu Gewinn und Variantenvergleich: ein zusammenhängender Ablauf mit Rechenweg, offenen Annahmen und Modellgrenzen."
+  crumbs={crumbs}
+>
+  <PageBand
+    crumbs={crumbs}
+    title="Preis & Wirtschaftlichkeit"
+    lead="Kosten erfassen → Preis bestimmen → Absatz planen → Gewinn beurteilen → Varianten vergleichen. Deine Eingaben bleiben beim Wechseln der Schritte erhalten."
+  />
+  <div class="container page-body">
+    <div class="flow" data-flow data-fields={JSON.stringify(STEPS.length)}>
+      <div class="notice notice-info" data-flow-notice role="status" hidden></div>
+      <nav aria-label="Fortschritt im Ablauf">
+        <ol class="stepper">
+          {
+            STEPS.map((s) => (
+              <li>
+                <button type="button" class="step-btn" data-goto={s.n} aria-current={s.n === 1 ? 'step' : undefined}>
+                  <span class="step-no" aria-hidden="true">{s.n}</span>
+                  <span class="step-name">{s.short}<span class="visually-hidden"> – Schritt {s.n} von {STEPS.length}: {s.title}</span></span>
+                </button>
+              </li>
+            ))
+          }
+        </ol>
+      </nav>
+
+      <div class="flow-grid">
+        <form class="flow-main card" data-flow-form novalidate onsubmit="return false" aria-label="Ablauf Preis und Wirtschaftlichkeit">
+          <!-- 1 Kosten -->
+          <section data-step="1" aria-labelledby="st1">
+            <h2 id="st1">1. {STEPS[0].title}</h2>
+            <p class="flow-why">{STEPS[0].why}</p>
+            <div class="fields">
+              <div class="field">
+                <label for="flow-title">Vorhaben oder Titel <span class="muted">(optional)</span></label>
+                <div class="input-wrap"><input id="flow-title" name="title" maxlength="80" autocomplete="off" placeholder="z. B. Angebot Müller, Produkt A, Kampagne Herbst" /></div>
+              </div>
+              <div class="field">
+                <label for="flow-zeitraum">Betrachtungszeitraum</label>
+                <div class="input-wrap">
+                  <select id="flow-zeitraum" name="zeitraum">
+                    {PERIODS.map((p) => <option value={p.value} selected={p.value === 'monat'}>{p.label}</option>)}
+                  </select>
+                </div>
+                <p class="help">Alle Beträge und Mengen in diesem Ablauf beziehen sich auf diesen Zeitraum – auch alle Varianten.</p>
+              </div>
+              <div class="field">
+                <label for="flow-unit">Einheit oder Leistung</label>
+                <div class="input-wrap"><input id="flow-unit" name="unit" maxlength="30" autocomplete="off" value="Stück" /></div>
+                <p class="help">Was du verkaufst, z. B. „Stück“, „Beratungsstunde“, „Paket“.</p>
+              </div>
+              <div class="field">
+                <label for="flow-costType">Welche Kosten gibst du ein?</label>
+                <div class="input-wrap">
+                  <select id="flow-costType" name="costType">
+                    <option value="variabel" selected>Variable Kosten je Einheit</option>
+                    <option value="einstand">Einstandspreis (Handel, ohne weitere mengenabhängige Kosten)</option>
+                    <option value="voll">Vollkosten je Einheit (inkl. Fixkostenanteil)</option>
+                  </select>
+                </div>
+                <p class="help">Vollkosten enthalten schon Fixkostenanteile. Sie werden hier nicht als variable Kosten übernommen, damit Fixkosten nicht doppelt zählen.</p>
+              </div>
+              <Field f={fV} prefix="flow" guide={g('v')} />
+              <div class="field"><label for="flow-ov">Art der Angabe (variable Kosten)</label><div class="input-wrap"><select id="flow-ov" name="origin-v"><option value="">nicht angegeben</option><option value="beobachtet">beobachtet (aus Unterlagen)</option><option value="geschaetzt">geschätzt (Annahme)</option></select></div></div>
+              <Field f={fF} prefix="flow" guide={g('F')} />
+              <div class="field"><label for="flow-oF">Art der Angabe (Fixkosten)</label><div class="input-wrap"><select id="flow-oF" name="origin-F"><option value="">nicht angegeben</option><option value="beobachtet">beobachtet (aus Unterlagen)</option><option value="geschaetzt">geschätzt (Annahme)</option></select></div></div>
+            </div>
+            <p class="notice notice-warn" data-voll hidden>Vollkosten gewählt: Die Auswertung bleibt gesperrt, bis variable Kosten (ohne Fixkostenanteil) eingetragen sind.</p>
+            <p class="flow-links small">Hilfen: <a href={topicUrl('stueckkosten')}>Gesamt- und Stückkosten</a> · <a href={topicUrl('stundensatz')}>Stundenkostensatz</a></p>
+          </section>
+
+          <!-- 2 Preis -->
+          <section data-step="2" aria-labelledby="st2" hidden>
+            <h2 id="st2">2. {STEPS[1].title}</h2>
+            <p class="flow-why">{STEPS[1].why}</p>
+            <div class="fields">
+              <Field f={fP} prefix="flow" guide={g('p')} />
+              <div class="field"><label for="flow-op">Art der Angabe (Preis)</label><div class="input-wrap"><select id="flow-op" name="origin-p"><option value="">nicht angegeben</option><option value="beobachtet">beobachtet (bestehender Preis)</option><option value="geschaetzt">geschätzt (geplant)</option></select></div></div>
+            </div>
+            <details class="flow-helper">
+              <summary>Preis aus einer Ziel-Deckungsbeitragsquote ableiten</summary>
+              <p class="small muted">Welcher Preis lässt von jedem Euro Umsatz mindestens die gewünschte Quote nach Abzug der variablen Kosten übrig? Das ist eine Quote bezogen auf die <strong>variablen</strong> Kosten – nicht die Marge auf Vollkosten.</p>
+              <div class="field">
+                <label for="flow-quote">Gewünschte Deckungsbeitragsquote</label>
+                <div class="input-wrap"><input id="flow-quote" name="quote" inputmode="decimal" autocomplete="off" maxlength="24" /><span class="unit">%</span></div>
+              </div>
+              <p class="flow-quote-result" data-quote-result role="status"></p>
+              <button type="button" class="btn btn-secondary" data-take-price hidden>Diesen Preis übernehmen</button>
+            </details>
+            <div class="flow-live" data-live="2" aria-live="polite"></div>
+          </section>
+
+          <!-- 3 Absatz -->
+          <section data-step="3" aria-labelledby="st3" hidden>
+            <h2 id="st3">3. {STEPS[2].title}</h2>
+            <p class="flow-why">{STEPS[2].why}</p>
+            <div class="fields">
+              <Field f={fQ} prefix="flow" guide={g('q')} />
+              <div class="field"><label for="flow-oq">Art der Angabe (Absatzmenge)</label><div class="input-wrap"><select id="flow-oq" name="origin-q"><option value="">nicht angegeben</option><option value="beobachtet">beobachtet (bisheriger Absatz)</option><option value="geschaetzt">geschätzt (Planung)</option></select></div></div>
+              <Field f={fZ} prefix="flow" />
+              <Field f={fCap} prefix="flow" />
+            </div>
+            <div class="flow-live" data-live="3" aria-live="polite"></div>
+          </section>
+
+          <!-- 4 Gewinn -->
+          <section data-step="4" aria-labelledby="st4" hidden>
+            <h2 id="st4">4. {STEPS[3].title}</h2>
+            <p class="flow-why">{STEPS[3].why}</p>
+            <div class="flow-live" data-live="4" aria-live="polite"></div>
+            <h3>Was wäre, wenn …? <span class="muted">(optional)</span></h3>
+            <p class="small muted">Trage eigene Änderungen ein, um ihre Wirkung zu sehen. KPILot schlägt hier keine Prozentwerte vor.</p>
+            <div class="fields">
+              <Field f={fPd} prefix="flow" />
+              <Field f={fCd} prefix="flow" />
+            </div>
+            <div class="flow-live" data-live="4b" aria-live="polite"></div>
+          </section>
+
+          <!-- 5 Varianten -->
+          <section data-step="5" aria-labelledby="st5" hidden>
+            <h2 id="st5">5. {STEPS[4].title}</h2>
+            <p class="flow-why">{STEPS[4].why}</p>
+            <p class="small">Alle Varianten gelten für denselben Zeitraum wie die Basis. Leere Felder übernehmen den Wert der Basis. Die Zahlen trägst du selbst ein – es gibt keine voreingestellten Prozentwerte oder Marktdaten.</p>
+            <p class="tools-row">
+              <button type="button" class="btn btn-secondary" data-add-scn="Vorsichtig">Vorsichtige Variante anlegen</button>
+              <button type="button" class="btn btn-secondary" data-add-scn="Realistisch">Realistische Variante anlegen</button>
+              <button type="button" class="btn btn-secondary" data-add-scn="Optimistisch">Optimistische Variante anlegen</button>
+              <button type="button" class="btn btn-ghost" data-add-scn="">Eigene Variante</button>
+            </p>
+            <div class="scn-cards" data-scn-cards></div>
+            <div class="flow-live" data-live="5" aria-live="polite"></div>
+          </section>
+
+          <!-- 6 Übersicht -->
+          <section data-step="6" aria-labelledby="st6" hidden>
+            <h2 id="st6">6. {STEPS[5].title}</h2>
+            <p class="flow-why">{STEPS[5].why}</p>
+            <div class="field">
+              <label for="flow-note">Notiz zu Annahmen <span class="muted">(optional)</span></label>
+              <div class="input-wrap"><textarea id="flow-note" name="note" rows="3" maxlength="2000"></textarea></div>
+            </div>
+            <div class="flow-live" data-live="6" aria-live="polite"></div>
+            <div class="tools-row" role="group" aria-label="Übersicht nutzen">
+              <button type="button" class="btn btn-secondary" data-flow-copy><Icon name="copy" />Kopieren</button>
+              <button type="button" class="btn btn-secondary" data-flow-print><Icon name="print" />Drucken / als PDF</button>
+              <button type="button" class="btn btn-primary" data-flow-save><Icon name="save" />In „Meine Berechnungen“ speichern</button>
+            </div>
+            <p class="save-status" role="status" data-flow-save-status hidden></p>
+            <h3>Werte in Einzelrechnern weiterverwenden</h3>
+            <p class="tools-row">
+              <button type="button" class="btn btn-secondary" data-flow-transfer="break-even">Im Break-even-Rechner öffnen</button>
+              <button type="button" class="btn btn-secondary" data-flow-transfer="gewinn">Im Gewinnrechner öffnen</button>
+              <button type="button" class="btn btn-secondary" data-flow-transfer="deckungsbeitrag">Im Deckungsbeitragsrechner öffnen</button>
+            </p>
+            <p class="small"><a href={topicUrl('rabatt-absatz')}>Rabatt prüfen: nötiger Mehrabsatz</a> · <a href="/lernen/unsicherheit/">Umgang mit unsicheren Annahmen</a></p>
+          </section>
+
+          <div class="flow-nav">
+            <button type="button" class="btn btn-secondary" data-prev>← Zurück</button>
+            <button type="button" class="btn btn-primary" data-next>Weiter →</button>
+            <span class="flow-nav-spacer"></span>
+            <button type="button" class="btn btn-ghost" data-flow-example><Icon name="example" />Beispiel einsetzen</button>
+            <button type="button" class="btn btn-ghost" data-flow-reset><Icon name="reset" />Zurücksetzen</button>
+          </div>
+        </form>
+
+        <aside class="flow-side card" aria-labelledby="zw-h">
+          <h2 id="zw-h">Zwischenstand</h2>
+          <p class="example-flag" data-flow-example-flag hidden><Icon name="example" /> <strong>Beispielwerte</strong> – ersetze sie durch deine eigenen Zahlen.</p>
+          <div data-side aria-live="polite"></div>
+        </aside>
+      </div>
+
+      <dialog data-flow-dialog aria-labelledby="fsave-h">
+        <form method="dialog">
+          <h2 id="fsave-h">Ablauf speichern</h2>
+          <p class="small muted">Wird lokal in diesem Browser unter „Meine Berechnungen“ abgelegt.</p>
+          <div class="field"><label for="fsave-name">Name</label><div class="input-wrap"><input id="fsave-name" name="name" maxlength="80" autocomplete="off" /></div></div>
+          <div class="field"><label for="fsave-project">Vorhaben <span class="muted">(optional)</span></label><div class="input-wrap"><select id="fsave-project" name="project"></select></div></div>
+          <div class="field" data-fsave-newwrap hidden><label for="fsave-new">Name des neuen Vorhabens</label><div class="input-wrap"><input id="fsave-new" name="newproject" maxlength="80" autocomplete="off" /></div></div>
+          <div class="form-actions"><button value="save" class="btn btn-primary">Speichern</button><button value="cancel" class="btn btn-secondary" formnovalidate>Abbrechen</button></div>
+        </form>
+      </dialog>
+    </div>
+    <script type="application/json" id="flow-meta" set:html={JSON.stringify({ steps: STEPS.map((s) => s.title) })} />
+  </div>
+</Base>
+
+<script>
+  import '../../../scripts/flow';
+</script>

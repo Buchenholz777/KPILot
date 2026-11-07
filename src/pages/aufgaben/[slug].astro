@@ -18,7 +18,7 @@ const label = (s: Task['steps'][number]) =>
   s.linkLabel ?? `${displayTitle(TOPIC_BY_ID[s.calc!])}${s.variant ? ' (Modus öffnen)' : ' öffnen'}`;
 ---
 
-<Base title={`${t.title} – Schritt für Schritt | KPILot`} description={t.promise} crumbs={crumbs}>
+<Base title={`${t.title} – Schritt für Schritt | KPILot`} description={t.metaDescription ?? t.promise} crumbs={crumbs}>
   <PageBand crumbs={crumbs} title={t.title} lead={t.promise} />
   <div class="container page-body">
     <section class="card content-card" aria-labelledby="fragen">

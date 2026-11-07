@@ -16,11 +16,17 @@ const crumbs = [
   { name: 'Alle Rechner', href: '/rechner/' },
   { name: cat.title, href: `/kategorie/${cat.slug}/` },
 ];
+// Description: Rechnernamen nur so weit aufzählen, dass ~160 Zeichen nicht überschritten werden (kein Abschneiden mitten im Wort).
+const descTail = ' – kostenlos online berechnen, mit Formel, Beispiel und Rechenweg.';
+const names = topics.map((t) => t.abbr ?? t.title);
+let listed = names.length;
+while (listed > 2 && `${cat.title}: ${names.slice(0, listed).join(', ')}${listed < names.length ? ' u. a.' : ''}${descTail}`.length > 160) listed--;
+const categoryDescription = `${cat.title}: ${names.slice(0, listed).join(', ')}${listed < names.length ? ' u. a.' : ''}${descTail}`;
 ---
 
 <Base
-  title={`${cat.title}: ${topics.length} Rechner mit Erklärung | KPILot`}
-  description={`${cat.title}: ${topics.map((t) => t.abbr ?? t.title).join(', ')} – verständlich erklärt und direkt berechnen.`.slice(0, 158)}
+  title={`${cat.title}: ${topics.length} kostenlose Online-Rechner | KPILot`}
+  description={categoryDescription}
   crumbs={crumbs}
 >
   <PageBand crumbs={crumbs} title={cat.title} lead={cat.intro} cat={cat.id}>

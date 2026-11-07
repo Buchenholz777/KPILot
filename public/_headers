@@ -1,0 +1,18 @@
+# Cloudflare Pages: HTTP-Header (https://developers.cloudflare.com/pages/configuration/headers/)
+
+# Gehashte Build-Dateien ändern bei jeder Änderung ihren Namen -> dauerhaft cachen.
+/_astro/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Logos, Icons und Illustrationen ändern sich selten.
+/brand/*
+  Cache-Control: public, max-age=604800
+/illustrationen/*
+  Cache-Control: public, max-age=86400
+
+# Die Projektadresse *.pages.dev und Vorschau-Deployments nicht indexieren –
+# bevorzugte Domain ist https://www.my-kpilot.de (Canonicals zeigen ebenfalls dorthin).
+https://:project.pages.dev/*
+  X-Robots-Tag: noindex
+https://:version.:project.pages.dev/*
+  X-Robots-Tag: noindex

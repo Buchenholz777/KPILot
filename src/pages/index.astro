@@ -7,7 +7,6 @@ import TaskTiles from '../components/TaskTiles.astro';
 import HomeExample from '../components/HomeExample.astro';
 import { TOPICS } from '../data/registry';
 import { SITE_NAME, SITE_DESCRIPTION } from '../config/site';
-import { HOME_FAQ } from '../data/faq';
 
 const site = Astro.site;
 const websiteLd = site
@@ -26,23 +25,18 @@ const websiteLd = site
         image: new URL('/og-image.png', site).href,
         offers: { '@type': 'Offer', price: '0', priceCurrency: 'EUR' },
       },
-      {
-        '@context': 'https://schema.org',
-        '@type': 'FAQPage',
-        mainEntity: HOME_FAQ.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),
-      },
     ]
   : [];
 ---
 
 <Base
-  title={`KPI Rechner – Preise kalkulieren, Wirtschaftlichkeit prüfen, Kennzahlen verstehen | ${SITE_NAME}`}
-  description={`Kostenlose Rechner für Preis, Rabatt, Break-even, Gewinn, Werbung und Liquidität – ${TOPICS.length} Rechner mit nachvollziehbarem Rechenweg, Variantenvergleich und Weiterverwendung der Werte.`}
+  title={`KPI-Rechner kostenlos: ${TOPICS.length} Online-Rechner mit Formeln | ${SITE_NAME}`}
+  description={`Berechne deine wichtigsten Unternehmenskennzahlen kostenlos: Marge, ROI, Break-even, Cashflow und mehr. ${TOPICS.length} Online-Rechner mit Formeln und Beispielen.`}
   jsonLd={websiteLd}
 >
   <Catalog mode="home">
     <Fragment slot="intro">
-      <h1 class="hero-title">Preise kalkulieren. <span class="accent">Wirtschaftlichkeit prüfen. Kennzahlen verstehen.</span></h1>
+      <h1 class="hero-title">KPI-Rechner: Preise kalkulieren. <span class="accent">Wirtschaftlichkeit prüfen. Kennzahlen verstehen.</span></h1>
       <p class="hero-sub">
         {TOPICS.length} kostenlose Rechner mit nachvollziehbarem Rechenweg. Vergleiche Varianten und nimm deine Werte in den nächsten Rechner mit.
       </p>

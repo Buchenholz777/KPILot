@@ -59,9 +59,6 @@ export const finanzenTopics: Topic[] = [
       "Zinsergebnis und Ertragsteuern nicht enthalten.",
     ],
     related: ["ebitda", "ebit-marge", "cashflow", "umsatzrendite"],
-    seoTitle: "EBIT berechnen – Ergebnis vor Zinsen und Steuern verständlich",
-    seoDescription:
-      "EBIT berechnen und verstehen: Umsatz minus Betriebsaufwand und Abschreibungen, mit Bild, Rechenweg und Abgrenzung zu EBITDA und Cashflow.",
     sources: [IHK],
   },
   {
@@ -107,9 +104,6 @@ export const finanzenTopics: Topic[] = [
       "Die hinzugerechneten Abschreibungen sind im EBIT enthalten.",
     ],
     related: ["ebit", "cashflow", "ebit-marge"],
-    seoTitle: "EBITDA berechnen – Ergebnisbrücke vom EBIT",
-    seoDescription:
-      "EBITDA aus EBIT und Abschreibungen berechnen, mit Ergebnisbrücke und klarer Abgrenzung: EBITDA ist kein Cashflow und kein Geldbestand.",
     sources: [
       {
         label: "Deutsche Börse: Glossar EBITDA",
@@ -155,9 +149,6 @@ export const finanzenTopics: Topic[] = [
     ],
     assumptions: ["EBIT und Umsatz aus derselben Periode."],
     related: ["ebit", "umsatzrendite", "marge"],
-    seoTitle: "EBIT-Marge berechnen – operative Marge in Prozent",
-    seoDescription:
-      "EBIT-Marge berechnen: EBIT im Verhältnis zum Nettoumsatz, mit Beispiel, Rechenweg und Abgrenzung zu Rohmarge und Umsatzrendite.",
   },
   {
     id: "umsatzrendite",
@@ -200,9 +191,6 @@ export const finanzenTopics: Topic[] = [
     ],
     assumptions: ["Ergebnis und Umsatz aus derselben Periode."],
     related: ["ebit-marge", "marge", "roi"],
-    seoTitle: "Umsatzrendite berechnen – Nettomarge in Prozent",
-    seoDescription:
-      "Nettoumsatzrendite berechnen: Jahresüberschuss im Verhältnis zum Umsatz, mit Abgrenzung zu Marge, Deckungsbeitragsquote und EBIT-Marge.",
   },
   {
     id: "cashflow",
@@ -256,9 +244,6 @@ export const finanzenTopics: Topic[] = [
       "Zinsen und Steuern werden im Modell dem operativen Bereich zugeordnet.",
     ],
     related: ["liquiditaet", "working-capital", "ebit", "ebitda"],
-    seoTitle: "Cashflow berechnen – operativ, investiv und Finanzierung",
-    seoDescription:
-      "Cashflow berechnen: operativer Cashflow aus Ein- und Auszahlungen oder erweiterte Übersicht mit Investitions- und Finanzierungs-Cashflow – mit Bild und Abgrenzung zum Gewinn.",
     sources: [
       {
         label: "IFRS Foundation: IAS 7 Statement of Cash Flows",
@@ -311,9 +296,6 @@ export const finanzenTopics: Topic[] = [
     ],
     assumptions: ["Dieselbe Abgrenzung wie im Liquiditätsrechner."],
     related: ["liquiditaet", "cashflow", "eigenkapital"],
-    seoTitle: "Working Capital berechnen – Nettoumlaufvermögen",
-    seoDescription:
-      "Working Capital berechnen: Umlaufvermögen minus kurzfristige Verpflichtungen, mit Bild und Abgrenzung zu Bankguthaben und Cashflow.",
   },
   {
     id: "liquiditaet",
@@ -369,9 +351,6 @@ export const finanzenTopics: Topic[] = [
       "Dieselbe Abgrenzung kurzfristiger Verpflichtungen wie beim Working Capital.",
     ],
     related: ["working-capital", "cashflow", "eigenkapital"],
-    seoTitle: "Liquiditätsgrade berechnen – Liquidität 1., 2. und 3. Grades",
-    seoDescription:
-      "Liquidität 1., 2. und 3. Grades berechnen: liquide Mittel, Forderungen und Umlaufvermögen im Verhältnis zu kurzfristigen Verpflichtungen – ohne pauschale Ampel.",
     sources: [IHK],
   },
   {
@@ -413,9 +392,6 @@ export const finanzenTopics: Topic[] = [
     ],
     assumptions: ["Eigenkapital und Bilanzsumme vom selben Stichtag."],
     related: ["liquiditaet", "working-capital", "roi"],
-    seoTitle: "Eigenkapitalquote berechnen",
-    seoDescription:
-      "Eigenkapitalquote berechnen: Eigenkapital im Verhältnis zur Bilanzsumme, mit Hinweisen zu negativem Eigenkapital und ohne pauschale Bewertung.",
     sources: [IHK],
   },
   {
@@ -461,9 +437,6 @@ export const finanzenTopics: Topic[] = [
       "Keine Abzinsung, keine Jahreshochrechnung.",
     ],
     related: ["amortisation", "roas", "eigenkapital", "cagr"],
-    seoTitle: "ROI-Rechner: Kapitalrendite berechnen",
-    seoDescription:
-      "ROI berechnen: Gewinn im Verhältnis zum eingesetzten Kapital, mit Bild, Rechenweg und klarer Abgrenzung zum ROAS.",
   },
   {
     id: "amortisation",
@@ -512,8 +485,5 @@ export const finanzenTopics: Topic[] = [
       "Statisches Modell ohne Abzinsung.",
     ],
     related: ["roi", "cashflow"],
-    seoTitle: "Amortisationsrechner: Amortisationsdauer berechnen",
-    seoDescription:
-      "Amortisationsdauer einer Investition berechnen: Investitionsbetrag durch Rückfluss je Periode, mit Hinweisen zum statischen Modell ohne Abzinsung.",
   },
 ];

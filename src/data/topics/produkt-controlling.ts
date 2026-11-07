@@ -39,9 +39,6 @@ export const produktTopics: Topic[] = [
     ],
     assumptions: ["Umsatz und Accountbestand aus derselben Periode."],
     related: ["clv", "mrr", "churn"],
-    seoTitle: "ARPU berechnen – Umsatz je Account",
-    seoDescription:
-      "ARPU berechnen: Umsatz geteilt durch durchschnittlich aktive Accounts, mit Beispiel und Abgrenzung zu Besuchern.",
   },
   {
     id: "clv",
@@ -93,9 +90,6 @@ export const produktTopics: Topic[] = [
       "Kein vollständiges Kohorten- oder Retention-Modell.",
     ],
     related: ["cac", "arpu", "churn", "deckungsbeitrag"],
-    seoTitle: "CLV-Rechner: Customer Lifetime Value berechnen",
-    seoDescription:
-      "Customer Lifetime Value (CLV) deckungsbeitragsbasiert berechnen, mit Lebenszeit-Umsatz, optionalem Abzug der CAC und offengelegten Modellannahmen.",
   },
   {
     id: "churn",
@@ -141,9 +135,6 @@ export const produktTopics: Topic[] = [
     ],
     assumptions: ["Verlorene Kunden stammen aus dem Anfangsbestand."],
     related: ["clv", "mrr", "arpu"],
-    seoTitle: "Churn-Rate berechnen – Kundenabwanderung und Retention",
-    seoDescription:
-      "Churn-Rate und Retention berechnen: verlorene Anfangskunden im Verhältnis zum Bestand, mit Bild und Hinweis, warum Neukunden die Quote nicht verbessern.",
   },
   {
     id: "mrr",
@@ -198,9 +189,6 @@ export const produktTopics: Topic[] = [
         url: "https://support.stripe.com/questions/understanding-monthly-recurring-revenue-%28mrr%29-and-annual-recurring-revenue-%28arr%29",
       },
     ],
-    seoTitle: "MRR und ARR berechnen – wiederkehrender Umsatz",
-    seoDescription:
-      "MRR und ARR aus beliebig vielen Abo-Tarifen berechnen, mit Monats- und Jahresabos und Erklärung der Run-Rate.",
   },
   {
     id: "nps",
@@ -249,9 +237,6 @@ export const produktTopics: Topic[] = [
         url: "https://www.netpromotersystem.com/about/measuring-your-net-promoter-score/",
       },
     ],
-    seoTitle: "NPS berechnen – Net Promoter Score",
-    seoDescription:
-      "Net Promoter Score berechnen aus Promotoren, Passiven und Detraktoren: Score zwischen −100 und +100 mit Bild und Erklärung.",
   },
 ];
 
@@ -297,9 +282,6 @@ export const controllingTopics: Topic[] = [
     ],
     assumptions: ["Soll und Ist in derselben Einheit und Periode."],
     related: ["veraenderung", "auslastung", "prozent"],
-    seoTitle: "Soll-Ist-Abweichung berechnen",
-    seoDescription:
-      "Soll-Ist-Vergleich: absolute und relative Abweichung berechnen und mit Zielrichtung bewerten – Kosten- oder Ertragsziel.",
   },
   {
     id: "auslastung",
@@ -339,9 +321,6 @@ export const controllingTopics: Topic[] = [
     ],
     assumptions: ["Gleiche Einheit und Periode."],
     related: ["stundensatz", "soll-ist"],
-    seoTitle: "Kapazitätsauslastung berechnen",
-    seoDescription:
-      "Auslastung berechnen: genutzte im Verhältnis zur verfügbaren Kapazität, mit Erklärung von Überbelegung über 100 %.",
   },
   {
     id: "lager",
@@ -390,8 +369,5 @@ export const controllingTopics: Topic[] = [
       "Tagesbasis sichtbar gewählt.",
     ],
     related: ["working-capital", "auslastung", "stueckkosten"],
-    seoTitle: "Lagerumschlag und Lagerdauer berechnen",
-    seoDescription:
-      "Lagerumschlagshäufigkeit und durchschnittliche Lagerdauer berechnen, mit 360- oder 365-Tage-Basis und Durchschnittsbestand aus Anfangs- und Endbestand.",
   },
 ];

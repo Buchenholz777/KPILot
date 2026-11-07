@@ -51,9 +51,6 @@ export const marketingTopics: Topic[] = [
       "Zähler und Nenner aus demselben Zeitraum und derselben Messung.",
     ],
     related: ["ctr", "cpa", "cac", "roas"],
-    seoTitle: "Conversion Rate berechnen – besuchs- oder ereignisbasiert",
-    seoDescription:
-      "Conversion Rate berechnen: besuchsbasierte oder ereignisbasierte Messweise, mit Beispiel 25 / 1.000 und Hinweisen zu Werten über 100 %.",
   },
   {
     id: "ctr",
@@ -93,9 +90,6 @@ export const marketingTopics: Topic[] = [
     ],
     assumptions: ["Gleiche Kampagne und gleicher Zeitraum für beide Zahlen."],
     related: ["cpc", "cpm", "conversion"],
-    seoTitle: "CTR berechnen – Klickrate von Anzeigen",
-    seoDescription:
-      "Klickrate (CTR) berechnen: Klicks im Verhältnis zu Impressionen, mit Beispiel und Hinweisen zur Messung.",
   },
   {
     id: "cpc",
@@ -132,9 +126,6 @@ export const marketingTopics: Topic[] = [
     misconceptions: ["Bei 0 Klicks gibt es keinen CPC – auch nicht 0 €."],
     assumptions: ["Kosten und Klicks aus demselben Zeitraum."],
     related: ["cpm", "ctr", "cpa"],
-    seoTitle: "CPC berechnen – Kosten je Klick",
-    seoDescription:
-      "Durchschnittlichen CPC berechnen: Werbekosten geteilt durch Klicks, mit Beispiel 100 € / 200 Klicks.",
   },
   {
     id: "cpm",
@@ -171,9 +162,6 @@ export const marketingTopics: Topic[] = [
     misconceptions: ["Eine Einblendung ist kein Kontakt mit Aufmerksamkeit."],
     assumptions: ["Kosten und Impressionen aus demselben Zeitraum."],
     related: ["cpc", "ctr"],
-    seoTitle: "CPM / TKP berechnen – Tausenderkontaktpreis",
-    seoDescription:
-      "Tausenderkontaktpreis (CPM, TKP) berechnen: Werbekosten je 1.000 Impressionen, mit Beispiel und Erklärung.",
   },
   {
     id: "cpa",
@@ -212,9 +200,6 @@ export const marketingTopics: Topic[] = [
     misconceptions: ["Eine Conversion ist nicht automatisch ein Neukunde."],
     assumptions: ["Attribution und Zeitraum transparent und gleich."],
     related: ["cac", "conversion", "cpc", "roas"],
-    seoTitle: "CPA berechnen – Kosten je Conversion",
-    seoDescription:
-      "CPA berechnen: Werbekosten je Conversion, mit Beispiel und Abgrenzung zum CAC (Kosten je Neukunde).",
   },
   {
     id: "roas",
@@ -269,9 +254,6 @@ export const marketingTopics: Topic[] = [
       "Werbewirtschaftlichkeit: konstante Deckungsbeitragsquote vor Werbekosten; die variablen Kosten sind darin schon abgezogen, die Werbekosten nicht.",
     ],
     related: ["cac", "cpa", "clv", "conversion", "deckungsbeitrag"],
-    seoTitle: "ROAS-Rechner: Return on Ad Spend berechnen",
-    seoDescription:
-      "ROAS berechnen als Faktor und in Prozent: zugeordneter Werbeumsatz durch Werbekosten – mit Bild und klarem Hinweis, dass ROAS kein Gewinn ist.",
   },
   {
     id: "cac",
@@ -314,8 +296,5 @@ export const marketingTopics: Topic[] = [
     ],
     assumptions: ["Klare Kostenabgrenzung für den Zeitraum."],
     related: ["clv", "cpa", "conversion"],
-    seoTitle: "CAC berechnen – Kosten je Neukunde",
-    seoDescription:
-      "Customer Acquisition Cost (CAC) berechnen: Marketing- und Vertriebskosten je Neukunde, mit Übernahme in den CLV-Rechner.",
   },
 ];

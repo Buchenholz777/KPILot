@@ -24,6 +24,10 @@ const rowCount = (min: number) => Math.max(min, 2);
 const scenFields = scenVariant ? scenVariant.fields.filter((f) => f.key !== 'zeitraum') : [];
 const scenPeriod = scenVariant?.fields.find((f) => f.key === 'zeitraum');
 const scenNames = ['Vorsichtig', 'Realistisch', 'Optimistisch'];
+// „Nächster Schritt“ und Kapazitätsabgleich nur ausgeben, wo der Rechner sie wirklich anbietet –
+// sonst stünde z. B. „Verfügbare Kapazität“ als versteckter Text in jedem Rechner-HTML.
+const hasFollowUps = (calc.followUps ?? []).length > 0;
+const hasCapacity = (calc.followUps ?? []).some((f) => f.action.kind === 'capacity');
 ---
 
 <section class="calc" id="rechner" data-calc={id} data-title={displayTitle(topic)} aria-labelledby="calc-h">
@@ -182,9 +186,11 @@ const scenNames = ['Vorsichtig', 'Realistisch', 'Optimistisch'];
         <p class="save-status" role="status" data-save-status hidden></p>
       </div>
 
+      {hasFollowUps && (
       <section class="followups" data-followups hidden aria-labelledby="followups-h">
         <h4 class="tools-title" id="followups-h">Nächster Schritt</h4>
         <ul data-followup-list></ul>
+        {hasCapacity && (
         <div class="capacity" data-capacity hidden>
           <div class="field">
             <label for={`${id}-cap`} data-capacity-label>Verfügbare Kapazität</label>
@@ -196,7 +202,9 @@ const scenNames = ['Vorsichtig', 'Realistisch', 'Optimistisch'];
           </div>
           <p class="capacity-result" data-capacity-result role="status" hidden></p>
         </div>
+        )}
       </section>
+      )}
 
       {
         transfers.length > 0 && (

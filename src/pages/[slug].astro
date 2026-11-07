@@ -14,12 +14,35 @@ import { runExample } from '../calc/engine';
 import { formatValue } from '../lib/number';
 import { illustrationPath } from '../illustrations';
 import type { Topic } from '../data/types';
+import { SEO, seoPageTitle } from '../data/seo';
 
 export const getStaticPaths = (() => TOPICS.map((t) => ({ params: { slug: t.slug }, props: { topic: t } }))) satisfies GetStaticPaths;
 const { topic: t } = Astro.props as { topic: Topic };
 const cat = CATEGORY_BY_ID[t.category];
 const calc = getCalc(t.id);
 const name = displayTitle(t);
+const seo = SEO[t.id];
+// Rechner als Webanwendung auszeichnen (nur zutreffende Angaben: kostenlos, im Browser, ohne Bewertungen)
+const appLd = Astro.site
+  ? [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'WebApplication',
+        name: seo.h1,
+        alternateName: name,
+        url: new URL(topicUrl(t), Astro.site).href,
+        description: seo.description,
+        applicationCategory: 'BusinessApplication',
+        operatingSystem: 'Alle (läuft im Webbrowser)',
+        browserRequirements: 'Benötigt JavaScript',
+        inLanguage: 'de-DE',
+        isAccessibleForFree: true,
+        offers: { '@type': 'Offer', price: '0', priceCurrency: 'EUR' },
+        image: new URL(illustrationPath(t.id, true), Astro.site).href,
+        isPartOf: { '@type': 'WebSite', name: 'KPILot', url: Astro.site.href },
+      },
+    ]
+  : [];
 const crumbs = [
   { name: 'Start', href: '/' },
   { name: cat.title, href: `/kategorie/${cat.slug}/` },
@@ -53,8 +76,8 @@ const examples = calc.variants.map((v) => {
 });
 ---
 
-<Base title={`${t.seoTitle} | KPILot`} description={t.seoDescription} crumbs={crumbs}>
-  <PageBand crumbs={crumbs} title={name} overlap cat={t.category}>
+<Base title={seoPageTitle(t.id)} description={seo.description} crumbs={crumbs} jsonLd={appLd}>
+  <PageBand crumbs={crumbs} title={seo.h1} overlap cat={t.category}>
     <p class="cat-label" slot="before"><CategoryIcon id={t.category} /> {cat.title}</p>
     {t.fullTerm && <p class="full-term" slot="sub">{t.fullTerm}</p>}
     <FavButton id={t.id} name={name} labeled slot="actions" />
@@ -82,7 +105,7 @@ const examples = calc.variants.map((v) => {
 
     <div class="detail-sections">
       <section class="card content-card" aria-labelledby="formel">
-        <h2 id="formel">Formel</h2>
+        <h2 id="formel">Formel: {name}</h2>
         <ul class="formula">{t.formula.map((f) => <li>{f}</li>)}</ul>
         <dl class="vars">
           {
@@ -97,7 +120,7 @@ const examples = calc.variants.map((v) => {
       </section>
 
       <section class="card content-card" aria-labelledby="beispiel">
-        <h2 id="beispiel">Beispiel und Rechenweg</h2>
+        <h2 id="beispiel">Beispielrechnung mit Rechenweg</h2>
         <p class="small muted">Diese Zahlen sind ein dokumentiertes Beispiel – dieselben Werte setzt „Beispiel einsetzen“ ein, und sie stimmen mit dem Bild überein.</p>
         {
           examples.map(({ v, r, inputs }) => (
@@ -146,7 +169,7 @@ const examples = calc.variants.map((v) => {
       <Provenance topic={t} />
 
       <section class="card content-card" aria-labelledby="verwandt">
-        <h2 id="verwandt">Verwandte Rechner</h2>
+        <h2 id="verwandt">Verwandte Rechner zu {name}</h2>
         <ul class="related-list">
           {
             t.related.map((id) => {

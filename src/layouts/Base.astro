@@ -23,7 +23,8 @@ const { title, description, noindex = false, crumbs = [], jsonLd = [] } = Astro.
 
 const site = Astro.site; // nur gesetzt, wenn SITE_URL bekannt ist
 const preview = !site;
-const canonical = site ? new URL(Astro.url.pathname, site).href : undefined;
+// Canonical/og:url nur für indexierbare Seiten – bei noindex (z. B. 404, Favoriten) wären sie ein Widerspruch.
+const canonical = site && !noindex ? new URL(Astro.url.pathname, site).href : undefined;
 const robots = preview || noindex ? 'noindex, follow' : 'index, follow';
 const ogImage = site ? new URL('/og-image.png', site).href : '/og-image.png';
 const ld: Record<string, unknown>[] = [];

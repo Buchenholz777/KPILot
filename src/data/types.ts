@@ -39,7 +39,6 @@ export interface Topic {
   misconceptions: string[];
   assumptions: string[];
   related: string[];
-  seoTitle: string;
-  seoDescription: string;
+  /** Title, Description, H1 und Keywords stehen zentral in src/data/seo.ts. */
   sources?: { label: string; url: string }[];
 }

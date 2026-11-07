@@ -45,9 +45,10 @@ async function init(root: HTMLElement) {
   const transfersEl = root.querySelector<HTMLElement>("[data-transfers]");
   const noticeEl = root.querySelector<HTMLElement>("[data-notice]")!;
   const chartEl = root.querySelector<HTMLElement>("[data-chart]")!;
-  const followEl = root.querySelector<HTMLElement>("[data-followups]")!;
-  const followList = followEl.querySelector<HTMLElement>("[data-followup-list]")!;
-  const capacityEl = followEl.querySelector<HTMLElement>("[data-capacity]")!;
+  // Nur vorhanden, wenn der Rechner Folgeschritte bzw. einen Kapazitätsabgleich anbietet.
+  const followEl = root.querySelector<HTMLElement>("[data-followups]");
+  const followList = followEl?.querySelector<HTMLElement>("[data-followup-list]");
+  const capacityEl = followEl?.querySelector<HTMLElement>("[data-capacity]");
   const saveStatusEl = root.querySelector<HTMLElement>("[data-save-status]")!;
   /** Aktuell geöffnete gespeicherte Berechnung (für „Änderungen speichern“). */
   let opened: { id: string; name: string; inputs: RawInputs; variantId: string } | null = null;
@@ -246,7 +247,7 @@ async function init(root: HTMLElement) {
       }
       toolsEl.hidden = true;
       if (transfersEl) transfersEl.hidden = true;
-      followEl.hidden = true;
+      if (followEl) followEl.hidden = true;
       chartEl.innerHTML = "";
       if (opts.announce)
         announce(
@@ -353,10 +354,11 @@ async function init(root: HTMLElement) {
 
   /* ---------- Nächste Schritte ---------- */
   function renderFollowUps(r: CalcResult) {
+    if (!followEl || !followList) return;
     const list = (def.followUps ?? []).filter(
       (f) => (!f.variantId || f.variantId === variant.id) && f.when(last.inputs, r),
     );
-    capacityEl.hidden = true;
+    if (capacityEl) capacityEl.hidden = true;
     followList.replaceChildren(
       ...list.map((f) => {
         const li = document.createElement("li");
@@ -410,7 +412,7 @@ async function init(root: HTMLElement) {
       const formB = scnEl.querySelector<HTMLFormElement>('[data-scn="B"]')!;
       (a.focus.map((k) => formB.elements.namedItem(k) as HTMLElement | null).find(Boolean))?.focus();
     } else if (a.kind === "capacity") {
-      if (!last.inputs || !last.result) return;
+      if (!last.inputs || !last.result || !capacityEl) return;
       const qty = a.quantity(last.inputs, last.result);
       if (!qty) return;
       capacityEl.hidden = false;

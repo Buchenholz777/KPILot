@@ -198,15 +198,15 @@ export const SEO: Record<string, SeoEntry> = {
     intent: "Den Verkaufspreis ermitteln, der eine gewünschte Marge erreicht.",
   },
   stueckkosten: {
-    title: "Stückkosten berechnen – Rechner mit Grafik",
+    title: "Stückkosten berechnen – Gesamt- und Stückkosten",
     description:
-      "Gesamtkosten und Stückkosten aus Fixkosten, variablen Kosten und Menge berechnen – inklusive Fixkostendegression als Grafik. Kostenlos, mit Formel und Beispiel.",
+      "Gesamtkosten und Stückkosten aus Fixkosten, variablen Kosten und Menge berechnen – mit Formel, Beispiel und anschaulicher Erklärung. Kostenlos und ohne Anmeldung.",
     h1: "Stückkosten und Gesamtkosten berechnen",
     primary: "Stückkosten berechnen",
     secondary: [
       "Kosten pro Stück",
       "Gesamtkosten berechnen",
-      "Fixkostendegression",
+      "Divisionskalkulation",
       "Durchschnittskosten",
     ],
     intent: "Kosten je Einheit bei einer bestimmten Menge ermitteln.",

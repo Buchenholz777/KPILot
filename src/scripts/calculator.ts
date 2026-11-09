@@ -346,6 +346,7 @@ async function init(root: HTMLElement) {
       chartEl.innerHTML = "";
       return;
     }
+    track("chart_shown", { calc: def.id, variant: variant.id });
     chartEl.innerHTML =
       r.chart.kind === "break-even"
         ? breakEvenChart(r.chart)
@@ -609,6 +610,7 @@ async function init(root: HTMLElement) {
       const text = resultText();
       try {
         await navigator.clipboard.writeText(text);
+        track("result_copied", { calc: def.id, variant: variant.id });
         toast("Ergebnis in die Zwischenablage kopiert.");
       } catch {
         const ta = document.createElement("textarea");
@@ -617,6 +619,7 @@ async function init(root: HTMLElement) {
         ta.select();
         const ok = document.execCommand("copy");
         ta.remove();
+        if (ok) track("result_copied", { calc: def.id, variant: variant.id });
         toast(
           ok
             ? "Ergebnis in die Zwischenablage kopiert."

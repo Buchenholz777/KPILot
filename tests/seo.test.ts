@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { TOPICS, TOPIC_BY_ID } from "../src/data/registry";
 import { SEO, seoPageTitle } from "../src/data/seo";
 import { getCalc } from "../src/calc/all";
+import { runExample } from "../src/calc/engine";
 
 describe("SEO-Konfiguration der Rechnerseiten", () => {
   it("jeder Rechner hat genau einen Eintrag, keine verwaisten Einträge", () => {
@@ -41,6 +42,18 @@ describe("SEO-Konfiguration der Rechnerseiten", () => {
     for (const t of TOPICS) {
       if (/Szenario/i.test(SEO[t.id].description))
         expect(getCalc(t.id).scenario, t.id).toBeDefined();
+    }
+  });
+
+  it("„Grafik“ bzw. „Diagramm“ wird nur bei Rechnern versprochen, die im Ergebnis ein Diagramm zeigen", () => {
+    for (const t of TOPICS) {
+      if (!/Grafik|Diagramm/i.test(SEO[t.id].description + SEO[t.id].title))
+        continue;
+      const hasChart = getCalc(t.id).variants.some((v) => {
+        const r = runExample(v);
+        return r.status === "ok" && !!r.chart;
+      });
+      expect(hasChart, t.id).toBe(true);
     }
   });
 

@@ -79,6 +79,32 @@ const def: CalcDef = {
           steps,
           notes: notes.length ? notes : undefined,
           tone: d.isNegative() ? "negative" : "neutral",
+          // Nur bei nicht negativem Deckungsbeitrag: Preis = variable Kosten + Deckungsbeitrag
+          chart:
+            d.isNegative() || p.isZero()
+              ? undefined
+              : {
+                  kind: "bars",
+                  summary: `Vom Verkaufspreis ${eur(p)} je Stück entfallen ${eur(v)} auf variable Kosten; ${eur(d)} bleiben als Stückdeckungsbeitrag.`,
+                  panels: [
+                    {
+                      title: "Aufteilung des Preises je Stück (€)",
+                      bars: [
+                        { label: "Verkaufspreis", value: p.toNumber(), text: eur(p) },
+                        { label: "Variable Kosten", value: v.toNumber(), text: eur(v) },
+                        { label: "Deckungsbeitrag", value: d.toNumber(), text: eur(d), emphasis: true },
+                      ],
+                    },
+                  ],
+                  table: {
+                    head: ["Größe", "je Stück"],
+                    rows: [
+                      ["Nettoverkaufspreis", eur(p)],
+                      ["Variable Kosten", eur(v)],
+                      ["Stückdeckungsbeitrag", eur(d)],
+                    ],
+                  },
+                },
         };
       },
     },

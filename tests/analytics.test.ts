@@ -83,6 +83,40 @@ describe("Erfolgsmessung", () => {
   });
 });
 
+describe("Navigations- und Nutzungsereignisse", () => {
+  it("neue Ereignisse senden nur Rechnerkennungen, nie Freitext", () => {
+    st.setConsent("granted");
+    enable();
+    track("calc_selected", { calc: "marge" });
+    track("related_clicked", { calc: "break-even" });
+    track("search_used");
+    track("chart_shown", { calc: "marge", variant: "standard" });
+    track("result_copied", { calc: "marge", variant: "standard" });
+    track("favorite_added", { calc: "marge" });
+    expect(sent.map((s) => s.name)).toEqual([
+      "calc_selected",
+      "related_clicked",
+      "search_used",
+      "chart_shown",
+      "result_copied",
+      "favorite_added",
+    ]);
+    expect(sent[2].params).toEqual({});
+    // Eingeschleuste Werte werden verworfen
+    track("result_copied", { calc: "Marge 12,5 %" as never, variant: "100 €" as never });
+    expect(sent[sent.length - 1].params).toEqual({});
+  });
+  it("search_used und chart_shown zählen je Seitenaufruf nur einmal", () => {
+    st.setConsent("granted");
+    enable();
+    for (let i = 0; i < 5; i++) {
+      track("search_used");
+      track("chart_shown", { calc: "roi", variant: "standard" });
+    }
+    expect(sent).toHaveLength(2);
+  });
+});
+
 describe("Betreiberangaben", () => {
   it("alle Pflichtangaben sind vom Betreiber bestätigt (kein Hinweis „in Vorbereitung“)", () => {
     expect(openOperatorItems()).toEqual([]);

@@ -84,7 +84,7 @@ Grundsatz: Jede Rechnerseite zielt auf die konkrete Berechnung, nach der gesucht
 | `/gewinnrechner/` | Gewinnrechner: Gewinn & Zielgewinn berechnen &#124; KPILot | Gewinnrechner | Gewinn berechnen, Zielgewinn berechnen, Menge für Zielgewinn |
 | `/margenrechner/` | Margenrechner: Marge und Aufschlag berechnen &#124; KPILot | Margenrechner | Marge berechnen, Handelsspanne berechnen, Aufschlag berechnen, Marge vs. Aufschlag |
 | `/verkaufspreis-berechnen/` | Verkaufspreis berechnen aus Zielmarge – Rechner &#124; KPILot | Verkaufspreis berechnen | Preis aus Marge berechnen, Zielmarge, Preis kalkulieren, VK berechnen |
-| `/stueckkosten-rechner/` | Stückkosten berechnen – Rechner mit Grafik &#124; KPILot | Stückkosten berechnen | Kosten pro Stück, Gesamtkosten berechnen, Fixkostendegression, Durchschnittskosten |
+| `/stueckkosten-rechner/` | Stückkosten berechnen – Gesamt- und Stückkosten &#124; KPILot | Stückkosten berechnen | Kosten pro Stück, Gesamtkosten berechnen, Divisionskalkulation, Durchschnittskosten |
 | `/zuschlagskalkulation/` | Zuschlagskalkulation Rechner: Selbstkosten &#124; KPILot | Zuschlagskalkulation Rechner | Selbstkosten berechnen, Herstellkosten berechnen, Gemeinkostenzuschlag, Zuschlagssatz berechnen |
 | `/stundenkostensatz-rechner/` | Stundenkostensatz berechnen – Stundensatz-Rechner &#124; KPILot | Stundensatz berechnen | Stundenkostensatz, Stundenverrechnungssatz, Kosten pro Stunde, Stundensatz Selbstständige |
 | `/rabatt-mehrabsatz-rechner/` | Lohnt sich ein Rabatt? Mehrabsatz berechnen &#124; KPILot | Rabatt Mehrabsatz berechnen | lohnt sich ein Rabatt, Rabattaktion Wirtschaftlichkeit, Absatzsteigerung bei Preissenkung |
@@ -133,3 +133,26 @@ Grundsatz: Jede Rechnerseite zielt auf die konkrete Berechnung, nach der gesucht
 | `/soll-ist-rechner/` | Soll-Ist-Vergleich: Abweichung berechnen &#124; KPILot | Soll-Ist-Vergleich berechnen | Planabweichung, Budgetabweichung, Abweichungsanalyse |
 | `/auslastung-rechner/` | Auslastung berechnen – Kapazitätsauslastung &#124; KPILot | Auslastung berechnen | Kapazitätsauslastung, Beschäftigungsgrad, Maschinenauslastung |
 | `/lagerkennzahlen-rechner/` | Lagerumschlag und Lagerdauer berechnen &#124; KPILot | Lagerumschlag berechnen | Lagerumschlagshäufigkeit, Lagerdauer berechnen, durchschnittlicher Lagerbestand |
+
+## 7. Zweite Runde (09.11.2026): Startseite, Diagramme, Messung
+
+Grundlage war der Auftrag „SEO-, Growth-, UI/UX- und Performance-Optimierung“. Vieles davon war nach der ersten Runde schon erfüllt (zentrale Metadaten, Canonicals, Sitemap, strukturierte Daten, Prüfungen). Neu:
+
+| Bereich | Umsetzung | Nachweis |
+|---|---|---|
+| Alle Rechner direkt sichtbar | Die Startseite zeigte zuvor nur 11 „empfohlene“ Rechner und brauchte „Alle 41 Rechner anzeigen“. Jetzt stehen alle 41 sofort im Katalog (nach Kategorien geordnet, Suche und Kategorie-Filter wie bisher); die redaktionelle Auswahl steht als „Schnellzugriff“ darüber. | Browserprüfung: 41 sichtbare Kacheln, kein Pflichtklick |
+| Hero | H1 „KPI-Rechner: Berechnen statt schätzen.“ (Keyword bleibt erhalten), Unterzeile mit Nutzen, Vorteile in einer Zeile (kostenlos, ohne Anmeldung, Formeln und Rechenweg, Berechnung im Browser – alles zutreffend), Suchplatzhalter „Was möchtest du berechnen? …“ | Suche bei 390 px ohne Scrollen sichtbar |
+| Schnellzugriff | Marge, Break-even, Deckungsbeitrag, Cashflow, Stundenkostensatz, Rabatt – bezeichnet als redaktionelle Auswahl, nicht als „beliebteste“ (keine Messdaten) | – |
+| Suche | Bestand genügte: Synonyme, Abkürzungen, Alltagsfragen, Tippfehler. Stichproben: „Wie viel Gewinn bleibt?“ → Gewinn, EBIT, Marge, Umsatzrendite · „Was bleibt vom Umsatz“ → Umsatzrendite, Deckungsbeitrag, Gewinn · „Wie lange bis sich eine Investition lohnt“ → Amortisation | geprüft per Testlauf |
+| Diagramme | 8 neue Live-Diagramme (siehe `docs/VISUALISIERUNG.md`), insgesamt 10 Rechner | `tests/charts.test.ts` |
+| Messung | 6 neue Ereignisse ohne Werte/Freitext (siehe `docs/MESSKONZEPT.md`, `docs/GROWTH.md`); Datenschutzhinweise angepasst | `tests/analytics.test.ts` |
+| Inventar und Regressionsschutz | `docs/RECHNER-INVENTAR.md` (automatisch aus dem Code), `tests/inventar.test.ts` (41 Rechner, URLs, Modi, Beispiele) | Tests |
+| Korrektur | Titel/Description von „Stückkosten“ versprachen eine Grafik, die der Rechner nicht zeigt; angepasst. Neuer Test: „Grafik“ nur bei Rechnern mit Diagramm. | `tests/seo.test.ts` |
+
+### Nicht umgesetzt (mit Begründung)
+
+- **Hero-H1 nur „Berechnen statt schätzen.“**: Die H1 trägt stattdessen zusätzlich das Suchwort „KPI-Rechner“. Das Motto steht trotzdem prominent.
+- **Zusätzliche drei SEO-Themenseiten**: Die Themenwelten Preisgestaltung, Wirtschaftlichkeit, Liquidität und Marketing existieren bereits als Aufgabenseiten (`/aufgaben/verkaufspreis-bestimmen/`, `/wirtschaftlichkeit-pruefen/`, `/liquiditaet-verstehen/`, `/werbung-bewerten/`) mit Fragen, Schritten, verlinkten Rechnern und Grenzen sowie `/lernen/welche-kennzahl/` und `/praxisfaelle/`. Weitere Seiten zum selben Thema würden um dieselbe Suchintention konkurrieren.
+- **Diagramm als PNG exportieren, Ergebnis-Link teilen**: nicht umgesetzt (siehe `docs/VISUALISIERUNG.md` bzw. `docs/GROWTH.md`). Kopieren und Drucken sind vorhanden.
+- **FAQ je Rechner**: Die Seiten enthalten „Typische Missverständnisse“ und „So liest du das Ergebnis“. Eine zusätzliche FAQ-Struktur würde dieselben Aussagen wiederholen.
+- **Lighthouse und reale Core Web Vitals**: nicht gemessen (kein Lighthouse installiert, keine Search-Console-Daten). Bekannt: statisches HTML, größtes Skript ca. 36 KB, Startseite ca. 22 KB komprimiert, langes Caching für Build-Dateien aktiv.

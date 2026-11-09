@@ -76,6 +76,28 @@ const def: CalcDef = {
                 "Ein Plus ist nicht automatisch gut – bei Kosten ist es eine Überschreitung.",
               ],
           tone,
+          chart: {
+            kind: "bars",
+            summary: `Soll ${num(s)}, Ist ${num(x)}, Abweichung ${pct(rel, true)}.`,
+            panels: [
+              {
+                title: "Soll und Ist im Vergleich",
+                bars: [
+                  { label: "Soll (Plan)", value: s.abs().toNumber(), text: num(s), negative: s.isNegative() },
+                  { label: "Ist", value: x.abs().toNumber(), text: num(x), emphasis: !x.isNegative(), negative: x.isNegative() },
+                ],
+              },
+            ],
+            table: {
+              head: ["Größe", "Wert"],
+              rows: [
+                ["Soll (Plan)", num(s)],
+                ["Ist (tatsächlich)", num(x)],
+                ["Abweichung absolut", num(diff, true)],
+                ["Abweichung relativ", pct(rel, true)],
+              ],
+            },
+          },
         };
       },
     },

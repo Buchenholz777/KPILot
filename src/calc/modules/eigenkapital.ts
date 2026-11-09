@@ -50,6 +50,28 @@ const def: CalcDef = {
             `Quote = Eigenkapital / Gesamtkapital × 100 = ${eur(ek)} / ${eur(gk)} × 100 = ${pct(q)}`,
           ],
           notes,
+          chart: {
+            kind: "bars",
+            summary: `Von ${eur(gk)} Gesamtkapital sind ${eur(ek)} Eigenkapital und ${eur(fk)} Fremdkapital; die Eigenkapitalquote beträgt ${pct(q)}.`,
+            panels: [
+              {
+                title: "Kapitalstruktur (€)",
+                bars: [
+                  { label: "Eigenkapital", value: ek.abs().toNumber(), text: eur(ek), emphasis: !ek.isNegative(), negative: ek.isNegative() },
+                  { label: "Fremdkapital", value: fk.abs().toNumber(), text: eur(fk), negative: fk.isNegative() },
+                  { label: "Gesamtkapital", value: gk.toNumber(), text: eur(gk) },
+                ],
+              },
+            ],
+            table: {
+              head: ["Größe", "Betrag"],
+              rows: [
+                ["Eigenkapital", eur(ek)],
+                ["Fremdkapital (Rest)", eur(fk)],
+                ["Gesamtkapital (Bilanzsumme)", eur(gk)],
+              ],
+            },
+          },
         };
       },
     },

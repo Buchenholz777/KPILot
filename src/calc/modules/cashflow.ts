@@ -47,6 +47,28 @@ const def: CalcDef = {
             "Nur tatsächliche Zahlungen zählen: Unbezahlte Rechnungen und Abschreibungen bewegen kein Geld.",
           ],
           tone: cf.isNegative() ? "negative" : "positive",
+          chart: {
+            kind: "bars",
+            summary: `Einzahlungen ${eur(e)}, Auszahlungen ${eur(a)}, Cashflow ${eur(cf)}.`,
+            panels: [
+              {
+                title: "Zahlungen im Zeitraum (€)",
+                bars: [
+                  { label: "Einzahlungen", value: e.toNumber(), text: eur(e) },
+                  { label: "Auszahlungen", value: a.toNumber(), text: eur(a) },
+                  { label: "Cashflow", value: cf.abs().toNumber(), text: eur(cf), emphasis: !cf.isNegative(), negative: cf.isNegative() },
+                ],
+              },
+            ],
+            table: {
+              head: ["Größe", "Betrag"],
+              rows: [
+                ["Betriebliche Einzahlungen", eur(e)],
+                ["Betriebliche Auszahlungen", eur(a)],
+                ["Operativer Cashflow", eur(cf)],
+              ],
+            },
+          },
         };
       },
     },
@@ -98,6 +120,30 @@ const def: CalcDef = {
             "Vereinfachte, direkte Zahlungsübersicht – keine gesetzliche Kapitalflussrechnung. Zinsen und Steuern hier dem operativen Bereich zuordnen.",
           ],
           tone: net.isNegative() ? "negative" : "neutral",
+          chart: {
+            kind: "bars",
+            summary: `Operativ ${eur(op)}, Investition ${eur(inv)}, Finanzierung ${eur(fin)}, zusammen ${eur(net)}.`,
+            panels: [
+              {
+                title: "Cashflow nach Bereich (€)",
+                bars: [
+                  { label: "Operativ", value: op.abs().toNumber(), text: eur(op), negative: op.isNegative() },
+                  { label: "Investition", value: inv.abs().toNumber(), text: eur(inv), negative: inv.isNegative() },
+                  { label: "Finanzierung", value: fin.abs().toNumber(), text: eur(fin), negative: fin.isNegative() },
+                  { label: "Netto", value: net.abs().toNumber(), text: eur(net), emphasis: !net.isNegative(), negative: net.isNegative() },
+                ],
+              },
+            ],
+            table: {
+              head: ["Bereich", "Cashflow"],
+              rows: [
+                ["Operativ", eur(op)],
+                ["Investition", eur(inv)],
+                ["Finanzierung", eur(fin)],
+                ["Netto", eur(net)],
+              ],
+            },
+          },
         };
       },
     },

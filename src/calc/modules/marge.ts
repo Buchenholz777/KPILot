@@ -87,6 +87,40 @@ const def: CalcDef = {
           steps,
           notes,
           tone: diff.isNegative() ? "negative" : "neutral",
+          // Beide Prozentwerte nebeneinander: Marge bezieht sich auf den Preis, Aufschlag auf die Kosten
+          chart:
+            marge && auf
+              ? {
+                  kind: "bars",
+                  summary: `Vom Verkaufspreis ${eur(p)} entfallen ${eur(k)} auf die Kosten und ${eur(diff)} auf den Rohertrag. Die Marge beträgt ${pct(marge.value)} vom Preis, der Aufschlag ${pct(auf.value)} auf die Kosten.`,
+                  panels: [
+                    {
+                      title: "Verkaufspreis in Euro",
+                      bars: [
+                        { label: "Kostenbasis", value: k.toNumber(), text: eur(k) },
+                        { label: "Rohertrag", value: diff.abs().toNumber(), text: eur(diff), emphasis: !diff.isNegative(), negative: diff.isNegative() },
+                      ],
+                    },
+                    {
+                      title: "Prozent: andere Bezugsgröße",
+                      bars: [
+                        { label: "Marge (vom Preis)", value: marge.value.abs().toNumber(), text: pct(marge.value), emphasis: !diff.isNegative(), negative: diff.isNegative() },
+                        { label: "Aufschlag (auf Kosten)", value: auf.value.abs().toNumber(), text: pct(auf.value), negative: diff.isNegative() },
+                      ],
+                    },
+                  ],
+                  table: {
+                    head: ["Größe", "Wert", "Bezugsgröße"],
+                    rows: [
+                      ["Kostenbasis", eur(k), "–"],
+                      ["Nettoverkaufspreis", eur(p), "–"],
+                      ["Rohertrag", eur(diff), "–"],
+                      ["Marge", pct(marge.value), "Verkaufspreis"],
+                      ["Aufschlag", pct(auf.value), "Kostenbasis"],
+                    ],
+                  },
+                }
+              : undefined,
         };
       },
     },

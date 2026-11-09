@@ -72,6 +72,22 @@ const def: CalcDef = {
             "Statisches Modell: konstante Rückflüsse, keine Abzinsung. Bruchteile setzen gleichmäßige Zahlungen innerhalb der Periode voraus.",
             "Fließt das Geld nur am Periodenende, gilt die Zahl der ganzen Perioden.",
           ],
+          // Zeitachse bis zum 1,5-Fachen der Amortisationsdauer: kumulierte Rückflüsse treffen den Investitionsbetrag
+          chart: {
+            kind: "break-even",
+            points: [
+              { q: 0, revenue: 0, cost: inv.toNumber() },
+              { q: t.mul(1.5).toNumber(), revenue: cf.mul(t).mul(1.5).toNumber(), cost: inv.toNumber() },
+            ],
+            breakEven: t.toNumber(),
+            labels: {
+              xUnit: many,
+              rising: "Kumulierte Rückflüsse (gestrichelt)",
+              fixed: "Investition (durchgezogen)",
+              aria: "Kumulierte Rückflüsse und Investitionsbetrag deiner Eingaben; sie treffen sich nach {x}.",
+              head: [many, "Kumulierte Rückflüsse", "Investition", "Saldo"],
+            },
+          },
         };
       },
     },

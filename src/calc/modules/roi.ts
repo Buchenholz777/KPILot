@@ -46,6 +46,27 @@ const def: CalcDef = {
             "Keine automatische Hochrechnung auf ein Jahr. Nicht mit ROAS verwechseln (dort steht Umsatz im Zähler).",
           ],
           tone: g.isNegative() ? "negative" : "neutral",
+          chart: {
+            kind: "bars",
+            summary: `Auf ${eur(k)} eingesetztes Kapital kommen ${eur(g)} Gewinn; der ROI beträgt ${pct(r)}.`,
+            panels: [
+              {
+                title: "Kapital und Gewinn (€)",
+                bars: [
+                  { label: "Eingesetztes Kapital", value: k.toNumber(), text: eur(k) },
+                  { label: "Gewinn", value: g.abs().toNumber(), text: eur(g), emphasis: !g.isNegative(), negative: g.isNegative() },
+                ],
+              },
+            ],
+            table: {
+              head: ["Größe", "Betrag"],
+              rows: [
+                ["Eingesetztes Kapital", eur(k)],
+                ["Zurechenbarer Gewinn", eur(g)],
+                ["ROI", pct(r)],
+              ],
+            },
+          },
         };
       },
     },

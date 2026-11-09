@@ -6,6 +6,7 @@ import {
   storageAvailable,
 } from "../lib/storage";
 import { toast, readJson } from "./ui";
+import { track } from "../lib/analytics";
 import { getRecent } from "../lib/workspace";
 
 interface KrData {
@@ -170,6 +171,7 @@ document.addEventListener("click", (e) => {
     return;
   }
   render();
+  if (res.active) track("favorite_added", { calc: id.split("#")[0] });
   toast(
     res.active
       ? `„${name}“ zu deinen Favoriten hinzugefügt.`

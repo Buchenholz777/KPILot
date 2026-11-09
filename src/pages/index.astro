@@ -5,6 +5,7 @@ import Favorites from '../components/Favorites.astro';
 import KpiInfo from '../components/KpiInfo.astro';
 import TaskTiles from '../components/TaskTiles.astro';
 import HomeExample from '../components/HomeExample.astro';
+import QuickAccess from '../components/QuickAccess.astro';
 import { TOPICS } from '../data/registry';
 import { SITE_NAME, SITE_DESCRIPTION } from '../config/site';
 
@@ -36,12 +37,19 @@ const websiteLd = site
 >
   <Catalog mode="home">
     <Fragment slot="intro">
-      <h1 class="hero-title">KPI-Rechner: Preise kalkulieren. <span class="accent">Wirtschaftlichkeit prüfen. Kennzahlen verstehen.</span></h1>
+      <h1 class="hero-title">KPI-Rechner: <span class="accent">Berechnen statt schätzen.</span></h1>
       <p class="hero-sub">
-        {TOPICS.length} kostenlose Rechner mit nachvollziehbarem Rechenweg. Vergleiche Varianten und nimm deine Werte in den nächsten Rechner mit.
+        Kostenlose Online-Rechner für Marge, Gewinnschwelle, Deckungsbeitrag, Cashflow und viele weitere betriebswirtschaftliche Kennzahlen – einfach erklärt, direkt berechnet.
       </p>
+      <ul class="hero-trust" aria-label="Vorteile">
+        <li>Kostenlos</li>
+        <li>Ohne Anmeldung</li>
+        <li>Formeln und Rechenweg</li>
+        <li>Berechnung im Browser</li>
+      </ul>
     </Fragment>
     <Fragment slot="between">
+      <QuickAccess />
       <section class="home-tasks" aria-labelledby="aufgaben-h">
         <h2 id="aufgaben-h">Womit möchtest du starten?</h2>
         <TaskTiles />

@@ -14,6 +14,14 @@ Umsetzung: `src/lib/analytics.ts`, eingebunden in `src/scripts/consent.ts`, `cal
 | `values_transferred` | Werte per Button an anderen Rechner übergeben | ÷ `calc_result` | `calc`, `variant` (Ziel) |
 | `calc_saved` | Berechnung ausdrücklich gespeichert | ÷ `calc_result` | `calc`, `variant` |
 | `saved_reopened` | gespeicherte Berechnung wieder geöffnet | ÷ `calc_saved` (zeitversetzt) | `calc`, `variant` |
+| `calc_selected` | Rechner in der Übersicht oder im Schnellzugriff angeklickt | ÷ Aufrufe der Startseite bzw. Übersicht | `calc` (Ziel) |
+| `related_clicked` | „Verwandten Rechner“ angeklickt | ÷ Aufrufe der Rechnerseite | `calc` (Ziel) |
+| `search_used` | Suche in der Übersicht lieferte erstmals Treffer (einmal je Seitenaufruf, ohne Suchtext) | ÷ Seitenaufrufe mit Suche | – |
+| `chart_shown` | zu einem Ergebnis wurde erstmals ein Diagramm angezeigt | ÷ `calc_result` | `calc`, `variant` |
+| `result_copied` | Ergebnis kopiert | ÷ `calc_result` | `calc`, `variant` |
+| `favorite_added` | Rechner zu den Favoriten hinzugefügt | ÷ Aufrufe der Rechnerseite | `calc` |
+
+Zuordnung zu den üblichen Namen im Wachstumskonzept: `view_calculator` = automatischer Seitenaufruf (page_view) der Rechnerseite · `start_calculation` = `calc_started` · `complete_calculation` = `calc_result` · `search_calculator` = `search_used` (und `search_no_results`) · `select_calculator` = `calc_selected` · `click_related_calculator` = `related_clicked` · `use_chart` = `chart_shown` (Anzeige, nicht Interaktion) · `copy_result` = `result_copied` · `save_calculation` = `calc_saved` · `favorite_calculator` = `favorite_added`. Ein `share_result` gibt es nicht, weil es keine Teilen-Funktion gibt, die Eingaben in Links schreibt (bewusst: Datenschutz).
 
 Nicht übertragen: Rechenwerte, freie Suchtexte, Projektnamen, Notizen, importierte Inhalte. Parameter werden gegen `^[a-z0-9-]{1,60}$` bereinigt (`cleanParams`, getestet in `tests/analytics.test.ts`). Die Browserprüfung belegt, dass eingegebene Zahlen weder im `dataLayer` noch in Anfrage-URLs auftauchen.
 In Google Analytics 4 die Ereignisse als benutzerdefinierte Ereignisse auswerten; Kennungen als benutzerdefinierte Dimensionen anlegen.

@@ -7,7 +7,6 @@ import Icon from './Icon.astro';
 import CategoryIcon from './CategoryIcon.astro';
 import BandLines from './BandLines.astro';
 import { TASKS, taskUrl } from '../data/tasks';
-import { HOME_ORDER } from '../data/home';
 
 interface Props {
   /** home: zeigt ohne Suche/Filter nur „Empfohlen“; all: kompletter Katalog. */
@@ -16,7 +15,7 @@ interface Props {
 }
 const { mode, headingId = 'katalog-h' } = Astro.props;
 const index = JSON.stringify(buildSearchIndex());
-const firstVisible = new Set((mode === 'home' ? HOME_ORDER.map((id) => TOPICS.find((t) => t.id === id)!) : TOPICS).slice(0, 6).map((t) => t.id));
+const firstVisible = new Set(TOPICS.slice(0, 6).map((t) => t.id));
 const qId = `q-${mode}`;
 ---
 
@@ -39,7 +38,7 @@ const qId = `q-${mode}`;
               autocomplete="off"
               enterkeyhint="search"
               spellcheck="false"
-              placeholder="z. B. Gewinnschwelle, Marge, Cashflow, CPC …"
+              placeholder="Was möchtest du berechnen? Zum Beispiel Marge, Gewinn oder Break-even …"
               aria-describedby={`${qId}-hint`}
               data-search
             />
@@ -78,14 +77,14 @@ const qId = `q-${mode}`;
     </fieldset>
 
     <div class="catalog-head">
-      <h2 id={headingId} data-catalog-heading>{mode === 'home' ? 'Nützliche Rechner für den Start' : 'Alle Rechner'}</h2>
+      <h2 id={headingId} data-catalog-heading>Alle Rechner</h2>
       <fieldset class="view-toggle" data-view-toggle>
         <legend>Ansicht</legend>
         <button type="button" class="view-btn" data-view-btn="explain" aria-pressed="true">Mit Erklärungen</button>
         <button type="button" class="view-btn" data-view-btn="compact" aria-pressed="false">Kompakt</button>
       </fieldset>
       <div class="catalog-status" role="status" aria-live="polite" data-status>
-        <span data-count><strong>{mode === 'home' ? 'Redaktionelle Auswahl – Geschäftsnutzen und Grundlagen' : `${TOPICS.length} Rechner`}</strong></span>
+        <span data-count><strong>{TOPICS.length} Rechner</strong></span>
         <span class="scope" data-scope hidden></span>
         <button type="button" class="btn btn-ghost" data-widen hidden>In allen Kategorien suchen</button>
         <button type="button" class="btn btn-ghost" data-reset hidden><Icon name="x" />Zurücksetzen</button>
@@ -97,7 +96,7 @@ const qId = `q-${mode}`;
     <div class="grid" data-grid data-view="explain">
       {
         TOPICS.map((t) => (
-          <div class="grid-item" data-item={t.id} data-cat={t.category} data-home-rank={HOME_ORDER.indexOf(t.id) >= 0 ? HOME_ORDER.indexOf(t.id) : 99} hidden={mode === 'home' && !t.recommended ? true : undefined}>
+          <div class="grid-item" data-item={t.id} data-cat={t.category}>
             <Tile topic={t} eager={firstVisible.has(t.id)} />
           </div>
         ))
@@ -121,15 +120,6 @@ const qId = `q-${mode}`;
       </ul>
     </div>
 
-    {
-      mode === 'home' && (
-        <p class="catalog-more" data-more>
-          <a class="btn btn-secondary" href="/rechner/">
-            Alle {TOPICS.length} Rechner anzeigen <Icon name="arrow" />
-          </a>
-        </p>
-      )
-    }
   </div>
   <script type="application/json" data-search-index set:html={index} />
 </div>
@@ -196,7 +186,7 @@ const qId = `q-${mode}`;
 
     function render(persist = true) {
       const q = state.q.trim();
-      const v = computeView(state, entries, { mode, recommended });
+      const v = computeView(state, entries, { mode: 'all', recommended });
       chips.forEach((c) => c.setAttribute('aria-pressed', String(c.dataset.catBtn === state.cat)));
       if (catSelect) catSelect.value = state.cat;
 
@@ -247,6 +237,7 @@ const qId = `q-${mode}`;
 
       empty.hidden = n > 0;
       if (!n && q) track('search_no_results');
+      if (n && q) track('search_used');
       if (!n) {
         const elsewhere = v.narrowed ? v.globalCount : 0;
         emptyAll.hidden = !elsewhere;

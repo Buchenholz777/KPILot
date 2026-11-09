@@ -62,10 +62,25 @@ export interface BarsChart {
   summary: string;
   panels: {
     title: string;
-    bars: { label: string; value: number; text: string; emphasis?: boolean }[];
+    /** value: Betrag (Höhe = Betrag); negative: Balken mit Warnfarbe, text trägt das Vorzeichen. */
+    bars: { label: string; value: number; text: string; emphasis?: boolean; negative?: boolean }[];
   }[];
   /** Tabellenalternative zum Diagramm. */
   table: { head: string[]; rows: string[][] };
+}
+
+/** Beschriftung des Liniendiagramms mit Schnittpunkt (Standard: Break-even mit Stück/Umsatz/Gesamtkosten). */
+export interface CrossingLabels {
+  /** Einheit der X-Achse, z. B. „Stück“ oder „Jahre“. */
+  xUnit: string;
+  /** Legende der gestrichelten Linie, z. B. „Umsatz (gestrichelt)“. */
+  rising: string;
+  /** Legende der durchgezogenen Linie, z. B. „Gesamtkosten (durchgezogen)“. */
+  fixed: string;
+  /** Kurzbeschreibung für Screenreader; {x} wird durch den Schnittpunkt ersetzt. */
+  aria: string;
+  /** Spaltenköpfe der Tabellenalternative: [X, steigende Linie, andere Linie, Differenz]. */
+  head: [string, string, string, string];
 }
 
 export interface ChartPoint {
@@ -87,7 +102,7 @@ export type CalcResult =
       notes?: string[];
       tone?: "neutral" | "positive" | "negative";
       chart?:
-        | { kind: "break-even"; points: ChartPoint[]; breakEven?: number }
+        | { kind: "break-even"; points: ChartPoint[]; breakEven?: number; labels?: CrossingLabels }
         | BarsChart;
     }
   | {

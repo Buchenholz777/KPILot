@@ -17,7 +17,7 @@ const dlgId = `video-dlg-${v.id}`;
 const titleId = `video-title-${v.id}`;
 ---
 
-<div class="video-card" id="erklaervideo" data-video-card data-src={videoSrc(v)} data-poster={posterSrc(v)} data-vtt={captionsSrc(v)} data-calc={v.calcId}>
+<div class="video-card" id="erklaervideo" data-video-card data-src={videoSrc(v)} data-poster={posterSrc(v)} data-vtt={captionsSrc(v)} data-video-id={v.calcId}>
   <a class="video-thumb" href={videoSrc(v)} data-video-open aria-haspopup="dialog" aria-label={`Video abspielen: ${v.title} (${displayDuration(v.duration)}, ohne Ton, mit Untertiteln)`}>
     <img src={posterSrc(v)} width="1280" height="720" alt="" loading="lazy" decoding="async" />
     <span class="video-play" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22"><path d="M8 5.5v13l11-6.5z" fill="currentColor"></path></svg></span>
@@ -92,7 +92,7 @@ const titleId = `video-title-${v.id}`;
       video.play().catch(() => {
         /* Wiedergabe startet dann über die Player-Steuerung */
       });
-      track('video_started', { calc: card.dataset.calc });
+      track("video_started", { calc: card.dataset.videoId });
     });
     card.querySelector('[data-video-close]')!.addEventListener('click', () => dlg.close());
     dlg.addEventListener('close', () => {

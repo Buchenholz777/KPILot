@@ -13,6 +13,9 @@ import { getCalc } from '../calc/all';
 import { runExample } from '../calc/engine';
 import { formatValue } from '../lib/number';
 import { illustrationPath } from '../illustrations';
+import VideoCard from '../components/VideoCard.astro';
+import { availableVideoForCalc, transcript } from '../lib/videos';
+import { videoSrc, posterSrc, isoDuration } from '../data/videos';
 import type { Topic } from '../data/types';
 
 export const getStaticPaths = (() => TOPICS.map((t) => ({ params: { slug: t.slug }, props: { topic: t } }))) satisfies GetStaticPaths;
@@ -51,9 +54,30 @@ const examples = calc.variants.map((v) => {
   }
   return { v, r, inputs };
 });
+
+// Erklärvideo nur, wenn es tatsächlich gerendert vorliegt (public/videos/…)
+const video = availableVideoForCalc(t.id);
+const site = Astro.site;
+const videoLd =
+  video && site
+    ? [
+        {
+          '@context': 'https://schema.org',
+          '@type': 'VideoObject',
+          name: video.title,
+          description: video.description,
+          thumbnailUrl: new URL(posterSrc(video), site).href,
+          contentUrl: new URL(videoSrc(video), site).href,
+          uploadDate: video.uploadDate,
+          duration: isoDuration(video.duration),
+          inLanguage: 'de-DE',
+          transcript: transcript(video).join(' '),
+        },
+      ]
+    : [];
 ---
 
-<Base title={`${t.seoTitle} | KPILot`} description={t.seoDescription} crumbs={crumbs}>
+<Base title={`${t.seoTitle} | KPILot`} description={t.seoDescription} crumbs={crumbs} jsonLd={videoLd}>
   <PageBand crumbs={crumbs} title={name} overlap cat={t.category}>
     <p class="cat-label" slot="before"><CategoryIcon id={t.category} /> {cat.title}</p>
     {t.fullTerm && <p class="full-term" slot="sub">{t.fullTerm}</p>}
@@ -66,6 +90,7 @@ const examples = calc.variants.map((v) => {
           <h2 class="eyebrow" id="kurz">Kurz erklärt</h2>
           <p class="intro-text">{t.intro}</p>
           <p class="jump"><a href="#rechner">Direkt zum Rechner ↓</a></p>
+          {video && <VideoCard video={video} />}
           <details class="img-desc">
             <summary>Bildbeschreibung lesen</summary>
             <p>{t.image.description}</p>

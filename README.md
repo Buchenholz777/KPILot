@@ -42,6 +42,7 @@ src/
     topics/*.ts         Texte je Thema: Titel, Kurztext, Nutzerfrage, Synonyme, Bildtexte, Formel …
     categories.ts       die sechs Kategorien inkl. „Häufig verwechselt“
     registry.ts         zentrales Rechnerverzeichnis (Reihenfolge 01–40)
+    videos.ts           Erklärvideos: Metadaten, Beispielwerte, Erzähltext (eine Quelle für Bild, Untertitel, Transkript)
   illustrations/        SVG-Erklärbilder (kit.ts = Zeichenwerkzeug, draw-*.ts = Motive)
   lib/
     decimal.ts          zentrale Präzision (40 Stellen, ROUND_HALF_UP)
@@ -54,6 +55,10 @@ src/
   scripts/              Browser-Logik: favorites.ts, calculator.ts, ui.ts
   styles/               tokens.css (Design-Tokens), global.css, components.css
   pages/                Startseite, /rechner/, /kategorie/…, 41 Rechnerseiten, Aufgaben, Ablauf, Lernseiten, Praxisfälle, Favoriten, Meine Berechnungen (+ Zusammenfassung), Über, Impressum, Datenschutz, 404, sitemap.xml, robots.txt, /illustrationen/*.svg
+video/
+  engine.ts             Motion-Engine (Zeit → SVG), Designsystem der Videos
+  scenes/<id>.ts        Szenen je Video · render.ts: Frames (Chromium) → H.264 (ffmpeg)
+public/videos/          gerenderte Webfassungen (720p) und Vorschaubilder
 tests/                  Vitest-Tests mit unabhängig festgelegten Erwartungswerten
 scripts/check-site.mjs  Prüfung des Builds
 docs/                   Formeln, Modellannahmen, Vorlagen, Quellen, Checklisten, Prüfprotokoll
@@ -100,6 +105,10 @@ Break-even, Gewinn, Deckungsbeitrag, der Preisablauf und die Praxisfälle führe
 ## Ergebnisgrafiken
 
 Jeder Rechner und Modus zeigt direkt unter der Hauptzahl „Deine Berechnung als Diagramm“ (aus den aktuellen Eingaben, ohne Klick). Aufbau: Datenaufbereitung `src/calc/charts/<kategorie>.ts` (liefert `ChartSpec`, siehe `src/calc/chart-types.ts`), Zeichnung `src/scripts/charts.ts` (SVG, Tabellenalternative, Punktauswahl per Regler), Einbindung `src/scripts/calculator.ts`. Die Aufbereitung wird je Kategorie erst auf der Rechnerseite nachgeladen (nicht auf der Startseite). Matrix aller Modi: [`docs/DIAGRAMM-MATRIX.md`](docs/DIAGRAMM-MATRIX.md). Neuer Rechner → Eintrag in der passenden Kategoriedatei ergänzen (`tests/charts-data.test.ts` prüft, dass jeder Rechner und Modus eine Grafik liefert).
+
+## Erklärvideos
+
+Sechs animierte Erklärvideos („In 60 Sekunden verstehen“: Break-even, Cashflow, Deckungsbeitrag, Marge & Aufschlag, ROI, Conversion Rate) werden programmatisch aus TypeScript-Szenen gerendert (`video/`), zentrale Konfiguration inkl. Erzähltext in `src/data/videos.ts`. Rendern: `npm run video:render -- all` (benötigt ffmpeg und Playwright-Chromium), Prüfen: `npm run video:check`. Die Videos haben keine Tonspur; der Erzähltext steht im Bild, als Untertitel und als Transkript. Details, Storyboards und offene Punkte: [`docs/VIDEOS.md`](docs/VIDEOS.md).
 
 ## Neuen Rechner ergänzen
 
@@ -196,3 +205,4 @@ Manuell ohne GitHub: `npx wrangler login`, dann `npm run deploy`. Die eigene Dom
 - [`docs/QUELLEN.md`](docs/QUELLEN.md): fachliche Referenzquellen
 - [`docs/VEROEFFENTLICHUNG.md`](docs/VEROEFFENTLICHUNG.md): Checkliste und fehlende Betreiberangaben
 - [`docs/PRUEFUNGEN.md`](docs/PRUEFUNGEN.md): durchgeführte und nicht ausführbare Prüfungen
+- [`docs/VIDEOS.md`](docs/VIDEOS.md): Erklärvideos – Produktion, Designsystem, Storyboards, Integration, offene Punkte

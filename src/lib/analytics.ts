@@ -25,7 +25,9 @@ export type EventName =
   /** Eine Berechnung wurde ausdrücklich gespeichert. */
   | "calc_saved"
   /** Eine gespeicherte Berechnung wurde wieder geöffnet. */
-  | "saved_reopened";
+  | "saved_reopened"
+  /** Ein Erklärvideo wurde gestartet (nur Rechner-ID, keine Werte). */
+  | "video_started";
 
 export interface EventParams {
   calc?: string;

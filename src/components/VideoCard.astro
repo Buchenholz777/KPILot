@@ -1,0 +1,108 @@
+---
+/**
+ * Kompakte Videokarte „In 60 Sekunden verstehen“.
+ * – lädt beim Seitenaufruf nur das kleine Vorschaubild (lazy); das Video wird erst nach Klick eingefügt
+ * – kein Autoplay; Wiedergabe in einem nativen <dialog> (Tastatur, Esc, Vollbild über die Player-Steuerung)
+ * – Untertitel (WebVTT) und Transkript aus derselben Konfiguration (src/data/videos.ts)
+ * Ohne JavaScript führt der Link direkt zur MP4-Datei.
+ */
+import { videoSrc, posterSrc, captionsSrc, displayDuration, type KpiVideo } from '../data/videos';
+import { transcript } from '../lib/videos';
+
+interface Props {
+  video: KpiVideo;
+}
+const { video: v } = Astro.props;
+const dlgId = `video-dlg-${v.id}`;
+const titleId = `video-title-${v.id}`;
+---
+
+<div class="video-card" id="erklaervideo" data-video-card data-src={videoSrc(v)} data-poster={posterSrc(v)} data-vtt={captionsSrc(v)} data-calc={v.calcId}>
+  <a class="video-thumb" href={videoSrc(v)} data-video-open aria-haspopup="dialog" aria-label={`Video abspielen: ${v.title} (${displayDuration(v.duration)}, ohne Ton, mit Untertiteln)`}>
+    <img src={posterSrc(v)} width="1280" height="720" alt="" loading="lazy" decoding="async" />
+    <span class="video-play" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22"><path d="M8 5.5v13l11-6.5z" fill="currentColor"></path></svg></span>
+    <span class="video-dur" aria-hidden="true">{displayDuration(v.duration)}</span>
+  </a>
+  <div class="video-meta">
+    <h3 class="video-heading">In 60 Sekunden verstehen</h3>
+    <p class="video-desc">{v.description}</p>
+    <p class="video-note">{displayDuration(v.duration)} · ohne Ton, Erzähltext im Bild und als Untertitel</p>
+    <details class="video-transcript">
+      <summary>Transkript lesen</summary>
+      {transcript(v).map((p) => <p>{p}</p>)}
+    </details>
+  </div>
+
+  <dialog class="video-dialog" id={dlgId} aria-labelledby={titleId}>
+    <div class="video-dialog-head">
+      <h2 id={titleId} class="video-dialog-title">{v.title}</h2>
+      <button type="button" class="btn btn-secondary video-close" data-video-close>Schließen<span class="sr-only"> (Esc)</span></button>
+    </div>
+    <div class="video-frame" data-video-slot></div>
+    <div class="video-end" data-video-end hidden>
+      <p>Jetzt mit deinen eigenen Zahlen rechnen:</p>
+      <a class="btn btn-primary" href="#rechner" data-video-calc>Jetzt selbst berechnen</a>
+    </div>
+  </dialog>
+</div>
+
+<script>
+  import { track } from '../lib/analytics';
+
+  for (const card of document.querySelectorAll<HTMLElement>('[data-video-card]')) {
+    const open = card.querySelector<HTMLAnchorElement>('[data-video-open]')!;
+    const dlg = card.querySelector<HTMLDialogElement>('dialog')!;
+    const slot = card.querySelector<HTMLElement>('[data-video-slot]')!;
+    const end = card.querySelector<HTMLElement>('[data-video-end]')!;
+    if (typeof dlg.showModal !== 'function') continue; // sehr alte Browser: Link öffnet die MP4-Datei
+
+    const ensureVideo = () => {
+      let video = slot.querySelector('video');
+      if (video) return video;
+      video = document.createElement('video');
+      video.controls = true;
+      video.preload = 'metadata';
+      video.playsInline = true;
+      video.muted = true; // Videos haben keine Tonspur
+      video.poster = card.dataset.poster!;
+      video.setAttribute('aria-label', dlg.querySelector('h2')!.textContent ?? 'Erklärvideo');
+      const src = document.createElement('source');
+      src.src = card.dataset.src!;
+      src.type = 'video/mp4';
+      const track = document.createElement('track');
+      track.kind = 'captions';
+      track.srclang = 'de';
+      track.label = 'Deutsch';
+      track.src = card.dataset.vtt!;
+      video.append(src, track);
+      video.addEventListener('ended', () => {
+        end.hidden = false;
+        end.querySelector<HTMLElement>('a')?.focus();
+      });
+      video.addEventListener('play', () => (end.hidden = true));
+      slot.append(video);
+      return video;
+    };
+
+    open.addEventListener('click', (e) => {
+      e.preventDefault();
+      const video = ensureVideo();
+      end.hidden = true;
+      dlg.showModal();
+      video.play().catch(() => {
+        /* Wiedergabe startet dann über die Player-Steuerung */
+      });
+      track('video_started', { calc: card.dataset.calc });
+    });
+    card.querySelector('[data-video-close]')!.addEventListener('click', () => dlg.close());
+    dlg.addEventListener('close', () => {
+      slot.querySelector('video')?.pause();
+    });
+    // Klick auf den abgedunkelten Hintergrund schließt
+    dlg.addEventListener('click', (e) => {
+      if (e.target === dlg) dlg.close();
+    });
+    // „Jetzt selbst berechnen“: Dialog schließen, dann normaler Sprung zu #rechner (kein Neuladen)
+    card.querySelector('[data-video-calc]')!.addEventListener('click', () => dlg.close());
+  }
+</script>

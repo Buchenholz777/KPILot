@@ -4,6 +4,8 @@ import Base from '../../layouts/Base.astro';
 import PageBand from '../../components/PageBand.astro';
 import { TASKS, taskUrl, type Task } from '../../data/tasks';
 import { TOPIC_BY_ID, topicUrl, displayTitle } from '../../data/registry';
+import { availableVideos } from '../../lib/videos';
+import { posterSrc, displayDuration } from '../../data/videos';
 
 export const getStaticPaths = (() => TASKS.map((t) => ({ params: { slug: t.slug }, props: { task: t } }))) satisfies GetStaticPaths;
 const { task: t } = Astro.props as { task: Task };
@@ -16,6 +18,8 @@ const link = (s: Task['steps'][number]) =>
   s.calc ? `${topicUrl(s.calc)}${s.variant ? `#${s.variant}` : ''}` : s.href!;
 const label = (s: Task['steps'][number]) =>
   s.linkLabel ?? `${displayTitle(TOPIC_BY_ID[s.calc!])}${s.variant ? ' (Modus öffnen)' : ' öffnen'}`;
+// Lernbereich: Erklärvideos (nur tatsächlich gerenderte)
+const videos = t.slug === 'kennzahlen-lernen' ? availableVideos() : [];
 ---
 
 <Base title={`${t.title} – Schritt für Schritt | KPILot`} description={t.promise} crumbs={crumbs}>
@@ -43,6 +47,31 @@ const label = (s: Task['steps'][number]) =>
         }
       </ol>
     </section>
+
+    {
+      videos.length > 0 && (
+        <section class="section" aria-labelledby="visuell">
+          <h2 id="visuell">Kennzahlen visuell verstehen</h2>
+          <p>Kurze Erklärvideos ohne Ton: Erzähltext im Bild, Untertitel und Transkript auf der jeweiligen Rechnerseite. Die Zahlen sind dieselben wie im Beispiel des Rechners.</p>
+          <ul class="video-tiles">
+            {videos.map((v) => (
+              <li class="card video-tile">
+                <a class="video-thumb" href={topicUrl(v.calcId)} tabindex="-1" aria-hidden="true">
+                  <img src={posterSrc(v)} width="1280" height="720" alt="" loading="lazy" decoding="async" />
+                  <span class="video-dur">{displayDuration(v.duration)}</span>
+                </a>
+                <div class="video-tile-body">
+                  <h3>{v.kpi}</h3>
+                  <p>{v.benefit}</p>
+                  <p class="muted">{displayDuration(v.duration)} · Video und Rechner auf einer Seite</p>
+                  <a class="video-tile-link" href={topicUrl(v.calcId)}>Zum {displayTitle(TOPIC_BY_ID[v.calcId])} mit Video</a>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )
+    }
 
     <section class="card content-card" aria-labelledby="grenzen">
       <h2 id="grenzen">Was die Rechner hier nicht leisten</h2>

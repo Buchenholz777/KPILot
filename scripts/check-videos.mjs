@@ -23,11 +23,11 @@ function moovFirst(file) {
 }
 
 function checkVideo(id, file, w, h, duration, maxMB) {
-  if (!existsSync(file)) return fail(id, `${file} fehlt`);
+  if (!existsSync(file)) return void fail(id, `${file} fehlt`);
   const info = probe(file);
   const v = info.streams.filter((s) => s.codec_type === "video");
   const a = info.streams.filter((s) => s.codec_type === "audio");
-  if (v.length !== 1) return fail(id, `${file}: ${v.length} Videospuren`);
+  if (v.length !== 1) return void fail(id, `${file}: ${v.length} Videospuren`);
   const s = v[0];
   if (s.codec_name !== "h264") fail(id, `${file}: Codec ${s.codec_name}`);
   if (s.pix_fmt !== "yuv420p") fail(id, `${file}: Pixelformat ${s.pix_fmt}`);

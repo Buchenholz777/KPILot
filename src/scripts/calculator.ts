@@ -59,9 +59,10 @@ async function init(root: HTMLElement) {
   }).catch(() => undefined);
   let lastChartWidth = 0;
   const chartWidth = () => Math.max(260, Math.min(640, resultEl.clientWidth - 48));
-  const followEl = root.querySelector<HTMLElement>("[data-followups]")!;
-  const followList = followEl.querySelector<HTMLElement>("[data-followup-list]")!;
-  const capacityEl = followEl.querySelector<HTMLElement>("[data-capacity]")!;
+  // Nur vorhanden, wenn der Rechner Folgeschritte bzw. einen Kapazitätsabgleich anbietet.
+  const followEl = root.querySelector<HTMLElement>("[data-followups]");
+  const followList = followEl?.querySelector<HTMLElement>("[data-followup-list]");
+  const capacityEl = followEl?.querySelector<HTMLElement>("[data-capacity]");
   const saveStatusEl = root.querySelector<HTMLElement>("[data-save-status]")!;
   /** Aktuell geöffnete gespeicherte Berechnung (für „Änderungen speichern“). */
   let opened: { id: string; name: string; inputs: RawInputs; variantId: string } | null = null;
@@ -282,7 +283,7 @@ async function init(root: HTMLElement) {
       }
       toolsEl.hidden = true;
       if (transfersEl) transfersEl.hidden = true;
-      followEl.hidden = true;
+      if (followEl) followEl.hidden = true;
       lastOutcome = null;
 
       if (opts.announce)
@@ -423,6 +424,7 @@ async function init(root: HTMLElement) {
   /** Diagrammbereich direkt unter der Hauptzahl; ohne geladene Aufbereitung zunächst der Leerzustand. */
   function chartHtml(): string {
     if (!lastOutcome) return chartPlaceholder();
+    track("chart_shown", { calc: def.id, variant: variant.id });
     lastChartWidth = chartWidth();
     return renderChartArea(lastOutcome, { width: chartWidth(), selection: chartSel, openTables });
   }
@@ -449,17 +451,18 @@ async function init(root: HTMLElement) {
   /* ---------- Nächste Schritte ---------- */
   let lastFollowSig = "";
   function renderFollowUps(r: CalcResult) {
+    if (!followEl || !followList) return;
     const list = (def.followUps ?? []).filter(
       (f) => (!f.variantId || f.variantId === variant.id) && f.when(last.inputs, r),
     );
     // Unveränderte Liste nicht neu aufbauen: sonst geht ein Klick verloren, wenn der Fokuswechsel aus dem Eingabefeld gleichzeitig neu berechnet
     const sig = `${variant.id}:${list.map((f) => f.id).join("|")}`;
     if (sig === lastFollowSig) {
-      followEl.hidden = list.length === 0;
+      followEl!.hidden = list.length === 0;
       return;
     }
     lastFollowSig = sig;
-    capacityEl.hidden = true;
+    if (capacityEl) capacityEl.hidden = true;
     followList.replaceChildren(
       ...list.map((f) => {
         const li = document.createElement("li");
@@ -512,7 +515,7 @@ async function init(root: HTMLElement) {
       const formB = scnEl.querySelector<HTMLFormElement>('[data-scn="B"]')!;
       (a.focus.map((k) => formB.elements.namedItem(k) as HTMLElement | null).find(Boolean))?.focus();
     } else if (a.kind === "capacity") {
-      if (!last.inputs || !last.result) return;
+      if (!last.inputs || !last.result || !capacityEl) return;
       const qty = a.quantity(last.inputs, last.result);
       if (!qty) return;
       capacityEl.hidden = false;
@@ -722,6 +725,7 @@ async function init(root: HTMLElement) {
       const text = resultText();
       try {
         await navigator.clipboard.writeText(text);
+        track("result_copied", { calc: def.id, variant: variant.id });
         toast("Ergebnis in die Zwischenablage kopiert.");
       } catch {
         const ta = document.createElement("textarea");
@@ -730,6 +734,7 @@ async function init(root: HTMLElement) {
         ta.select();
         const ok = document.execCommand("copy");
         ta.remove();
+        if (ok) track("result_copied", { calc: def.id, variant: variant.id });
         toast(
           ok
             ? "Ergebnis in die Zwischenablage kopiert."

@@ -53,9 +53,6 @@ export const kostenTopics: Topic[] = [
       "Ein Produkt bzw. eine gleichartige Leistung.",
     ],
     related: ["break-even", "gewinn", "marge", "clv"],
-    seoTitle: "Deckungsbeitrag berechnen – Stückdeckungsbeitrag und DB-Quote",
-    seoDescription:
-      "Deckungsbeitrag berechnen: Stückdeckungsbeitrag, Deckungsbeitragsquote und Gesamtdeckungsbeitrag mit Rechenweg – und Übernahme in den Break-even-Rechner.",
   },
   {
     id: "break-even",
@@ -111,9 +108,6 @@ export const kostenTopics: Topic[] = [
       "Eine gleichartige Leistung.",
     ],
     related: ["deckungsbeitrag", "gewinn", "stueckkosten", "marge"],
-    seoTitle: "Break-even-Rechner: Gewinnschwelle berechnen mit Grafik",
-    seoDescription:
-      "Break-even berechnen: Gewinnschwelle in Stück und Euro, aufgerundete Mindeststückzahl, Grafik, Tabelle und Vergleich zweier Szenarien.",
   },
   {
     id: "gewinn",
@@ -167,9 +161,6 @@ export const kostenTopics: Topic[] = [
       "Ganze Stückzahlen.",
     ],
     related: ["break-even", "deckungsbeitrag", "ebit", "stueckkosten"],
-    seoTitle: "Gewinnrechner: Gewinn und Menge für Zielgewinn berechnen",
-    seoDescription:
-      "Gewinn bei gegebener Stückzahl berechnen oder die nötige Absatzmenge für einen Zielgewinn ermitteln – mit Szenariovergleich A/B und Rechenweg.",
   },
   {
     id: "marge",
@@ -220,9 +211,6 @@ export const kostenTopics: Topic[] = [
       "Die Kostenbasis ist klar definiert (z. B. Einstandspreis).",
     ],
     related: ["zielpreis", "deckungsbeitrag", "rabatt", "umsatzrendite"],
-    seoTitle: "Margenrechner: Marge und Aufschlag berechnen",
-    seoDescription:
-      "Marge und Aufschlag berechnen und unterscheiden: Handelsspanne in Prozent vom Verkaufspreis und Aufschlag auf die Kosten, mit Rechenweg.",
   },
   {
     id: "zielpreis",
@@ -269,9 +257,6 @@ export const kostenTopics: Topic[] = [
       "Rohmarge vor weiteren Betriebskosten.",
     ],
     related: ["marge", "deckungsbeitrag", "zuschlag", "stundensatz"],
-    seoTitle: "Verkaufspreis berechnen aus Zielmarge – auf Cent genau",
-    seoDescription:
-      "Verkaufspreis aus Kosten und gewünschter Marge berechnen, auf Cent aufgerundet, mit tatsächlich erreichter Marge und typischem Fehler beim Aufschlag.",
   },
   {
     id: "stueckkosten",
@@ -317,9 +302,6 @@ export const kostenTopics: Topic[] = [
       "Fixkosten und Menge im selben Zeitraum.",
     ],
     related: ["break-even", "zuschlag", "deckungsbeitrag", "stundensatz"],
-    seoTitle: "Stückkosten berechnen – Gesamtkosten und Kosten je Stück",
-    seoDescription:
-      "Gesamtkosten und Stückkosten aus Fixkosten, variablen Kosten und Menge berechnen, mit Fixkostenanteil je Stück und Hinweisen zur Divisionskalkulation.",
   },
   {
     id: "zuschlag",
@@ -380,9 +362,6 @@ export const kostenTopics: Topic[] = [
       "Zuschlagssätze stammen aus der eigenen Kostenstellenrechnung.",
     ],
     related: ["stueckkosten", "zielpreis", "stundensatz", "deckungsbeitrag"],
-    seoTitle: "Zuschlagskalkulation online: Herstellkosten und Selbstkosten",
-    seoDescription:
-      "Zuschlagskalkulation berechnen: Material- und Fertigungsgemeinkosten, Herstellkosten, Verwaltungs- und Vertriebszuschlag bis zu den Selbstkosten – oder Zuschlagssatz ermitteln.",
   },
   {
     id: "stundensatz",
@@ -424,9 +403,6 @@ export const kostenTopics: Topic[] = [
     ],
     assumptions: ["Kosten und Stunden beziehen sich auf dieselbe Periode."],
     related: ["zuschlag", "stueckkosten", "zielpreis", "auslastung"],
-    seoTitle: "Stundenkostensatz berechnen – Kosten je abrechenbarer Stunde",
-    seoDescription:
-      "Stundenkostensatz berechnen: Periodenkosten auf abrechenbare Stunden verteilen, mit Hinweisen zu Urlaub, Leerlauf und dem Unterschied zum Verkaufspreis.",
   },
   {
     id: "rabatt-absatz",
@@ -482,8 +458,5 @@ export const kostenTopics: Topic[] = [
       "Nettopreise ohne Umsatzsteuer; Absatz im selben Zeitraum.",
     ],
     related: ["rabatt", "deckungsbeitrag", "gewinn", "break-even"],
-    seoTitle: "Rabatt-Rechner: Wie viel Mehrabsatz braucht ein Rabatt?",
-    seoDescription:
-      "Berechne, um wie viel Prozent der Absatz steigen muss, damit ein Rabatt denselben Gesamtdeckungsbeitrag bringt – mit Grafik, Rechenweg und Grenzfällen.",
   },
 ];

@@ -14,8 +14,8 @@ const words = ['', 'Ein', 'Zwei', 'Drei', 'Vier', 'Fünf', 'Sechs'];
 ---
 
 <Base
-  title={`Praxisfälle: ${cases.map((c) => c.sector).join(', ')} | KPILot`}
-  description={`${N} durchgerechnete, ausdrücklich fiktive Fälle mit Ausgangsfrage, Annahmen, Rechnung, Ergebnis, Variantenvergleich und nächstem Prüfschritt – zum Weiterrechnen mit deinen Zahlen.`}
+  title="Praxisfälle mit Kennzahlen: durchgerechnet | KPILot"
+  description={`${N} durchgerechnete, fiktive Praxisfälle aus ${cases.map((c) => c.sector).join(', ')} – mit Annahmen, Rechenweg und Variantenvergleich.`}
   crumbs={crumbs}
 >
   <PageBand crumbs={crumbs} title="Praxisfälle" lead={`${words[N] ?? N} vollständig durchgerechnete Fälle. Alle Annahmen sind ausdrücklich fiktiv; alle Zahlen, Tabellen und Übernahmen entstehen aus denselben Falldaten und Rechenfunktionen wie die Rechner.`} />

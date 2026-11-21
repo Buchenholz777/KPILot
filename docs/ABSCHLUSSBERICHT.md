@@ -10,7 +10,7 @@ Umgesetzt wurden: zentrale Betreiberkonfiguration mit ehrlicher Offen-Liste und 
 
 | Abschnitt | Status |
 |---|---|
-| 3.1 Impressum/Datenschutz | **umgesetzt, Prüfung konkret eingeschränkt** – technisch vollständig, Fakten blockiert (siehe `docs/BETREIBER-OFFEN.md`); Entwurfshinweis bleibt absichtlich, bis der Betreiber bestätigt |
+| 3.1 Impressum/Datenschutz | **umgesetzt** – Betreiberangaben am 05.11.2026 bestätigt (siehe `docs/BETREIBER-OFFEN.md`), Hinweis „in Vorbereitung“ entfällt |
 | 3.2 Nutzungsmessung/Datenverarbeitung | umgesetzt und geprüft (Browser-Netzwerkprüfung; Texte angeglichen) |
 | 4.1 Zeiträume im Vergleich | umgesetzt und geprüft (Tests + Browser) |
 | 4.2 Margenerklärung | umgesetzt und geprüft |

@@ -34,7 +34,7 @@ const errorsOf = (p, list) => {
   await p.goto(BASE + "/", { waitUntil: "networkidle" });
   ok(await p.locator("[data-consent]").isVisible(), "Einwilligungsabfrage beim Erstbesuch sichtbar");
   ok(external.length === 0, "vor Zustimmung keine Anfragen an Google");
-  ok((await p.locator("h1").innerText()).includes("Preise kalkulieren"), "Startseite: neue Hauptüberschrift");
+  ok((await p.locator("h1").innerText()).includes("KPI-Rechner"), "Startseite: Hauptüberschrift");
   ok((await p.locator(".task-tile").count()) === 5, "Startseite: fünf Aufgabeneinstiege");
   // Suche mit Tippfehler
   await p.fill("[data-search]", "Deckungsbeitarg");

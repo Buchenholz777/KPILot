@@ -27,7 +27,19 @@ export type EventName =
   /** Eine gespeicherte Berechnung wurde wieder geöffnet. */
   | "saved_reopened"
   /** Ein Erklärvideo wurde gestartet (nur Rechner-ID, keine Werte). */
-  | "video_started";
+  | "video_started"
+  /** Ein Rechner wurde in der Übersicht oder im Schnellzugriff angeklickt (calc = Ziel). */
+  | "calc_selected"
+  /** Ein „Verwandter Rechner“ wurde angeklickt (calc = Ziel). */
+  | "related_clicked"
+  /** Eine Suche in der Übersicht lieferte erstmals Treffer (ohne Suchtext). */
+  | "search_used"
+  /** Zu einem Ergebnis wurde erstmals ein Diagramm angezeigt. */
+  | "chart_shown"
+  /** Das Ergebnis wurde kopiert. */
+  | "result_copied"
+  /** Ein Rechner wurde zu den Favoriten hinzugefügt (calc = Rechner ohne Modus). */
+  | "favorite_added";
 
 export interface EventParams {
   calc?: string;

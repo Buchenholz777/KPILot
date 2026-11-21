@@ -1,0 +1,123 @@
+---
+/**
+ * Schnellzugriff auf häufig gebrauchte Rechner (redaktionelle Auswahl, keine gemessene Beliebtheit).
+ * Alle Rechner stehen darunter vollständig im Katalog.
+ */
+import { TOPIC_BY_ID, topicUrl, displayTitle } from '../data/registry';
+import CategoryIcon from './CategoryIcon.astro';
+
+const IDS = ['marge', 'break-even', 'deckungsbeitrag', 'cashflow', 'stundensatz', 'rabatt'];
+const items = IDS.map((id) => TOPIC_BY_ID[id]).filter(Boolean);
+---
+
+<section class="quick" aria-labelledby="quick-h">
+  <h2 id="quick-h">Schnellzugriff</h2>
+  <ul class="quick-list">
+    {
+      items.map((t) => (
+        <li>
+          <a class="quick-item" href={topicUrl(t)} data-cat={t.category}>
+            <span class="quick-icon" aria-hidden="true"><CategoryIcon id={t.category} /></span>
+            <span class="quick-text">
+              <strong>{displayTitle(t)}</strong>
+              <span>{t.question}</span>
+            </span>
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</section>
+
+<style>
+  .quick {
+    margin-block: var(--space-4) var(--space-5);
+  }
+  .quick h2 {
+    margin: 0 0 var(--space-3);
+    font-size: var(--text-md);
+  }
+  .quick-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-3);
+  }
+  @media (min-width: 48rem) {
+    .quick-list {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+  @media (min-width: 72rem) {
+    .quick-list {
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+    }
+  }
+  .quick-item {
+    display: flex;
+    gap: var(--space-3);
+    align-items: flex-start;
+    height: 100%;
+    min-height: var(--touch);
+    padding: var(--space-3);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+    color: var(--color-text);
+    text-decoration: none;
+    box-shadow: var(--shadow-xs);
+    transition:
+      border-color 0.15s,
+      box-shadow 0.15s,
+      transform 0.15s;
+  }
+  .quick-item:hover {
+    border-color: var(--color-accent);
+    box-shadow: var(--shadow-card-hover);
+    transform: translateY(-1px);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .quick-item {
+      transition: none;
+    }
+    .quick-item:hover {
+      transform: none;
+    }
+  }
+  .quick-icon {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: var(--radius-sm);
+    background: var(--color-accent-soft);
+    color: var(--color-accent-text);
+  }
+  .quick-text {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+  }
+  .quick-text strong {
+    font-size: var(--text-sm);
+    line-height: 1.25;
+  }
+  .quick-text span {
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  @media (max-width: 40rem) {
+    .quick-text span {
+      display: none;
+    }
+  }
+</style>

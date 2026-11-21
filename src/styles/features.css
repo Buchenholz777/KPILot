@@ -1287,6 +1287,7 @@ body.print-flow-summary .flow-nav {
 }
 /* Suchmodus: Treffer direkt unter dem Suchfeld */
 [data-catalog][data-searching] .home-tasks,
+[data-catalog][data-searching] .quick,
 [data-catalog][data-searching] .favs-row {
   display: none;
 }

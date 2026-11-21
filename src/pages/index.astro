@@ -5,9 +5,9 @@ import Favorites from '../components/Favorites.astro';
 import KpiInfo from '../components/KpiInfo.astro';
 import TaskTiles from '../components/TaskTiles.astro';
 import HomeExample from '../components/HomeExample.astro';
+import QuickAccess from '../components/QuickAccess.astro';
 import { TOPICS } from '../data/registry';
 import { SITE_NAME, SITE_DESCRIPTION } from '../config/site';
-import { HOME_FAQ } from '../data/faq';
 
 const site = Astro.site;
 const websiteLd = site
@@ -15,26 +15,41 @@ const websiteLd = site
       { '@context': 'https://schema.org', '@type': 'WebSite', name: SITE_NAME, url: site.href, inLanguage: 'de-DE', description: SITE_DESCRIPTION },
       {
         '@context': 'https://schema.org',
-        '@type': 'FAQPage',
-        mainEntity: HOME_FAQ.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),
+        '@type': 'WebApplication',
+        name: 'KPILot',
+        url: site.href,
+        applicationCategory: 'BusinessApplication',
+        operatingSystem: 'Alle (läuft im Webbrowser)',
+        browserRequirements: 'Benötigt JavaScript',
+        inLanguage: 'de-DE',
+        description: `Kostenloser KPI Rechner: ${TOPICS.length} Rechner für Key Performance Indicators wie Conversion Rate, ROI, CAC, CLV, Marge, Deckungsbeitrag und Break-even – mit Formel, Erklärung und nachvollziehbarem Rechenweg. Alle Berechnungen laufen im Browser, ohne Anmeldung.`,
+        image: new URL('/og-image.png', site).href,
+        offers: { '@type': 'Offer', price: '0', priceCurrency: 'EUR' },
       },
     ]
   : [];
 ---
 
 <Base
-  title={`KPI Rechner – Preise kalkulieren, Wirtschaftlichkeit prüfen, Kennzahlen verstehen | ${SITE_NAME}`}
-  description={`Kostenlose Rechner für Preis, Rabatt, Break-even, Gewinn, Werbung und Liquidität – ${TOPICS.length} Rechner mit nachvollziehbarem Rechenweg, Variantenvergleich und Weiterverwendung der Werte.`}
+  title={`KPI-Rechner kostenlos: ${TOPICS.length} Online-Rechner mit Formeln | ${SITE_NAME}`}
+  description={`Berechne deine wichtigsten Unternehmenskennzahlen kostenlos: Marge, ROI, Break-even, Cashflow und mehr. ${TOPICS.length} Online-Rechner mit Formeln und Beispielen.`}
   jsonLd={websiteLd}
 >
   <Catalog mode="home">
     <Fragment slot="intro">
-      <h1 class="hero-title">Preise kalkulieren. <span class="accent">Wirtschaftlichkeit prüfen. Kennzahlen verstehen.</span></h1>
+      <h1 class="hero-title">KPI-Rechner: <span class="accent">Berechnen statt schätzen.</span></h1>
       <p class="hero-sub">
-        {TOPICS.length} kostenlose Rechner mit nachvollziehbarem Rechenweg. Vergleiche Varianten und nimm deine Werte in den nächsten Rechner mit.
+        Kostenlose Online-Rechner für Marge, Gewinnschwelle, Deckungsbeitrag, Cashflow und viele weitere betriebswirtschaftliche Kennzahlen – einfach erklärt, direkt berechnet.
       </p>
+      <ul class="hero-trust" aria-label="Vorteile">
+        <li>Kostenlos</li>
+        <li>Ohne Anmeldung</li>
+        <li>Formeln und Rechenweg</li>
+        <li>Berechnung im Browser</li>
+      </ul>
     </Fragment>
     <Fragment slot="between">
+      <QuickAccess />
       <section class="home-tasks" aria-labelledby="aufgaben-h">
         <div class="home-tasks-head">
           <h2 id="aufgaben-h">Womit möchtest du starten?</h2>

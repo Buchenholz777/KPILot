@@ -38,7 +38,7 @@ const qId = `q-${mode}`;
               autocomplete="off"
               enterkeyhint="search"
               spellcheck="false"
-              placeholder="z. B. Gewinnschwelle, Marge, Cashflow, CPC …"
+              placeholder="Was möchtest du berechnen? Zum Beispiel Marge, Gewinn oder Break-even …"
               aria-describedby={`${qId}-hint`}
               data-search
             />
@@ -237,6 +237,7 @@ const qId = `q-${mode}`;
 
       empty.hidden = n > 0;
       if (!n && q) track('search_no_results');
+      if (n && q) track('search_used');
       if (!n) {
         const elsewhere = v.narrowed ? v.globalCount : 0;
         emptyAll.hidden = !elsewhere;

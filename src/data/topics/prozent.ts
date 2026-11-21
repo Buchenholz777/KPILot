@@ -51,10 +51,6 @@ export const prozentTopics: Topic[] = [
       "Ein Grundwert von 0 lässt keinen Prozentsatz zu.",
     ],
     related: ["veraenderung", "rabatt", "prozentpunkte", "dreisatz"],
-    seoTitle:
-      "Prozentrechner: Prozentwert, Prozentsatz und Grundwert berechnen",
-    seoDescription:
-      "Prozent berechnen mit Erklärung: Prozentwert, Prozentsatz oder Grundwert ermitteln, mit Rechenweg, Beispiel und Hinweisen zu Werten über 100 %.",
   },
   {
     id: "veraenderung",
@@ -105,9 +101,6 @@ export const prozentTopics: Topic[] = [
       "Bei einem Ausgangswert von 0 ist nur die absolute Veränderung bestimmbar.",
     ],
     related: ["prozentpunkte", "cagr", "soll-ist", "prozent"],
-    seoTitle: "Prozentuale Veränderung berechnen – Steigerung und Rückgang",
-    seoDescription:
-      "Prozentuale Veränderung berechnen: absolute und relative Veränderung zwischen zwei Werten, mit Rechenweg und Hinweisen zu Ausgangswert 0 und negativen Werten.",
   },
   {
     id: "rabatt",
@@ -162,10 +155,6 @@ export const prozentTopics: Topic[] = [
       "Bei 100 % Rabatt lässt sich der ursprüngliche Preis nicht zurückrechnen.",
     ],
     related: ["prozent", "marge", "zielpreis", "veraenderung"],
-    seoTitle:
-      "Rabattrechner: Preis nach Rabatt und ursprünglichen Preis berechnen",
-    seoDescription:
-      "Rabatt berechnen: Endpreis nach Rabatt oder Erhöhung, Rückrechnung des ursprünglichen Preises und zwei aufeinanderfolgende Rabatte richtig kombinieren.",
   },
   {
     id: "prozentpunkte",
@@ -213,10 +202,6 @@ export const prozentTopics: Topic[] = [
       "Bei einem alten Wert von 0 % ist keine relative Veränderung bestimmbar.",
     ],
     related: ["veraenderung", "prozent", "conversion"],
-    seoTitle:
-      "Prozentpunkte berechnen – Unterschied zu Prozent einfach erklärt",
-    seoDescription:
-      "Prozentpunkte berechnen und von Prozent unterscheiden: Differenz zweier Prozentwerte und relative Veränderung mit Beispiel 5 % → 6 %.",
   },
   {
     id: "dreisatz",
@@ -266,9 +251,6 @@ export const prozentTopics: Topic[] = [
       "Der gewählte Zusammenhang (direkt oder umgekehrt) gilt im ganzen Bereich.",
     ],
     related: ["prozent", "durchschnitt", "stueckkosten"],
-    seoTitle: "Dreisatz-Rechner: direkt und umgekehrt proportional berechnen",
-    seoDescription:
-      "Dreisatz online berechnen: direkt und umgekehrt proportional, mit Rechenweg über eine Einheit und Beispielen zu Preis und Arbeitszeit.",
   },
   {
     id: "durchschnitt",
@@ -311,9 +293,6 @@ export const prozentTopics: Topic[] = [
       "Gewichte sind nicht negativ, mindestens eines ist größer als 0.",
     ],
     related: ["dreisatz", "prozent", "cagr"],
-    seoTitle: "Gewichteter Durchschnitt – Rechner mit beliebig vielen Werten",
-    seoDescription:
-      "Gewichteten Durchschnitt berechnen: Werte und Gewichte eintragen, Rechenweg sehen und verstehen, warum der einfache Mittelwert irreführen kann.",
   },
   {
     id: "cagr",
@@ -362,8 +341,5 @@ export const prozentTopics: Topic[] = [
       "Gleichmäßiges, zusammengesetztes Wachstum als Modell.",
     ],
     related: ["veraenderung", "roi", "durchschnitt"],
-    seoTitle: "CAGR-Rechner: durchschnittliches jährliches Wachstum berechnen",
-    seoDescription:
-      "CAGR berechnen: gleichmäßige jährliche Wachstumsrate zwischen Anfangs- und Endwert, mit Rechenweg und Erklärung des geglätteten Modells.",
   },
 ];

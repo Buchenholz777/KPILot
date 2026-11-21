@@ -22,6 +22,8 @@ export interface Task {
   short: string;
   /** Nutzenversprechen auf der Zielseite. */
   promise: string;
+  /** Optional: kürzere Meta-Description (sonst wird `promise` verwendet). */
+  metaDescription?: string;
   /** Typische Fragen, die diese Aufgabe beantwortet. */
   questions: string[];
   steps: TaskStep[];
@@ -120,6 +122,8 @@ export const TASKS: Task[] = [
     slug: "kennzahlen-lernen",
     title: "Kennzahlen lernen",
     short: "Begriff, Beispiel, eigene Rechnung – in dieser Reihenfolge",
+    metaDescription:
+      "Kennzahlen Schritt für Schritt lernen: erst der Begriff, dann ein durchgerechnetes Beispiel, dann die eigene Berechnung – mit klaren Grenzen der Aussage.",
     promise:
       "Lerne Kennzahlen in sinnvoller Reihenfolge: erst der Begriff, dann ein durchgerechnetes Beispiel, dann deine eigene Berechnung – mit klaren Grenzen, damit du Ergebnisse richtig deutest.",
     questions: ["Was ist der Unterschied zwischen Marge und Deckungsbeitrag?", "Welche Kennzahl beantwortet meine Frage?", "Wie gehe ich mit unsicheren Annahmen um?"],

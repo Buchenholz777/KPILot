@@ -7,7 +7,11 @@ import {
   cleanParams,
 } from "../src/lib/analytics";
 import * as st from "../src/lib/storage";
-import { OPERATOR, openOperatorItems, operatorComplete } from "../src/config/operator";
+import {
+  OPERATOR,
+  openOperatorItems,
+  operatorComplete,
+} from "../src/config/operator";
 
 class Mem implements st.StorageLike {
   m = new Map<string, string>();
@@ -28,7 +32,8 @@ beforeEach(() => {
   resetAnalyticsForTests();
   sent = [];
 });
-const enable = () => enableAnalytics((name, params) => sent.push({ name, params }));
+const enable = () =>
+  enableAnalytics((name, params) => sent.push({ name, params }));
 
 describe("Erfolgsmessung", () => {
   it("sendet ohne Einwilligung nichts – auch wenn das Skript bereit wäre", () => {
@@ -45,10 +50,15 @@ describe("Erfolgsmessung", () => {
   it("sendet nach Einwilligung, aber jedes Ereignis je Rechner und Modus nur einmal", () => {
     st.setConsent("granted");
     enable();
-    expect(track("calc_started", { calc: "break-even", variant: "standard" })).toBe(true);
-    for (let i = 0; i < 20; i++) track("calc_started", { calc: "break-even", variant: "standard" });
+    expect(
+      track("calc_started", { calc: "break-even", variant: "standard" }),
+    ).toBe(true);
+    for (let i = 0; i < 20; i++)
+      track("calc_started", { calc: "break-even", variant: "standard" });
     expect(sent).toHaveLength(1);
-    expect(track("calc_started", { calc: "gewinn", variant: "menge" })).toBe(true);
+    expect(track("calc_started", { calc: "gewinn", variant: "menge" })).toBe(
+      true,
+    );
     expect(sent).toHaveLength(2);
   });
   it("Widerruf stoppt die Messung sofort", () => {
@@ -66,22 +76,61 @@ describe("Erfolgsmessung", () => {
       q: "Deckungsbeitarg",
       value: "3000",
     } as unknown as Parameters<typeof cleanParams>[0];
-    expect(cleanParams(dirty)).toEqual({ calc: "break-even", task: "verkaufspreis" });
+    expect(cleanParams(dirty)).toEqual({
+      calc: "break-even",
+      task: "verkaufspreis",
+    });
+  });
+});
+
+describe("Navigations- und Nutzungsereignisse", () => {
+  it("neue Ereignisse senden nur Rechnerkennungen, nie Freitext", () => {
+    st.setConsent("granted");
+    enable();
+    track("calc_selected", { calc: "marge" });
+    track("related_clicked", { calc: "break-even" });
+    track("search_used");
+    track("chart_shown", { calc: "marge", variant: "standard" });
+    track("result_copied", { calc: "marge", variant: "standard" });
+    track("favorite_added", { calc: "marge" });
+    expect(sent.map((s) => s.name)).toEqual([
+      "calc_selected",
+      "related_clicked",
+      "search_used",
+      "chart_shown",
+      "result_copied",
+      "favorite_added",
+    ]);
+    expect(sent[2].params).toEqual({});
+    // Eingeschleuste Werte werden verworfen
+    track("result_copied", { calc: "Marge 12,5 %" as never, variant: "100 €" as never });
+    expect(sent[sent.length - 1].params).toEqual({});
+  });
+  it("search_used und chart_shown zählen je Seitenaufruf nur einmal", () => {
+    st.setConsent("granted");
+    enable();
+    for (let i = 0; i < 5; i++) {
+      track("search_used");
+      track("chart_shown", { calc: "roi", variant: "standard" });
+    }
+    expect(sent).toHaveLength(2);
   });
 });
 
 describe("Betreiberangaben", () => {
-  it("unbestätigte Angaben werden als offen ausgewiesen, nichts gilt als fertig", () => {
-    expect(operatorComplete()).toBe(false);
-    const keys = openOperatorItems().map((i) => i.key);
-    expect(keys).toContain("name");
-    expect(keys).toContain("legalReview");
-    expect(keys).toContain("analyticsRetention");
+  it("alle Pflichtangaben sind vom Betreiber bestätigt (kein Hinweis „in Vorbereitung“)", () => {
+    expect(openOperatorItems()).toEqual([]);
+    expect(operatorComplete()).toBe(true);
   });
-  it("erfundene Fakten sind ausgeschlossen: Fehlende Werte bleiben leer", () => {
-    expect(OPERATOR.analyticsRetention.value).toBeUndefined();
-    expect(OPERATOR.analyticsTransferBasis.value).toBeUndefined();
-    expect(OPERATOR.supervisoryAuthority.value).toBeUndefined();
-    expect(OPERATOR.legalReview.value).toBeUndefined();
+  it("bestätigte Kontaktdaten sind gesetzt", () => {
+    expect(OPERATOR.name.value).toBe("Alexander Bandel");
+    expect(OPERATOR.email.value).toBe("alexbundle2@gmail.com");
+    expect(OPERATOR.city.value).toBe("33034 Brakel");
+  });
+  it("bestätigte Angaben ohne Wert bedeuten „nicht zutreffend“ und erscheinen nicht", () => {
+    for (const k of ["legalForm", "register", "vatId", "phone"] as const) {
+      expect(OPERATOR[k].confirmed, k).toBe(true);
+      expect(OPERATOR[k].value, k).toBeUndefined();
+    }
   });
 });

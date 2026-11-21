@@ -26,6 +26,8 @@ export type EventName =
   | "calc_saved"
   /** Eine gespeicherte Berechnung wurde wieder geöffnet. */
   | "saved_reopened"
+  /** Ein Erklärvideo wurde gestartet (nur Rechner-ID, keine Werte). */
+  | "video_started"
   /** Ein Rechner wurde in der Übersicht oder im Schnellzugriff angeklickt (calc = Ziel). */
   | "calc_selected"
   /** Ein „Verwandter Rechner“ wurde angeklickt (calc = Ziel). */

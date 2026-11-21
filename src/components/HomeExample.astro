@@ -3,6 +3,8 @@ import { getVariant } from '../calc/all';
 import { runExample } from '../calc/engine';
 import { formatValue } from '../lib/number';
 import { topicUrl } from '../data/registry';
+import { buildCases } from '../data/cases';
+const caseCount = buildCases().length;
 /** Kurzes, vollständiges Praxisbeispiel – die Werte stammen aus denselben Rechenfunktionen wie der Rechner. */
 const v = getVariant('rabatt-absatz', 'prozent');
 const r = runExample(v);
@@ -27,7 +29,7 @@ const ok = r.status === 'ok' ? r : undefined;
         </p>
         <p class="step-links">
           <a class="btn btn-primary" href={`${topicUrl('rabatt-absatz')}#beispiel`}>Dieses Beispiel im Rechner öffnen</a>
-          <a href="/praxisfaelle/">Alle drei Praxisfälle ansehen</a>
+          <a href="/praxisfaelle/">Alle {caseCount} Praxisfälle ansehen</a>
         </p>
       </div>
     </section>

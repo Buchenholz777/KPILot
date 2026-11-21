@@ -1,4 +1,4 @@
-import type { CalcDef, CalcResult, Out } from "../types";
+import type { CalcDef, CalcResult, Out, ResultComparison } from "../types";
 import { D, val, opt, out, det, eur, pct, undef, formatValue, toInput } from "../helpers";
 import type { Decimal } from "../../lib/decimal";
 
@@ -26,6 +26,8 @@ export function adEconomics(u: Decimal, k: Decimal, quotePct: Decimal) {
   const minRoas = q.gt(0) ? D(1).div(q) : undefined;
   return { dbBefore, after, roas, minRoas };
 }
+
+const eurS = (d: Decimal, signed = false) => formatValue(d, "money", undefined, signed);
 
 const def: CalcDef = {
   id: "roas",
@@ -109,7 +111,7 @@ const def: CalcDef = {
           notes.unshift("Bei 0 € Werbekosten ist der ROAS nicht definiert. Die übrigen Werte sind trotzdem berechnet.");
         }
         if (m.minRoas) {
-          extra.push(out("Mindest-ROAS zur Deckung der Werbekosten", m.minRoas, "factor"));
+          extra.push(out("Mindest-ROAS zur Deckung der Werbekosten", m.minRoas, "factor4"));
           steps.push(`Mindest-ROAS = 1 / Quote = 1 / ${formatValue(qp.div(100), "number")} = ${formatValue(m.minRoas, "number")}`);
           if (m.roas) {
             const gap = m.roas.sub(m.minRoas);
@@ -122,16 +124,33 @@ const def: CalcDef = {
               : "Bei 0 % Deckungsbeitragsquote bleibt vom Umsatz nichts übrig, um Werbung zu bezahlen: Ein Mindest-ROAS ist nicht definiert.",
           );
         }
+        let comparison: ResultComparison | undefined;
         if (altp) {
           const a = adEconomics(u, k, altp);
+          const diff = a.after.sub(m.after);
+          const fx = (x?: Decimal) => (x ? formatValue(x, "factor4") : "nicht definiert");
           extra.push(
-            det(out(`Beitrag nach Werbung bei ${pct(altp)} Quote`, a.after, "money", undefined, true)),
-            det(out("Veränderung gegenüber deiner Quote", a.after.sub(m.after), "money", undefined, true)),
+            out("Alternative Quote: Deckungsbeitrag vor Werbekosten", a.dbBefore, "money"),
+            out("Alternative Quote: Beitrag nach Werbekosten", a.after, "money", undefined, true),
+            out("Alternative minus aktuelle Berechnung", diff, "money", undefined, true),
           );
-          if (a.minRoas) extra.push(det(out(`Mindest-ROAS bei ${pct(altp)} Quote`, a.minRoas, "factor")));
+          if (a.minRoas) extra.push(out("Alternative Quote: Mindest-ROAS", a.minRoas, "factor4"));
           steps.push(
-            `Alternative Quote ${pct(altp)}: Beitrag nach Werbung = ${eur(u)} × ${pct(altp)} − ${eur(k)} = ${eur(a.after)}`,
+            `Alternative Quote ${pct(altp)}: Deckungsbeitrag vor Werbung = ${eur(u)} × ${pct(altp)} = ${eur(a.dbBefore)}; Beitrag nach Werbung = ${eur(a.dbBefore)} − ${eur(k)} = ${eur(a.after)}`,
+            `Alternative minus aktuelle Berechnung: ${eur(a.after)} − ${eur(m.after)} = ${eurS(diff, true)}`,
           );
+          comparison = {
+            title: "Aktuelle Quote und Alternative im Vergleich",
+            head: ["Größe", `Aktuell: ${pct(qp)}`, `Alternative: ${pct(altp)}`],
+            rows: [
+              ["Deckungsbeitrag vor Werbung", eur(m.dbBefore), eur(a.dbBefore)],
+              ["Werbekosten", eur(k), eur(k)],
+              ["Beitrag nach Werbung", eurS(m.after, true), eurS(a.after, true)],
+              ["ROAS (tatsächlich)", m.roas ? formatValue(m.roas, "factor") : "nicht definiert", a.roas ? formatValue(a.roas, "factor") : "nicht definiert"],
+              ["Mindest-ROAS", fx(m.minRoas), fx(a.minRoas)],
+            ],
+            summary: `Alternative minus aktuelle Berechnung: ${eurS(diff, true)}. ${diff.isZero() ? "Der Beitrag nach Werbung bleibt gleich." : `Bei der alternativen Quote ${diff.isNegative() ? "sinkt" : "steigt"} der Beitrag nach Werbung um ${eur(diff.abs())}.`} Das ist eine Rechnung mit deiner Annahme, keine Vorhersage.`,
+          };
         }
         const positive = m.after.gt(0);
         const result: CalcResult = {
@@ -145,6 +164,7 @@ const def: CalcDef = {
               : `Der Deckungsbeitrag (${eur(m.dbBefore)}) deckt die Werbekosten (${eur(k)}) nicht: Die Werbung kostet ${eur(m.after.abs())} mehr, als sie in diesem einfachen Modell einbringt.`,
           steps,
           notes,
+          comparison,
           tone: positive ? "positive" : m.after.isZero() ? "neutral" : "negative",
         };
         return result;

@@ -1,3 +1,4 @@
+import { unitField, UNIT_KEY } from "../units";
 import type { CalcDef } from "../types";
 import {
   D,
@@ -51,6 +52,7 @@ const def: CalcDef = {
           integer: true,
         },
         periodField(),
+        unitField(),
       ],
       example: { p: "50", v: "30", F: "3000", q: "200", zeitraum: "monat" },
       compute(i) {
@@ -109,6 +111,7 @@ const def: CalcDef = {
           help: "0 € bedeutet: nur Kostendeckung",
         },
         periodField(),
+        unitField(),
       ],
       example: { p: "50", v: "30", F: "3000", Z: "1000", zeitraum: "monat" },
       compute(i) {
@@ -198,6 +201,7 @@ const def: CalcDef = {
         v: toInput(val(i, "v")),
         F: toInput(val(i, "F")),
         zeitraum: i.choices.zeitraum ?? "monat",
+        [UNIT_KEY]: i.choices[UNIT_KEY] ?? "stueck",
       }),
     },
   ],

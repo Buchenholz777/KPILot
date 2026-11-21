@@ -1,3 +1,4 @@
+import { unitField, UNIT_KEY } from "../units";
 import type { CalcDef, CalcResult, Inputs } from "../types";
 import {
   D,
@@ -52,13 +53,6 @@ export function breakEven(i: Inputs): CalcResult {
   const qMin = ceilQty(qTheo);
   const resultAtMin = d.mul(qMin).sub(F);
   const profitFrom = qTheo.isInteger() ? qTheo.add(1) : qMin;
-  const qMax = Math.max(10, Math.ceil(qTheo.mul(2).toNumber()));
-  const pt = (q: number) => ({
-    q,
-    revenue: p.mul(q).toNumber(),
-    cost: F.add(v.mul(q)).toNumber(),
-  });
-
   return {
     status: "ok",
     main: out("Mindeststückzahl zur Kostendeckung", qMin, "integer", "Stück"),
@@ -87,11 +81,6 @@ export function breakEven(i: Inputs): CalcResult {
       `Ergebnis bei ${num(qMin)} Stück = d × q − F = ${eur(d)} × ${num(qMin)} − ${eur(F)} = ${eur(resultAtMin)}`,
     ],
     notes: [`Fixkosten, Preise und Mengen gelten ${zr}.`],
-    chart: {
-      kind: "break-even",
-      points: [pt(0), pt(qMax)],
-      breakEven: qTheo.toNumber(),
-    },
   };
 }
 
@@ -125,6 +114,7 @@ const def: CalcDef = {
           help: "Kosten, die unabhängig von der Menge anfallen, z. B. Miete",
         },
         periodField(),
+        unitField(),
       ],
       example: { p: "50", v: "30", F: "3000", zeitraum: "monat" },
       compute: breakEven,
@@ -157,6 +147,7 @@ const def: CalcDef = {
         v: toInput(val(i, "v")),
         F: toInput(val(i, "F")),
         zeitraum: i.choices.zeitraum ?? "monat",
+        [UNIT_KEY]: i.choices[UNIT_KEY] ?? "stueck",
       }),
     },
   ],

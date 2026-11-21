@@ -51,6 +51,21 @@ const sources = [
       Rechnerseite nennt die verwendete Definition, Annahmen und typische Missverständnisse. Pauschale „gut/schlecht“-Bewertungen ohne Branchenkontext gibt es nicht.
     </p>
 
+    <h2 id="verantwortung">Verantwortung, Zielgruppe und Prüfung</h2>
+    <dl class="status-list">
+      <dt>Wer entwickelt und verantwortet die Inhalte?</dt>
+      <dd>Der Betreiber von KPILot (Angaben im <a href="/impressum/">Impressum</a>). Qualifikationen oder Freigaben Dritter werden hier nur genannt, wenn sie nachweisbar sind – derzeit sind keine dokumentiert.</dd>
+      <dt>Für wen ist KPILot gedacht?</dt>
+      <dd>Für Selbstständige, kleine Unternehmen, Einsteiger in Controlling und Marketing sowie für Ausbildung und Lernen, die Kennzahlen verstehen und eigene Zahlen nachvollziehbar durchrechnen möchten. KPILot ist ein Werkzeug zur Orientierung, keine Beratung.</dd>
+      <dt>Wie werden Formeln, Beispiele und Grenzfälle geprüft?</dt>
+      <dd>
+        <strong>Automatisiert:</strong> Unit-Tests mit unabhängig von Hand berechneten Erwartungswerten für Rechenfunktionen, Randfälle, Rundung, Praxisfälle, Übernahmen und Grafikdaten; Build-, Link-, Kontrast- und Browserprüfungen.
+        <strong>Fachlich:</strong> Eine inhaltliche Prüfung durch Dritte ist nicht dokumentiert. <strong>Technisch:</strong> Das Änderungsdatum einer Seite ist ein Dateidatum und kein Prüfdatum.
+      </dd>
+      <dt>Welche Modellvariante und Referenz gilt in einem Rechner?</dt>
+      <dd>Jede Rechnerseite nennt unter „Modellannahmen“ die verwendete Variante und unter „Quellen, Verantwortung und Stand“ die Referenz – oder weist aus, dass nur Lehrbuchdarstellung zugrunde liegt.</dd>
+    </dl>
+
     <h2 id="hilfe">Hilfe und häufige Fragen</h2>
     <div class="faq">
       {HELP_FAQ.map((f) => <details><summary>{f.q}</summary><p>{f.a}</p></details>)}

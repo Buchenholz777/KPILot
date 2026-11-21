@@ -30,9 +30,14 @@ const changed = technicalChangeDate(topicFile(t.category));
       </p>
     )
   }
-  <p class="small muted">
-    <strong>Verantwortlich für die Inhalte:</strong> der Betreiber von KPILot (siehe <a href="/impressum/">Impressum</a>).
-    <strong>Fachliche Prüfung durch Dritte:</strong> nicht dokumentiert.
-    {changed && <> <strong>Technisch zuletzt geändert:</strong> {formatIsoDe(changed)} (Änderungsdatum der Inhaltsdatei, keine inhaltliche Prüfung).</>}
-  </p>
+  <p><strong>Verwendete Modellvariante:</strong> {t.assumptions.slice(0, 2).join(' · ')} Die vollständigen <a href="#annahmen">Modellannahmen</a> stehen oben.</p>
+  <dl class="status-list">
+    <dt>Verantwortlich für die Inhalte</dt>
+    <dd>der Betreiber von KPILot (siehe <a href="/impressum/">Impressum</a>); weitere Qualifikationen sind nicht belegt und werden deshalb nicht genannt.</dd>
+    <dt>Automatisierte Prüfung</dt>
+    <dd>Das Beispiel dieses Rechners ist berechenbar und wird mit Unit-Tests geprüft; Rechenregeln, Randfälle und Rundung sind durch Tests mit unabhängig berechneten Erwartungswerten abgesichert. Das ist keine fachliche Inhaltsprüfung (<a href="/ueber/#verantwortung">Wie wir prüfen</a>).</dd>
+    <dt>Fachliche Inhaltsprüfung durch Dritte</dt>
+    <dd>nicht dokumentiert.</dd>
+    {changed && (<><dt>Technische Änderung</dt><dd>zuletzt am {formatIsoDe(changed)} (Änderungsdatum der Inhaltsdatei – kein Prüfdatum).</dd></>)}
+  </dl>
 </section>

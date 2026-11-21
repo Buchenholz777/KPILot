@@ -129,21 +129,6 @@ export function discountEconomics(c: Calc, i: Inputs, rabattPct?: Decimal): Calc
   );
   extra.push(det(out("Veränderung des Stückdeckungsbeitrags", dDelta, "money", "je Einheit", true)));
 
-  const bars1 = [
-    { label: "vorher", value: d0.toNumber(), text: eur(d0) },
-    { label: "nach Rabatt", value: d1.toNumber(), text: eur(d1), emphasis: true },
-  ];
-  const baseQ = q && !q.isZero() ? q : D(100);
-  const reqQ = q && !q.isZero() && qNew ? qNew : baseQ.mul(factor);
-  const bars2 = [
-    { label: q && !q.isZero() ? "bisher" : "bisher (Beispiel 100)", value: baseQ.toNumber(), text: num(baseQ) },
-    {
-      label: "erforderlich",
-      value: reqQ.toNumber(),
-      text: q && !q.isZero() ? num(reqQ) : `${formatValue(factor, "number")}-fach`,
-      emphasis: true,
-    },
-  ];
   const result: CalcResult = {
     status: "ok",
     main: out("Erforderlicher Mehrabsatz", more, "percent"),
@@ -154,26 +139,6 @@ export function discountEconomics(c: Calc, i: Inputs, rabattPct?: Decimal): Calc
       "Annahme: Die variablen Kosten je Einheit bleiben gleich, die Fixkosten sind vergleichbar. Ob die zusätzliche Nachfrage tatsächlich erreichbar ist, sagt der Rechner nicht.",
     ],
     tone: "neutral",
-    chart: {
-      kind: "bars",
-      summary: `Beitrag je Einheit sinkt von ${eur(d0)} auf ${eur(d1)}; erforderlicher Absatz steigt auf das ${formatValue(factor, "number")}-Fache.`,
-      panels: [
-        { title: "Beitrag je Einheit (€)", bars: bars1 },
-        { title: q && !q.isZero() ? "Absatz (Einheiten)" : "Absatz (relativ, bisher = 100)", bars: bars2 },
-      ],
-      table: {
-        head: ["Größe", "vorher", "nach Rabatt"],
-        rows: [
-          ["Preis je Einheit", eur(p), eur(p1)],
-          ["Stückdeckungsbeitrag", eur(d0), eur(d1)],
-          [
-            q && !q.isZero() ? "Absatz (Einheiten)" : "Absatz (bisher = 100)",
-            num(baseQ),
-            q && !q.isZero() ? `${num(reqQ)} (mindestens)` : `${num(reqQ)} (${formatValue(factor, "number")}-fach)`,
-          ],
-        ],
-      },
-    },
   };
   return result;
 }

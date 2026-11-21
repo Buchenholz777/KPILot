@@ -8,8 +8,13 @@ import { CALCS } from "../src/calc/all";
 import { runExample } from "../src/calc/engine";
 import { formatValue } from "../src/lib/number";
 import { SEO, seoPageTitle } from "../src/data/seo";
+import { buildCharts, loadChartBuilders, type ChartBuilders } from "../src/calc/charts";
+import { run } from "../src/calc/engine";
 
-it("erzeugt docs/FORMELN.md und docs/MODELLANNAHMEN.md", () => {
+it("erzeugt docs/FORMELN.md und docs/MODELLANNAHMEN.md", async () => {
+  // Diagramm-Aufbereitung je Kategorie (dieselbe wie im Browser)
+  const builders: Record<string, ChartBuilders> = {};
+  for (const t of TOPICS) builders[t.category] ??= await loadChartBuilders(t.category);
   mkdirSync("docs", { recursive: true });
   let f =
     "# Formeldokumentation – alle " +
@@ -63,8 +68,8 @@ Der Ablauf verwendet ausschließlich die Rechenfunktionen von Deckungsbeitrag, B
     const c = CALCS[t.id];
     const charts = c.variants
       .filter((v) => {
-        const r = runExample(v);
-        return r.status === "ok" && !!r.chart;
+        const { validation, result } = run(v, v.example);
+        return !!result && buildCharts(builders[t.category], t.id, v.id, validation.inputs, result).charts.length > 0;
       })
       .map((v) => v.label);
     const fields = new Set<string>();

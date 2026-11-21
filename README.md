@@ -4,7 +4,7 @@
 
 Markenname, Claim und Kurzbeschreibung stehen zentral in `src/config/site.ts`. Der Projektordner heißt aus historischen Gründen weiterhin `klarrechnen`. Lokale Speicherschlüssel (`kr.*`) wurden bewusst nicht umbenannt, damit Favoriten und gespeicherte Rechnungen erhalten bleiben.
 
-Statische, deutschsprachige Website mit 41 Rechnern in sechs Kategorien (die Zahl ergibt sich aus dem Register `src/data/registry.ts`; Anwendungsfälle zählen nicht mit): kurze Erklärung, eigene Erklärillustration, Rechner mit Rechenweg, Ergebnis in drei Ebenen, Folgeaktionen, Favoriten, zuletzt genutzte Rechner, „Meine Berechnungen“ (Vorschau, Notizen, Vorhaben, Papierkorb, Sicherung), Werteübernahme und Szenariovergleich. Dazu fünf Aufgabeneinstiege, der geführte Ablauf „Preis & Wirtschaftlichkeit“, drei Praxisfälle und Lernseiten. Alle Berechnungen laufen deterministisch im Browser. Es gibt keine Datenbank, kein Konto, keine KI-Aufrufe und keine Werbeskripte. Eine Nutzungsmessung mit Google Analytics läuft ausschließlich nach Einwilligung (`docs/MESSKONZEPT.md`).
+Statische, deutschsprachige Website mit 41 Rechnern in sechs Kategorien (die Zahl ergibt sich aus dem Register `src/data/registry.ts`; Anwendungsfälle zählen nicht mit): kurze Erklärung, eigene Erklärillustration, Rechner mit Rechenweg, Ergebnis in drei Ebenen, Folgeaktionen, Favoriten, zuletzt genutzte Rechner, „Meine Berechnungen“ (Vorschau, Notizen, Vorhaben, Papierkorb, Sicherung), Werteübernahme und Szenariovergleich. Dazu fünf Aufgabeneinstiege, der geführte Ablauf „Preis & Wirtschaftlichkeit“, Praxisfälle (aus einer gemeinsamen Falldatenquelle `src/data/cases.ts`) und Lernseiten. Alle Berechnungen laufen deterministisch im Browser. Es gibt keine Datenbank, kein Konto, keine KI-Aufrufe und keine Werbeskripte. Eine Nutzungsmessung mit Google Analytics läuft ausschließlich nach Einwilligung (`docs/MESSKONZEPT.md`).
 
 Technik: Astro 7 (statische Generierung), TypeScript, normales CSS mit Design-Tokens, decimal.js, Vitest.
 
@@ -21,6 +21,7 @@ npm run build        # statisches Build nach dist/
 npm run check:site   # prüft dist/: Links, Titel, Descriptions, Canonicals, noindex, Sitemap
 npm run preview      # fertiges Build lokal ansehen
 NODE_PATH=$(npm root -g) node scripts/e2e-smoke.mjs   # Browserprüfung der Nutzerwege (Playwright, Preview muss laufen)
+NODE_PATH=$(npm root -g) node scripts/e2e-charts.mjs  # alle Rechner und Modi: Grafik, kein NaN, kein Überlauf (Desktop + 375 px)
 ```
 
 Benötigt Node.js ≥ 22.
@@ -37,10 +38,11 @@ src/
     all.ts / load.ts    alle Module (Build/Tests) bzw. Einzel-Laden im Browser
   config/operator.ts    Betreiberangaben mit Bestätigungsflags (Impressum, Datenschutz, Rückmeldung)
   data/
-    tasks.ts            fünf Aufgabeneinstiege · cases.ts: drei Praxisfälle · field-guides.ts: Eingabehilfen · home.ts: Reihenfolge der Startauswahl
+    tasks.ts            fünf Aufgabeneinstiege · cases.ts: Praxisfälle (Handel, Dienstleistung, Produktion, Werbung) mit Rechentext, Tabellen und Übernahmen aus denselben Falldaten · field-guides.ts: Eingabehilfen
     topics/*.ts         Texte je Thema: Titel, Kurztext, Nutzerfrage, Synonyme, Bildtexte, Formel …
     categories.ts       die sechs Kategorien inkl. „Häufig verwechselt“
     registry.ts         zentrales Rechnerverzeichnis (Reihenfolge 01–40)
+    videos.ts           Erklärvideos: Metadaten, Beispielwerte, Erzähltext (eine Quelle für Bild, Untertitel, Transkript)
   illustrations/        SVG-Erklärbilder (kit.ts = Zeichenwerkzeug, draw-*.ts = Motive)
   lib/
     decimal.ts          zentrale Präzision (40 Stellen, ROUND_HALF_UP)
@@ -53,6 +55,10 @@ src/
   scripts/              Browser-Logik: favorites.ts, calculator.ts, ui.ts
   styles/               tokens.css (Design-Tokens), global.css, components.css
   pages/                Startseite, /rechner/, /kategorie/…, 41 Rechnerseiten, Aufgaben, Ablauf, Lernseiten, Praxisfälle, Favoriten, Meine Berechnungen (+ Zusammenfassung), Über, Impressum, Datenschutz, 404, sitemap.xml, robots.txt, /illustrationen/*.svg
+video/
+  engine.ts             Motion-Engine (Zeit → SVG), Designsystem der Videos
+  scenes/<id>.ts        Szenen je Video · render.ts: Frames (Chromium) → H.264 (ffmpeg)
+public/videos/          gerenderte Webfassungen (720p) und Vorschaubilder
 tests/                  Vitest-Tests mit unabhängig festgelegten Erwartungswerten
 scripts/check-site.mjs  Prüfung des Builds
 docs/                   Formeln, Modellannahmen, Vorlagen, Quellen, Checklisten, Prüfprotokoll
@@ -90,7 +96,19 @@ Die 41 Themen stehen in `src/data/registry.ts` (Reihenfolge und Texte) und `src/
 
 Kategorien: Prozent & Grundlagen · Kostenrechnung & Preise · Finanzen & Liquidität · Marketing & Vertrieb · Produkt & Kunden · Controlling & Planung.
 
-„Empfohlen“ auf der Startseite ist eine redaktionelle Auswahl (`recommended: true` im Thema), keine gemessene Beliebtheit.
+Die Startseite zeigt standardmäßig den **vollständigen Katalog** (alle Rechner aus `src/data/registry.ts`, ohne Aufklappen oder „Mehr anzeigen“); Anzahl und Trefferzahlen werden aus dem Register abgeleitet. Ein neuer Rechner erscheint automatisch dort.
+
+## Mengeneinheit
+
+Break-even, Gewinn, Deckungsbeitrag, der Preisablauf und die Praxisfälle führen die Einheit der Menge mit (Stück, abrechenbare Stunde, Auftrag, Paket, Einheit; `src/calc/units.ts`). Die Rechenmodule formulieren mit „Stück“; `localize` ersetzt Fachwörter nach einer festen Tabelle, Zahlen und Rundung (aufrunden auf ganze Einheiten) bleiben identisch. Die Einheit ist Teil von Übernahmen, Speicherung, Szenariovergleich (gemeinsam) und Grafiken.
+
+## Ergebnisgrafiken
+
+Jeder Rechner und Modus zeigt direkt unter der Hauptzahl „Deine Berechnung als Diagramm“ (aus den aktuellen Eingaben, ohne Klick). Aufbau: Datenaufbereitung `src/calc/charts/<kategorie>.ts` (liefert `ChartSpec`, siehe `src/calc/chart-types.ts`), Zeichnung `src/scripts/charts.ts` (SVG, Tabellenalternative, Punktauswahl per Regler), Einbindung `src/scripts/calculator.ts`. Die Aufbereitung wird je Kategorie erst auf der Rechnerseite nachgeladen (nicht auf der Startseite). Matrix aller Modi: [`docs/DIAGRAMM-MATRIX.md`](docs/DIAGRAMM-MATRIX.md). Neuer Rechner → Eintrag in der passenden Kategoriedatei ergänzen (`tests/charts-data.test.ts` prüft, dass jeder Rechner und Modus eine Grafik liefert).
+
+## Erklärvideos
+
+Sechs animierte Erklärvideos („In 60 Sekunden verstehen“: Break-even, Cashflow, Deckungsbeitrag, Marge & Aufschlag, ROI, Conversion Rate) werden programmatisch aus TypeScript-Szenen gerendert (`video/`), zentrale Konfiguration inkl. Erzähltext in `src/data/videos.ts`. Rendern: `npm run video:render -- all` (benötigt ffmpeg und Playwright-Chromium), Prüfen: `npm run video:check`. Die Videos haben keine Tonspur; der Erzähltext steht im Bild, als Untertitel und als Transkript. Details, Storyboards und offene Punkte: [`docs/VIDEOS.md`](docs/VIDEOS.md).
 
 ## Neuen Rechner ergänzen
 
@@ -187,3 +205,4 @@ Manuell ohne GitHub: `npx wrangler login`, dann `npm run deploy`. Die eigene Dom
 - [`docs/QUELLEN.md`](docs/QUELLEN.md): fachliche Referenzquellen
 - [`docs/VEROEFFENTLICHUNG.md`](docs/VEROEFFENTLICHUNG.md): Checkliste und fehlende Betreiberangaben
 - [`docs/PRUEFUNGEN.md`](docs/PRUEFUNGEN.md): durchgeführte und nicht ausführbare Prüfungen
+- [`docs/VIDEOS.md`](docs/VIDEOS.md): Erklärvideos – Produktion, Designsystem, Storyboards, Integration, offene Punkte

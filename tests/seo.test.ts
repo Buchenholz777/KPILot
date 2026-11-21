@@ -1,3 +1,5 @@
+import { buildCharts, loadChartBuilders } from "../src/calc/charts";
+import { run } from "../src/calc/engine";
 import { describe, expect, it } from "vitest";
 import { TOPICS, TOPIC_BY_ID } from "../src/data/registry";
 import { SEO, seoPageTitle } from "../src/data/seo";
@@ -45,13 +47,14 @@ describe("SEO-Konfiguration der Rechnerseiten", () => {
     }
   });
 
-  it("„Grafik“ bzw. „Diagramm“ wird nur bei Rechnern versprochen, die im Ergebnis ein Diagramm zeigen", () => {
+  it("„Grafik“ bzw. „Diagramm“ wird nur bei Rechnern versprochen, die im Ergebnis ein Diagramm zeigen", async () => {
     for (const t of TOPICS) {
       if (!/Grafik|Diagramm/i.test(SEO[t.id].description + SEO[t.id].title))
         continue;
+      const builders = await loadChartBuilders(t.category);
       const hasChart = getCalc(t.id).variants.some((v) => {
-        const r = runExample(v);
-        return r.status === "ok" && !!r.chart;
+        const { validation, result } = run(v, v.example);
+        return !!result && buildCharts(builders, t.id, v.id, validation.inputs, result).charts.length > 0;
       });
       expect(hasChart, t.id).toBe(true);
     }

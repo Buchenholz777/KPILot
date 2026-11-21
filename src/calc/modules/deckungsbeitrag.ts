@@ -1,3 +1,4 @@
+import { unitField, UNIT_KEY } from "../units";
 import type { CalcDef, Out } from "../types";
 import { val, opt, out, eur, pct, num, toInput } from "../helpers";
 
@@ -32,6 +33,7 @@ const def: CalcDef = {
           integer: true,
           optional: true,
         },
+        unitField(),
       ],
       example: { p: "50", v: "30", q: "100" },
       compute(i) {
@@ -79,32 +81,6 @@ const def: CalcDef = {
           steps,
           notes: notes.length ? notes : undefined,
           tone: d.isNegative() ? "negative" : "neutral",
-          // Nur bei nicht negativem Deckungsbeitrag: Preis = variable Kosten + Deckungsbeitrag
-          chart:
-            d.isNegative() || p.isZero()
-              ? undefined
-              : {
-                  kind: "bars",
-                  summary: `Vom Verkaufspreis ${eur(p)} je Stück entfallen ${eur(v)} auf variable Kosten; ${eur(d)} bleiben als Stückdeckungsbeitrag.`,
-                  panels: [
-                    {
-                      title: "Aufteilung des Preises je Stück (€)",
-                      bars: [
-                        { label: "Verkaufspreis", value: p.toNumber(), text: eur(p) },
-                        { label: "Variable Kosten", value: v.toNumber(), text: eur(v) },
-                        { label: "Deckungsbeitrag", value: d.toNumber(), text: eur(d), emphasis: true },
-                      ],
-                    },
-                  ],
-                  table: {
-                    head: ["Größe", "je Stück"],
-                    rows: [
-                      ["Nettoverkaufspreis", eur(p)],
-                      ["Variable Kosten", eur(v)],
-                      ["Stückdeckungsbeitrag", eur(d)],
-                    ],
-                  },
-                },
         };
       },
     },
@@ -130,7 +106,7 @@ const def: CalcDef = {
       target: "break-even",
       label: "Preis und variable Kosten in Break-even übernehmen",
       describe: "Nettoverkaufspreis je Stück und variable Kosten je Stück",
-      values: (i) => ({ p: toInput(val(i, "p")), v: toInput(val(i, "v")) }),
+      values: (i) => ({ p: toInput(val(i, "p")), v: toInput(val(i, "v")), [UNIT_KEY]: i.choices[UNIT_KEY] ?? "stueck" }),
     },
     {
       target: "gewinn",
@@ -141,6 +117,7 @@ const def: CalcDef = {
         const r: Record<string, string> = {
           p: toInput(val(i, "p")),
           v: toInput(val(i, "v")),
+          [UNIT_KEY]: i.choices[UNIT_KEY] ?? "stueck",
         };
         const q = opt(i, "q");
         if (q) r.q = toInput(q);

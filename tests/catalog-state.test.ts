@@ -14,11 +14,8 @@ import {
 } from "../src/lib/catalog-state";
 
 const entries = buildSearchIndex();
-const recommended = new Set(
-  TOPICS.filter((t) => t.recommended).map((t) => t.id),
-);
-const view = (s: CatalogState, mode: "home" | "all" = "all") =>
-  computeView(s, entries, { mode, recommended });
+
+const view = (s: CatalogState) => computeView(s, entries);
 const type = (s: CatalogState, q: string) => onQueryChange(s, q);
 
 describe("Regression: Suche ist nach Kategorieauswahl global", () => {
@@ -91,7 +88,8 @@ describe("Leeren und Kategorien ohne Suchtext", () => {
     s = onClear();
     expect(s).toEqual({ q: "", cat: ALL });
     expect(view(s).visible).toHaveLength(entries.length);
-    expect(view(s, "home").homeDefault).toBe(true);
+    // Startseite: Standardansicht zeigt den vollständigen Katalog (keine Auswahl, kein „Mehr anzeigen“)
+    expect(new Set(view(s).visible).size).toBe(TOPICS.length);
   });
   it("Text vollständig löschen → Kategorie Alle (kein versteckter Filter)", () => {
     let s = onCategory(type(initialState(), "roi"), "finanzen");

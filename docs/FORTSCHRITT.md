@@ -21,3 +21,5 @@ Branch: `claude/lucid-galileo-nauvjo` · Ausgangsstand: 258 Tests grün, `astro 
 | 10 | Mobile/Zugänglichkeit, Messkonzept, Nutzertest, Regression, Bericht | 15–17, 19, 20 | erledigt |
 
 Alle Pakete umgesetzt (Details und Einschränkungen: `docs/ABSCHLUSSBERICHT.md`). Letzter Prüfstand: 348 Tests, `astro check` 0 Fehler, `check:site` ohne Probleme, Browserprüfung und axe ohne Verstöße.
+
+Folgeauftrag „Qualität und Nutzerführung“: alle unabhängig umsetzbaren Pakete erledigt (siehe `docs/UMSETZUNGSMATRIX-FOLGEAUFTRAG.md`); offen bleiben die Betreiberangaben (`docs/BETREIBER-OFFEN.md`).

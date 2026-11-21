@@ -13,6 +13,9 @@ import { getCalc } from '../calc/all';
 import { runExample } from '../calc/engine';
 import { formatValue } from '../lib/number';
 import { illustrationPath } from '../illustrations';
+import VideoCard from '../components/VideoCard.astro';
+import { availableVideoForCalc, transcript } from '../lib/videos';
+import { videoSrc, posterSrc, isoDuration } from '../data/videos';
 import type { Topic } from '../data/types';
 import { SEO, seoPageTitle } from '../data/seo';
 
@@ -74,9 +77,30 @@ const examples = calc.variants.map((v) => {
   }
   return { v, r, inputs };
 });
+
+// Erklärvideo nur, wenn es tatsächlich gerendert vorliegt (public/videos/…)
+const video = availableVideoForCalc(t.id);
+const site = Astro.site;
+const videoLd =
+  video && site
+    ? [
+        {
+          '@context': 'https://schema.org',
+          '@type': 'VideoObject',
+          name: video.title,
+          description: video.description,
+          thumbnailUrl: new URL(posterSrc(video), site).href,
+          contentUrl: new URL(videoSrc(video), site).href,
+          uploadDate: video.uploadDate,
+          duration: isoDuration(video.duration),
+          inLanguage: 'de-DE',
+          transcript: transcript(video).join(' '),
+        },
+      ]
+    : [];
 ---
 
-<Base title={seoPageTitle(t.id)} description={seo.description} crumbs={crumbs} jsonLd={appLd}>
+<Base title={seoPageTitle(t.id)} description={seo.description} crumbs={crumbs} jsonLd={[...appLd, ...videoLd]}>
   <PageBand crumbs={crumbs} title={seo.h1} overlap cat={t.category}>
     <p class="cat-label" slot="before"><CategoryIcon id={t.category} /> {cat.title}</p>
     {t.fullTerm && <p class="full-term" slot="sub">{t.fullTerm}</p>}
@@ -89,6 +113,7 @@ const examples = calc.variants.map((v) => {
           <h2 class="eyebrow" id="kurz">Kurz erklärt</h2>
           <p class="intro-text">{t.intro}</p>
           <p class="jump"><a href="#rechner">Direkt zum Rechner ↓</a></p>
+          {video && <VideoCard video={video} />}
           <details class="img-desc">
             <summary>Bildbeschreibung lesen</summary>
             <p>{t.image.description}</p>
@@ -96,7 +121,7 @@ const examples = calc.variants.map((v) => {
         </div>
         <figure class="figure intro-figure">
           <img src={illustrationPath(t.id, true)} width="640" height="360" alt={t.image.alt} decoding="async" fetchpriority="high" />
-          <figcaption>{t.image.caption}</figcaption>
+          <figcaption><span class="badge">Beispielgrafik · feste Beispielwerte</span> {t.image.caption} <span class="muted">Deine eigene Berechnung erscheint beim Ergebnis unter „Deine Berechnung als Diagramm“.</span></figcaption>
         </figure>
       </section>
 
@@ -119,8 +144,8 @@ const examples = calc.variants.map((v) => {
         </dl>
       </section>
 
-      <section class="card content-card" aria-labelledby="beispiel">
-        <h2 id="beispiel">Beispielrechnung mit Rechenweg</h2>
+      <section class="card content-card" aria-labelledby="rechenweg-beispiel">
+        <h2 id="rechenweg-beispiel">Beispielrechnung mit Rechenweg</h2>
         <p class="small muted">Diese Zahlen sind ein dokumentiertes Beispiel – dieselben Werte setzt „Beispiel einsetzen“ ein, und sie stimmen mit dem Bild überein.</p>
         {
           examples.map(({ v, r, inputs }) => (

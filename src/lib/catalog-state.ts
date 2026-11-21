@@ -53,8 +53,6 @@ export interface CatalogView {
   globalCount: number;
   /** Suchtext wird gerade durch eine Kategorie eingegrenzt. */
   narrowed: boolean;
-  /** Startseite ohne Suche/Filter: nur Empfehlungen. */
-  homeDefault: boolean;
   /** Vorschlag bei Tippfehler („Deckungsbeitrag“); die sichtbaren Treffer gehören dann zu diesem Vorschlag. */
   suggestion?: string;
 }
@@ -62,24 +60,18 @@ export interface CatalogView {
 export function computeView(
   s: CatalogState,
   entries: SearchEntry[],
-  opts: { mode: "home" | "all"; recommended: Set<string> },
 ): CatalogView {
   const q = s.q.trim();
   const found = q ? searchWithSuggestion(q, entries) : undefined;
   const ranked = found ? found.ids : entries.map((e) => e.id);
   const catOf = new Map(entries.map((e) => [e.id, e.category]));
-  const homeDefault = opts.mode === "home" && !q && s.cat === ALL;
-  let visible =
+  // Ohne bewusste Such- oder Filteraktion bleibt der vollständige Katalog sichtbar.
+  const visible =
     s.cat === ALL ? ranked : ranked.filter((id) => catOf.get(id) === s.cat);
-  if (homeDefault)
-    visible = entries
-      .filter((e) => opts.recommended.has(e.id))
-      .map((e) => e.id);
   return {
     visible,
     globalCount: q ? ranked.length : entries.length,
     narrowed: !!q && s.cat !== ALL,
-    homeDefault,
     suggestion: found?.fuzzy ? found.suggestion : undefined,
   };
 }

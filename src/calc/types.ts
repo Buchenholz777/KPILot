@@ -56,37 +56,12 @@ export interface Out {
   detail?: boolean;
 }
 
-export interface BarsChart {
-  kind: "bars";
-  /** Kurzbeschreibung für Screenreader. */
+export interface ResultComparison {
+  title: string;
+  head: string[];
+  rows: string[][];
+  /** Eindeutige Aussage zur Differenz, z. B. „Alternative minus aktuelle Berechnung: −360,00 €“. */
   summary: string;
-  panels: {
-    title: string;
-    /** value: Betrag (Höhe = Betrag); negative: Balken mit Warnfarbe, text trägt das Vorzeichen. */
-    bars: { label: string; value: number; text: string; emphasis?: boolean; negative?: boolean }[];
-  }[];
-  /** Tabellenalternative zum Diagramm. */
-  table: { head: string[]; rows: string[][] };
-}
-
-/** Beschriftung des Liniendiagramms mit Schnittpunkt (Standard: Break-even mit Stück/Umsatz/Gesamtkosten). */
-export interface CrossingLabels {
-  /** Einheit der X-Achse, z. B. „Stück“ oder „Jahre“. */
-  xUnit: string;
-  /** Legende der gestrichelten Linie, z. B. „Umsatz (gestrichelt)“. */
-  rising: string;
-  /** Legende der durchgezogenen Linie, z. B. „Gesamtkosten (durchgezogen)“. */
-  fixed: string;
-  /** Kurzbeschreibung für Screenreader; {x} wird durch den Schnittpunkt ersetzt. */
-  aria: string;
-  /** Spaltenköpfe der Tabellenalternative: [X, steigende Linie, andere Linie, Differenz]. */
-  head: [string, string, string, string];
-}
-
-export interface ChartPoint {
-  q: number;
-  revenue: number;
-  cost: number;
 }
 
 export type CalcResult =
@@ -101,9 +76,10 @@ export type CalcResult =
       /** Interpretationsgrenzen direkt am Ergebnis. */
       notes?: string[];
       tone?: "neutral" | "positive" | "negative";
-      chart?:
-        | { kind: "break-even"; points: ChartPoint[]; breakEven?: number; labels?: CrossingLabels }
-        | BarsChart;
+      /** Zwischenwerte, die für Grafiken gebraucht werden (z. B. Beitrag je Tarif). */
+      breakdown?: Out[];
+      /** Sichtbare Gegenüberstellung (z. B. aktuelle Quote und bewusst eingegebene Alternative). */
+      comparison?: ResultComparison;
     }
   | {
       status: "undefined" | "impossible" | "ambiguous";

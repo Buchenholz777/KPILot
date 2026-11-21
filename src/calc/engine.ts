@@ -1,4 +1,5 @@
 import { D, type Decimal } from "../lib/decimal";
+import { localizeDeep, unitOf } from "./units";
 import { parseNumber } from "../lib/number";
 import type {
   CalcResult,
@@ -116,7 +117,9 @@ export function run(
 ): { validation: Validation; result: CalcResult | null } {
   const validation = validate(variant, raw);
   if (!validation.inputs) return { validation, result: null };
-  return { validation, result: variant.compute(validation.inputs) };
+  const result = variant.compute(validation.inputs);
+  // Einheit der Menge: Bezeichnungen im Ergebnis anpassen (Zahlen unverändert)
+  return { validation, result: localizeDeep(result, unitOf(validation.inputs.choices)) };
 }
 
 /** Für Tests und Build: Beispiel einer Variante berechnen (muss gültig sein). */

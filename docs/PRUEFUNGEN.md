@@ -85,3 +85,56 @@ Selbstprüfung durch den Entwickler; **keine Tests mit Personen, keine Screenrea
 | Netzwerk: vor Zustimmung und nach Ablehnung keine Anfrage an Google; nach Zustimmung nur `gtag/js`; Rechenwerte weder in `dataLayer` noch in Anfrage-URLs; `calc_result` einmal | Playwright | bestanden |
 
 **Nicht ausgeführt / eingeschränkt:** Screenreader (NVDA/VoiceOver), echte iOS/Android-Geräte, Firefox/Safari, Druckvorschau und PDF-Export (Druck-CSS vorhanden, nicht visuell geprüft), Lighthouse-/Performance-Messung, Nutzertests (Verfahren in `docs/MESSKONZEPT.md`). Es wird keine vollständige Barrierefreiheit behauptet: axe findet nur einen Teil möglicher Probleme.
+
+## Live-Ergebnisgrafiken und vollständiger Startseitenkatalog, 05.11.2026
+
+Selbstprüfung (Chromium/Playwright); keine Screenreader-, Geräte- oder Nutzertests.
+
+| Prüfung | Methode | Ergebnis |
+|---|---|---|
+| Diagrammdaten für **alle 41 Rechner / 55 Modi** mit Beispielwerten (Titel, erklärender Satz, Tabelle, keine NaN/Infinity) | `tests/charts-data.test.ts` | 55 Matrixfälle bestanden |
+| Break-even-Prüffälle (80/50/6.000 → 200 Stück · 16.000 €, Gewinn bei 201: 30 €; Preis 100 → 120 · 12.000 €; F 3.001 → 150,05 / 151 / 19 €; p = v; F = 0; Preis < v; sehr kleine/große Werte) | Unit-Test + Browser | bestanden |
+| Marge 70/120 (50 €, 41,67 %, 71,43 %), Marge bei Kosten 0, ROAS 3.600/900 (4,0-fach), Wirtschaftlichkeit 30 % (1.080 € / 180 €), negativer Deckungsbeitrag, Rabatt ≤ 0, Eigenkapital negativ, Churn/NPS/Auslastung/Liquidität/Amortisation/MRR | Unit-Test (+ Browser für Marge/ROAS) | bestanden |
+| Live-Aktualisierung ohne Klick, Leerzustand, Entfernen bei fehlendem Wert, Reset, Beispiel, Übernahme in Gewinnrechner, A/B-Grafik, Tabelle aufklappbar, Punktauswahl per Tastatur, Druckansicht (Grafik sichtbar, Regler aus) | `scripts/e2e-smoke.mjs` | bestanden |
+| Durchlauf aller Rechner und Modi im Browser (Desktop 1280 px und 375 px): Grafik + Tabelle vorhanden, kein NaN/Infinity/undefined, keine Skriptfehler, kein horizontales Seitenscrollen | `scripts/e2e-charts.mjs` | 110 Aufrufe, 0 Befunde |
+| Startseite: eindeutige Rechner-IDs = Katalog (41), alle sichtbar ohne Interaktion, kein „Mehr anzeigen“, keine Diagramme/Charts-Code, Trefferzahl „N von 41“, Suche, Kategorie, Zurücksetzen, Kompaktansicht, frischer Aufruf leer | `scripts/e2e-smoke.mjs` | bestanden |
+| axe-core (WCAG A/AA + Best Practice), 9 Rechnerseiten mit Grafik × 1280/375 px | Playwright + axe | 0 Verstöße |
+| Gesamt | `npm test` / `npm run check` / `npm run check:site` | 423 Tests · 0 Fehler · 66 Seiten ohne Befund |
+
+**Nicht geprüft:** Screenreader-Ausgabe der Grafiken (nur aria-Label, Tabelle und Tastaturregler technisch vorhanden), Firefox/Safari, echte Touch-Geräte, Browser-Zoom über 200 %, visuelle Druck-/PDF-Qualität über die Sichtbarkeitsprüfung hinaus, Leistungsmessung. Die Grenzfall-Spalte der Matrix beschreibt die Behandlung im Code; getestet sind die mit „G“ markierten Fälle.
+
+## Folgeauftrag „Qualität und Nutzerführung“, 05.11.2026
+
+Selbstprüfung (Chromium/Playwright, axe-core); keine Screenreader-, Geräte- oder Nutzertests.
+
+| Prüfung | Methode | Ergebnis |
+|---|---|---|
+| Praxisfälle (Handel 100/80/100/1.500 mit Rabattvariante; Dienstleistung in Stunden; Produktion mit Kapazität; Werbung 3.600/900/30 %/20 %) mit unabhängig berechneten Erwartungswerten, alle Schritt-/Fall-Übernahmen berechenbar, Fall → Preisablauf | `tests/cases.test.ts` | 12 Tests bestanden |
+| Einheit „Stunde“: Zahlen unverändert, Texte/Grafik ohne „Stück“; alte Daten ohne Einheit unverändert | `tests/neue-rechner.test.ts` | bestanden |
+| ROAS-Vergleich (1.080/720, +180/−180, −360, 3,3333/5,0-fach); ohne Alternative keine zweite Berechnung | Unit-Test + Browser (Kopierausgabe) | bestanden |
+| Sensitivität (Preis +5 € → +1.000 €; Kosten +2 € → −400 €; Absatz −10 % auf 180 → −400 €), Szenariobeispiel 1.000/0/3.250 € | `tests/workflow.test.ts` + Browser | bestanden |
+| Suchmodus (Aufgaben ausgeblendet, Treffer direkt unter dem Suchfeld, „Deckungsbeitrg“ → Deckungsbeitrag), kompakte Ansicht als Standard, kompakte Aufgabenkacheln | `scripts/e2e-smoke.mjs` | bestanden |
+| Dynamischer Übernahmehinweis (fehlt/vorhanden/fehlt wieder), Praxisfall-Übernahmen im Browser, Stunden-Rechner, Entwurfsschutz im Preisablauf, Abschlussreihenfolge, Druckansicht mit Grafik | `scripts/e2e-smoke.mjs` | bestanden |
+| Alle 55 Modi: Grafik + Tabelle, kein NaN, kein Überlauf (Desktop/375 px) | `scripts/e2e-charts.mjs` | 110 Aufrufe, 0 Befunde |
+| axe-core, 8 Seiten × 1280/375 px | Playwright + axe | 0 Verstöße |
+| Gesamt | `npm test`, `npm run check`, `check:site` (66 Seiten), `check:contrast` | 439 Tests · 0 Fehler · ohne Befund |
+
+Gefundene und behobene Fehler: Klicks auf Weiterrechnen-Buttons gingen verloren, wenn ein Eingabefeld gleichzeitig den Fokus verlor (Liste wurde neu aufgebaut); Muster-Kennungen der Ablauf-Grafiken doppelt vergeben (Flächen unsichtbar); Beschriftungskollisionen in Balkendiagrammen mit negativen Werten.
+
+**Nicht geprüft:** Screenreader, Firefox/Safari, echte Touch-Geräte, Zoom über 200 %, PDF-Seitenumbrüche visuell, Leistungsmessung, fachliche/rechtliche Inhaltsprüfung.
+
+## Erklärvideos „In 60 Sekunden verstehen“, 20.11.2026
+
+| Prüfung | Methode | Ergebnis |
+|---|---|---|
+| Jede im Video gezeigte Zahl (Beispiel + Zusatzwerte wie 151/200 Stück, Netto-Cashflow 5.000 €, 16,7 % Marge, 5 % bei 20/400) gegen den echten Rechner; Cue-Timing, Lesetempo ≤ 17 Zeichen/s, WebVTT | `tests/videos.test.ts` | 44 Tests bestanden |
+| Videodateien: H.264 High, yuv420p, 1280×720 bzw. 1920×1080, 30 fps, 66,0 s, keine Tonspur, faststart, Größe 1,3–1,7 MB, Vorschaubild 1280×720 | `npm run video:check` (ffprobe) | 6/6 bestanden |
+| Sichtprüfung aller Szenen über Einzelbilder (Überlappungen, Lesbarkeit, Proportionen) | `video/render.ts --stills` | Befunde behoben (Beschriftungskollisionen, Zwischenwerte beim Preiswechsel, Zeilenumbruch „20 %“) |
+| Integration: Karte auf 6 Seiten, kein `<video>` und kein MP4-Abruf beim Laden, Lazy-Poster, kein Layoutsprung, Tastatur (Enter/Esc), Fokus im Dialog, Pause beim Schließen, Ende → „Jetzt selbst berechnen“ → `#rechner` ohne Neuladen, 360/768 px ohne Querscrollen, Lernbereich 6 Kacheln, Seite ohne Video ohne Karte | `scripts/e2e-videos.mjs` | bestanden |
+| axe-core (Karte, geöffneter Dialog, Lernbereich; 1280/375 px) | Playwright + axe | 0 Verstöße |
+| VideoObject nur im Produktions-Build, nur für vorhandene Videos | `SITE_URL=… npm run build` | 6 Seiten mit VideoObject, keine sonst |
+| Gesamt | `npm test`, `npm run check`, `check:site`, `check:contrast`, `e2e-smoke`, `e2e-charts` | 483 Tests · 0 Fehler · ohne Befund |
+
+Gefundener und behobener Fehler: Das Attribut `data-calc` der Videokarte wurde vom Rechner-Skript (`querySelector("[data-calc]")`) zuerst gefunden → Skriptfehler; umbenannt in `data-video-id`.
+
+**Nicht geprüft / offen:** keine Sprachspur (keine akzeptable lokale TTS, siehe `docs/VIDEOS.md`), Safari/iOS-Wiedergabe, Firefox, Screenreader, echte Geräte; Videos nicht in Produktion veröffentlicht.

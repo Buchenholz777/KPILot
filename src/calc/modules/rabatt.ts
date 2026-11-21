@@ -1,5 +1,4 @@
-import type { CalcDef, Inputs, BarsChart } from "../types";
-import type { Decimal } from "decimal.js";
+import type { CalcDef, Inputs } from "../types";
 import {
   D,
   val,
@@ -50,31 +49,6 @@ function factor(i: Inputs, n: 1 | 2) {
   return art === "rabatt" ? D(1).sub(s.div(100)) : D(1).add(s.div(100));
 }
 
-/** Zwei Preise nebeneinander (Ausgangs- und Endpreis) – zusätzliche Anzeige, keine neue Rechnung. */
-function priceChart(from: Decimal, to: Decimal, fromLabel: string, toLabel: string, summary: string): BarsChart {
-  return {
-    kind: "bars",
-    summary,
-    panels: [
-      {
-        title: "Preis in Euro",
-        bars: [
-          { label: fromLabel, value: from.toNumber(), text: eur(from) },
-          { label: toLabel, value: to.toNumber(), text: eur(to), emphasis: true },
-        ],
-      },
-    ],
-    table: {
-      head: ["Preis", "Betrag"],
-      rows: [
-        [fromLabel, eur(from)],
-        [toLabel, eur(to)],
-        ["Differenz", eur(to.sub(from))],
-      ],
-    },
-  };
-}
-
 const def: CalcDef = {
   id: "rabatt",
   schema: 1,
@@ -99,7 +73,6 @@ const def: CalcDef = {
             `Endpreis = Ausgangspreis × (1 − Rabatt / 100)`,
             `= ${eur(p)} × (1 − ${pct(r)}) = ${eur(end)}`,
           ],
-          chart: priceChart(p, end, "Ausgangspreis", "Preis nach Rabatt", `Der Preis sinkt von ${eur(p)} auf ${eur(end)}.`),
         };
       },
     },
@@ -123,7 +96,6 @@ const def: CalcDef = {
             `Endpreis = Ausgangspreis × (1 + Erhöhung / 100)`,
             `= ${eur(p)} × (1 + ${pct(e)}) = ${eur(end)}`,
           ],
-          chart: priceChart(p, end, "Ausgangspreis", "Preis nach Erhöhung", `Der Preis steigt von ${eur(p)} auf ${eur(end)}.`),
         };
       },
     },

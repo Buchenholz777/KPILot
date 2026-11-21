@@ -70,7 +70,7 @@ describe("Übernahme Break-even → Gewinn", () => {
     const t = CALCS["break-even"].transfers!.find((x) => x.target === "gewinn")!;
     const r = okCalc("break-even", undefined, base);
     const values = t.values(v, r);
-    expect(values).toEqual({ p: "50", v: "30", F: "3000", zeitraum: "monat" });
+    expect(values).toEqual({ p: "50", v: "30", F: "3000", zeitraum: "monat", einheit: "stueck" });
     const g = okCalc("gewinn", "menge", { ...values, q: "200" });
     expect(g.main.value.toString()).toBe("1000");
   });

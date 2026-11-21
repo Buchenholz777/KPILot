@@ -50,6 +50,7 @@ const def: CalcDef = {
           status: "ok",
           main: out("MRR", mrr, "money", "je Monat"),
           extra: [out("ARR (MRR × 12)", arr, "money", "je Jahr")],
+          breakdown: parts.map((x, k) => out(`Tarif ${k + 1}`, x, "money", "je Monat")),
           meaning: `Die aktiven Abos entsprechen ${eur(mrr)} wiederkehrendem Umsatz pro Monat – hochgerechnet ${eur(arr)} pro Jahr.`,
           steps: [
             ...rows.map(

@@ -167,7 +167,7 @@ describe("Speicher nicht verfügbar", () => {
     expect(ws.getSaved()).toEqual([]);
     expect(ws.removeSaved("x")).toBe(false);
     expect(ws.touchRecent("marge")).toBe(false);
-    expect(ws.getPrefs().catalogView).toBe("explain");
+    expect(ws.getPrefs().catalogView).toBe("compact");
   });
 });
 
@@ -279,11 +279,11 @@ describe("Zuletzt genutzt und Einstellungen", () => {
     expect(ws.touchRecent("../x")).toBe(false);
   });
   it("Katalogansicht wird gemerkt, unbekannte Werte fallen auf den Standard zurück", () => {
-    expect(ws.getPrefs().catalogView).toBe("explain");
-    ws.setPrefs({ catalogView: "compact" });
-    expect(ws.getPrefs().catalogView).toBe("compact");
+    expect(ws.getPrefs().catalogView).toBe("compact"); // Standard für Erstbesucher
+    ws.setPrefs({ catalogView: "explain" });
+    expect(ws.getPrefs().catalogView).toBe("explain"); // bewusst gespeicherte Wahl wird berücksichtigt
     local.setItem(st.PREFS_KEY, '{"v":1,"catalogView":"quatsch"}');
-    expect(ws.getPrefs().catalogView).toBe("explain");
+    expect(ws.getPrefs().catalogView).toBe("compact");
   });
   it("„Alles löschen“ entfernt auch Arbeitsbereich, Zuletzt-Liste und Einstellungen, behält die Einwilligung", () => {
     mk("x");

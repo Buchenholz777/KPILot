@@ -128,13 +128,14 @@ Gefundene und behobene Fehler: Klicks auf Weiterrechnen-Buttons gingen verloren,
 | Prüfung | Methode | Ergebnis |
 |---|---|---|
 | Jede im Video gezeigte Zahl (Beispiel + Zusatzwerte wie 151/200 Stück, Netto-Cashflow 5.000 €, 16,7 % Marge, 5 % bei 20/400) gegen den echten Rechner; Cue-Timing, Lesetempo ≤ 17 Zeichen/s, WebVTT | `tests/videos.test.ts` | 44 Tests bestanden |
-| Videodateien: H.264 High, yuv420p, 1280×720 bzw. 1920×1080, 30 fps, 66,0 s, keine Tonspur, faststart, Größe 1,3–1,7 MB, Vorschaubild 1280×720 | `npm run video:check` (ffprobe) | 6/6 bestanden |
+| Videodateien: H.264 High, yuv420p, 1280×720 bzw. 1920×1080, 30 fps, 66,0 s, faststart, Vorschaubild 1280×720 | `npm run video:check` (ffprobe) | 6/6 bestanden |
+| Erklärstimme (22.11.2026): genau eine AAC-Tonspur (mono, 48 kHz) in Videolänge, nicht still; Web 2,1–2,5 MB; Sprechtext (Lautumschrift, Ordinalzahlen) und Zeitplan (≤ 8 % schneller, Verzug ≤ 1,4 s) | `npm run video:check`, `tests/voice.test.ts` | 6/6 bestanden · 7 Tests bestanden |
 | Sichtprüfung aller Szenen über Einzelbilder (Überlappungen, Lesbarkeit, Proportionen) | `video/render.ts --stills` | Befunde behoben (Beschriftungskollisionen, Zwischenwerte beim Preiswechsel, Zeilenumbruch „20 %“) |
-| Integration: Karte auf 6 Seiten, kein `<video>` und kein MP4-Abruf beim Laden, Lazy-Poster, kein Layoutsprung, Tastatur (Enter/Esc), Fokus im Dialog, Pause beim Schließen, Ende → „Jetzt selbst berechnen“ → `#rechner` ohne Neuladen, 360/768 px ohne Querscrollen, Lernbereich 6 Kacheln, Seite ohne Video ohne Karte | `scripts/e2e-videos.mjs` | bestanden |
+| Integration: Karte auf 6 Seiten, kein `<video>` und kein MP4-Abruf beim Laden, Lazy-Poster, kein Layoutsprung, Tastatur (Enter/Esc), Fokus im Dialog, Ton an (nicht stumm), Pause beim Schließen, Ende → „Jetzt selbst berechnen“ → `#rechner` ohne Neuladen, 360/768 px ohne Querscrollen, Lernbereich 6 Kacheln, Seite ohne Video ohne Karte | `scripts/e2e-videos.mjs` | bestanden |
 | axe-core (Karte, geöffneter Dialog, Lernbereich; 1280/375 px) | Playwright + axe | 0 Verstöße |
 | VideoObject nur im Produktions-Build, nur für vorhandene Videos | `SITE_URL=… npm run build` | 6 Seiten mit VideoObject, keine sonst |
 | Gesamt | `npm test`, `npm run check`, `check:site`, `check:contrast`, `e2e-smoke`, `e2e-charts` | 483 Tests · 0 Fehler · ohne Befund |
 
 Gefundener und behobener Fehler: Das Attribut `data-calc` der Videokarte wurde vom Rechner-Skript (`querySelector("[data-calc]")`) zuerst gefunden → Skriptfehler; umbenannt in `data-video-id`.
 
-**Nicht geprüft / offen:** keine Sprachspur (keine akzeptable lokale TTS, siehe `docs/VIDEOS.md`), Safari/iOS-Wiedergabe, Firefox, Screenreader, echte Geräte; Videos nicht in Produktion veröffentlicht.
+**Nicht geprüft / offen:** Hörprobe der synthetischen Stimme durch einen Menschen, Safari/iOS-Wiedergabe, Firefox, Screenreader, echte Geräte.

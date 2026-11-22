@@ -16,6 +16,12 @@ const PAGES = {
   marge: "/margenrechner/",
   roi: "/roi-rechner/",
   conversion: "/conversion-rate-rechner/",
+  "ebit-ebitda": "/ebitda-rechner/",
+  roas: "/roas-rechner/",
+  liquiditaet: "/liquiditaetsrechner/",
+  "clv-cac": "/clv-rechner/",
+  "rabatt-mehrabsatz": "/rabatt-mehrabsatz-rechner/",
+  "amortisation-kapitalwert": "/amortisationsrechner/",
 };
 
 const browser = await chromium.launch();
@@ -112,16 +118,16 @@ for (const vp of [
   await c.close();
 }
 
-/* 4. Lernbereich: sechs Kacheln mit Links zu den Rechnern; Seite ohne Video hat keine Karte */
+/* 4. Lernbereich: zwölf Kacheln mit Links zu den Rechnern; Seite ohne Video hat keine Karte */
 {
   const c = await browser.newContext({ viewport: { width: 1280, height: 900 } });
   const p = await c.newPage();
   await p.goto(BASE + "/aufgaben/kennzahlen-lernen/", { waitUntil: "networkidle" });
   ok((await p.locator("#visuell").innerText()) === "Kennzahlen visuell verstehen", "Lernbereich: Abschnitt „Kennzahlen visuell verstehen“");
-  ok((await p.locator(".video-tile").count()) === 6, "Lernbereich: sechs Videokacheln");
+  ok((await p.locator(".video-tile").count()) === 12, "Lernbereich: zwölf Videokacheln");
   const hrefs = await p.locator(".video-tile-link").evaluateAll((as) => as.map((a) => a.getAttribute("href")));
   ok(JSON.stringify(hrefs.sort()) === JSON.stringify(Object.values(PAGES).sort()), "Lernbereich: Links zu den passenden Rechnern");
-  await p.goto(BASE + "/roas-rechner/", { waitUntil: "networkidle" });
+  await p.goto(BASE + "/nps-rechner/", { waitUntil: "networkidle" });
   ok((await p.locator("[data-video-card]").count()) === 0, "Rechner ohne Video: keine Videokarte");
   await c.close();
 }

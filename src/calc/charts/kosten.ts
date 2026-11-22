@@ -325,7 +325,50 @@ const stundensatz: Builder = (i, r) => {
   };
 };
 
-const rabattAbsatz: Builder = (i, r) => {
+/** Preis & Absatz: Deckungsbeitrag über der Menge zum neuen Preis (Modell mit gleichbleibendem Stückbeitrag) gegen den bisherigen Deckungsbeitrag. */
+const preisAbsatz: Builder = (i, r) => {
+  if (r.status !== "ok") return none("Ohne gültige Eingaben gibt es keine Grafik.");
+  const p1 = val(i, "neuerPreis")!,
+    vk = val(i, "v")!,
+    q0 = val(i, "q0")!,
+    q1 = val(i, "q1")!;
+  const d1 = p1.sub(vk);
+  const db0 = outOf(r, "Deckungsbeitrag vorher")!.value;
+  const db1 = outOf(r, "Deckungsbeitrag nachher")!.value;
+  const need = outOf(r, "Erforderliche neue Menge")?.value;
+  const xMax = niceMax(Math.max(num(q0), num(q1), need ? num(need) : 0) * 1.3);
+  const chart: LinesChart = {
+    kind: "lines",
+    title: "Deckungsbeitrag zum neuen Preis nach Absatzmenge (Modell)",
+    caption: "",
+    summary: "",
+    table: { head: ["Menge", "Deckungsbeitrag zum neuen Preis", "Bisheriger Deckungsbeitrag"], rows: [] },
+    xLabel: "Absatzmenge zum neuen Preis (Einheiten)",
+    yLabel: "Deckungsbeitrag in Euro",
+    xMax,
+    xFormat: (x) => formatDecimal(D(x), { max: 0 }),
+    yFormat: compactEur,
+    series: [{ id: "n", label: "Deckungsbeitrag zum neuen Preis", style: "solid", tone: "accent", points: [{ x: 0, y: 0 }, { x: xMax, y: num(d1) * xMax }] }],
+    hlines: [{ y: num(db0), label: `Bisher ${eur(db0)}` }],
+    markers: [{ x: num(q1), y: num(db1), kind: "plan", label: `Annahme: ${int(q1)}`, pos: "br" }],
+  };
+  const row = (q: Decimal, label: string) => [`${int(q)} (${label})`, eur(d1.mul(q), true), eur(db0)];
+  chart.table.rows = [row(q1, "Annahme")];
+  if (need) {
+    chart.markers!.push({ x: num(need), y: num(db0), kind: "target", label: `Halten: ${int(need)}`, pos: "tl" });
+    chart.table.rows.push(row(need, "zum Halten"));
+    chart.caption = `Die Linie zeigt den Deckungsbeitrag, den der neue Preis bei jeder Menge bringt (Stückbeitrag ${eur(d1)}). Sie erreicht den bisherigen Deckungsbeitrag von ${eur(db0)} bei ${int(need)} Einheiten; deine Annahme sind ${int(q1)} Einheiten (${eur(db1, true)}). Die Linie ist ein Rechenmodell, keine Prognose der Nachfrage.`;
+  } else {
+    chart.notice = "Der neue Stückdeckungsbeitrag ist nicht positiv: Keine Menge erreicht den bisherigen Deckungsbeitrag.";
+    chart.caption = `Zum neuen Preis bleibt je Einheit ${eur(d1, true)} über den variablen Kosten. Deshalb erreicht keine Menge den bisherigen Deckungsbeitrag von ${eur(db0)}; deine Annahme von ${int(q1)} Einheiten ergibt ${eur(db1, true)}.`;
+  }
+  chart.table.rows.unshift(row(q0, "bisherige Menge, zum neuen Preis"));
+  chart.summary = chart.caption;
+  return one(chart);
+};
+
+const rabattAbsatz: Builder = (i, r, variantId) => {
+  if (variantId === "preis-absatz") return preisAbsatz(i, r, variantId);
   const d0 = outOf(r, "Stückdeckungsbeitrag vorher");
   const d1 = outOf(r, "Stückdeckungsbeitrag nachher");
   if (!d0 || !d1) return none("Ohne gültige Eingaben gibt es keine Grafik.");

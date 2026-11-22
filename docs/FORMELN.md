@@ -238,7 +238,7 @@ Beispiel: Kostensatz = Periodenkosten / abrechenbare Stunden = 1.200,00 € / 60
 ## 16. Rabatt: nötiger Mehrabsatz
 
 - ID: `rabatt-absatz` · URL: `/rabatt-mehrabsatz-rechner/` · Kategorie: Kostenrechnung & Preise
-- Varianten: `prozent` (Rabatt in Prozent), `neuer-preis` (Neuer Preis)
+- Varianten: `prozent` (Rabatt in Prozent), `neuer-preis` (Neuer Preis), `preis-absatz` (Preis & Absatz)
 
     Neuer Preis = Ausgangspreis × (1 − Rabatt / 100)
     d₀ = Ausgangspreis − v · d₁ = neuer Preis − v
@@ -252,6 +252,8 @@ Beispiel: Kostensatz = Periodenkosten / abrechenbare Stunden = 1.200,00 € / 60
 Beispiel (Rabatt in Prozent): Neuer Preis = Ausgangspreis − Rabatt = 100,00 € × (1 − 10 %) = 90,00 € → Stückdeckungsbeitrag vorher = 100,00 € − 80,00 € = 20,00 € → Stückdeckungsbeitrag nachher = 90,00 € − 80,00 € = 10,00 € → Absatzfaktor = vorher / nachher = 20,00 € / 10,00 € = 2 → Mehrabsatz = (Absatzfaktor − 1) × 100 = 100 % → Neue Menge = bisherige Menge × Absatzfaktor = 100 × 2 = 200 → aufgerundet 200 Stück → Kontrolle mit ungerundeten Werten: 10,00 € × 200 = 2.000,00 € ≥ 20,00 € × 100 = 2.000,00 € ⇒ **Erforderlicher Mehrabsatz: 100 %**
 
 Beispiel (Neuer Preis): Neuer Preis = Ausgangspreis − Rabatt = 100,00 € × (1 − 10 %) = 90,00 € → Stückdeckungsbeitrag vorher = 100,00 € − 80,00 € = 20,00 € → Stückdeckungsbeitrag nachher = 90,00 € − 80,00 € = 10,00 € → Absatzfaktor = vorher / nachher = 20,00 € / 10,00 € = 2 → Mehrabsatz = (Absatzfaktor − 1) × 100 = 100 % → Neue Menge = bisherige Menge × Absatzfaktor = 100 × 2 = 200 → aufgerundet 200 Stück → Kontrolle mit ungerundeten Werten: 10,00 € × 200 = 2.000,00 € ≥ 20,00 € × 100 = 2.000,00 € ⇒ **Erforderlicher Mehrabsatz: 100 %**
+
+Beispiel (Preis & Absatz): Umsatz vorher = 100,00 € × 100 = 10.000,00 € · nachher = 90,00 € × 130 = 11.700,00 € → Stückdeckungsbeitrag vorher = 100,00 € − 60,00 € = 40,00 € · nachher = 90,00 € − 60,00 € = 30,00 € → Deckungsbeitrag vorher = 40,00 € × 100 = 4.000,00 € · nachher = 30,00 € × 130 = 3.900,00 € → Veränderung = 3.900,00 € − 4.000,00 € = −100,00 € → Menge zum Halten des bisherigen Deckungsbeitrags = 4.000,00 € / 30,00 € = 133,3333 → aufgerundet 134 Einheiten → Gewinn vorher = 4.000,00 € − 2.000,00 € = 2.000,00 € · nachher = 3.900,00 € − 2.000,00 € = 1.900,00 € ⇒ **Veränderung des Deckungsbeitrags: −100,00 €**
 
 ## 17. EBIT
 
@@ -306,7 +308,7 @@ Beispiel: Umsatzrendite = Jahresüberschuss / Nettoumsatz × 100 = 8.000,00 € 
 ## 21. Cashflow
 
 - ID: `cashflow` · URL: `/cashflow-rechner/` · Kategorie: Finanzen & Liquidität
-- Varianten: `operativ` (Operativer Cashflow), `erweitert` (Erweiterte Übersicht)
+- Varianten: `operativ` (Operativer Cashflow), `erweitert` (Erweiterte Übersicht), `plan` (Liquiditätsplan)
 
     Operativer Cashflow = betriebliche Einzahlungen − betriebliche Auszahlungen
     Netto-Cashflow = operativ + investiv + Finanzierung
@@ -319,6 +321,8 @@ Beispiel: Umsatzrendite = Jahresüberschuss / Nettoumsatz × 100 = 8.000,00 € 
 Beispiel (Operativer Cashflow): Operativer Cashflow = Einzahlungen − Auszahlungen = 30.000,00 € − 22.000,00 € = 8.000,00 € ⇒ **Operativer Cashflow: +8.000,00 €**
 
 Beispiel (Erweiterte Übersicht): Operativ = 30.000,00 € − 22.000,00 € = 8.000,00 € → Investiv = 0,00 € − 5.000,00 € = −5.000,00 € → Finanzierung = 2.000,00 € − 0,00 € = 2.000,00 € → Netto = 8.000,00 € + −5.000,00 € + 2.000,00 € = 5.000,00 € ⇒ **Erfasster Netto-Cashflow: +5.000,00 €**
+
+Beispiel (Liquiditätsplan): Endbestand = Anfangsbestand + Einzahlungen − Auszahlungen, je Monat fortgeschrieben, Start: 5.000,00 € → Monat 1: 5.000,00 € + 12.000,00 € − 11.000,00 € = 6.000,00 € → Monat 2: 6.000,00 € + 9.000,00 € − 16.000,00 € = −1.000,00 € → Monat 3: −1.000,00 € + 15.000,00 € − 12.000,00 € = 2.000,00 € → Monat 4: 2.000,00 € + 8.000,00 € − 13.500,00 € = −3.500,00 € → Monat 5: −3.500,00 € + 16.000,00 € − 11.000,00 € = 1.500,00 € → Monat 6: 1.500,00 € + 12.000,00 € − 11.500,00 € = 2.000,00 € ⇒ **Endbestand nach Monat 6: +2.000,00 €**
 
 ## 22. Working Capital
 

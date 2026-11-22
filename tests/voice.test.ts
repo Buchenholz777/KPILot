@@ -8,17 +8,23 @@ describe("Erklärstimme: Sprechtext", () => {
     expect(speechText("Netto-Cashflow")).toBe("Netto-Käschfloh");
     expect(speechText("im Conversion-Rate-Rechner")).toBe("im Konwörschen-Räjt-Rechner");
     expect(speechText("10 % ROI")).toBe("10 % Er-O-I");
+    expect(speechText("CLV minus CAC")).toBe("CLV minus Zeh-A-Zeh");
   });
 
   it("liest Ordinalzahlen als Ordinalzahlen", () => {
     expect(speechText("Mit dem 150. Stück sind … Erst das 151. Stück bringt")).toBe("Mit dem hundertfünfzigsten Stück sind … Erst das hunderteinundfünfzigste Stück bringt");
   });
 
+  it("liest „1. Grades“ als „ersten Grades“", () => {
+    expect(speechText("Bei Liquidität 1. Grades von 50 %")).toBe("Bei Liquidität ersten Grades von 50 %");
+    expect(speechText("Grad 2 zählt Forderungen")).toBe("Grad 2 zählt Forderungen");
+  });
+
   it("lässt in keinem Cue Ordinalpunkt oder englische Schreibweise übrig", () => {
     for (const v of VIDEOS)
       for (const c of v.cues) {
         const s = speechText(c.text);
-        expect(s, `${v.id}: ${c.text}`).not.toMatch(/\d+\. [a-zäöüß]|\d+\. Stück|Break-even|Cashflow|Conversion|\bROI\b|–/);
+        expect(s, `${v.id}: ${c.text}`).not.toMatch(/\d+\. [a-zäöüß]|\d+\. Stück|\d\. Grades|Break-even|Cashflow|Conversion|\bROI\b|\bCAC\b|–/);
       }
   });
 });

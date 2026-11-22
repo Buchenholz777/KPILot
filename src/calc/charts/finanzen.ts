@@ -1,7 +1,8 @@
 import type { Builder } from "./kit";
-import { niceMax, bars, bridge, composition, eur, int, isPartOfWhole, meter, none, num, outOf, pct, val, one } from "./kit";
+import { niceMax, bars, bridge, composition, compactEur, eur, int, isPartOfWhole, meter, none, num, outOf, pct, val, one } from "./kit";
 import type { LinesChart } from "../chart-types";
 import { D } from "../../lib/decimal";
+import { liquidityPlan } from "../modules/cashflow";
 import { formatDecimal, formatValue } from "../../lib/number";
 
 const PER: Record<string, string> = { jahr: "Jahre", quartal: "Quartale", monat: "Monate" };
@@ -61,7 +62,46 @@ const ratioEur = (a: { label: string; key: string }, b: { label: string; key: st
   };
 };
 
+/** Liquiditätsplan: Endbestand je Periode (Linie), Nulllinie als Engpass-Grenze, bedienbare Periodenauswahl. */
+const liquiditaetsplan: Builder = (i, r) => {
+  if (r.status !== "ok") return none("Ohne gültige Eingaben gibt es keine Grafik.");
+  const rows = i.rows.perioden ?? [];
+  const startB = val(i, "start")!;
+  const verzug = Number((val(i, "verzug") ?? D(0)).toString());
+  const pk = i.choices.periode === "woche" ? { one: "Woche", many: "Wochen" } : { one: "Monat", many: "Monate" };
+  const { plan } = liquidityPlan(startB, rows, verzug);
+  const base = verzug > 0 ? liquidityPlan(startB, rows, 0).plan : undefined;
+  const pts = (pl: typeof plan) => [{ x: 0, y: num(startB) }, ...pl.map((p) => ({ x: p.k, y: num(p.end) }))];
+  let minRow = plan[0];
+  for (const p of plan) if (p.end.lt(minRow.end)) minRow = p;
+  const chart: LinesChart = {
+    kind: "lines",
+    title: `Geplanter Endbestand je ${pk.one}`,
+    caption: "",
+    summary: "",
+    table: { head: [pk.one, "Anfangsbestand", "Einzahlungen", "Auszahlungen", "Endbestand"], rows: plan.map((p) => [String(p.k), eur(p.start, true), eur(p.ein), eur(p.aus), eur(p.end, true)]) },
+    xLabel: `${pk.one} des Plans`,
+    yLabel: "Bestand in Euro",
+    xMax: plan.length,
+    xFormat: (x) => String(Math.round(x)),
+    yFormat: compactEur,
+    series: [
+      { id: "plan", label: verzug > 0 ? `Mit ${verzug} ${verzug === 1 ? pk.one : pk.many} Zahlungsverzug` : "Geplanter Endbestand", style: "solid", tone: "accent", points: pts(plan) },
+      ...(base ? [{ id: "base", label: "Ohne Verzug", style: "dashed" as const, tone: "ink" as const, points: pts(base) }] : []),
+    ],
+    hlines: [{ y: 0, label: "0 €" }],
+    markers: [{ x: minRow.k, y: num(minRow.end), kind: "point", label: `Tiefpunkt ${eur(minRow.end, true)}`, pos: "br" }],
+    explore: { label: `${pk.one} wählen`, stops: plan.map((p) => ({ x: p.k, lines: [{ label: "Einzahlungen", text: eur(p.ein) }, { label: "Auszahlungen", text: eur(p.aus) }, { label: "Endbestand", text: eur(p.end, true) }] })) },
+  };
+  const neg = plan.filter((p) => p.end.isNegative());
+  chart.caption = `Der Bestand startet bei ${eur(startB, true)} und endet nach ${plan.length} ${pk.many} bei ${eur(plan[plan.length - 1].end, true)}. ${neg.length ? `In ${neg.length} ${neg.length === 1 ? pk.one : pk.many} liegt er unter 0 € (niedrigster Stand ${eur(minRow.end, true)}).` : "Er bleibt in jeder Periode bei oder über 0 €."}${base ? " Die gestrichelte Linie zeigt denselben Plan ohne Verzug." : ""}`;
+  chart.summary = chart.caption;
+  chart.notice = "Plan aus eingegebenen Zahlungen – keine Prognose.";
+  return one(chart);
+};
+
 const cashflow: Builder = (i, r, variantId) => {
+  if (variantId === "plan") return liquiditaetsplan(i, r, variantId);
   if (r.status !== "ok") return none("Ohne gültige Eingaben gibt es keine Grafik.");
   const mk = (label: string, key: string, sign: 1 | -1) => {
     const x = val(i, key);

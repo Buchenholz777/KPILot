@@ -7,6 +7,7 @@ import { TOPIC_BY_ID } from "../src/data/registry";
 
 /** Rechnet einen Video-Check mit dem echten Rechner nach. „Label~n“ = auf n Nachkommastellen gerundet vergleichen. */
 function verify(calcId: string, c: VideoCheck) {
+  calcId = c.calc ?? calcId;
   const variant = getCalc(calcId).variants.find((v) => v.id === c.variant);
   expect(variant, `${calcId}/${c.variant}`).toBeDefined();
   const r = run(variant!, c.values).result;
@@ -23,8 +24,9 @@ function verify(calcId: string, c: VideoCheck) {
 }
 
 describe("Erklärvideos: Konfiguration", () => {
-  it("genau sechs Videos mit eindeutigen IDs", () => {
-    expect(VIDEOS.map((v) => v.id)).toEqual(["break-even", "cashflow", "deckungsbeitrag", "marge", "roi", "conversion"]);
+  it("zwölf Videos mit eindeutigen IDs und eindeutigem Rechner", () => {
+    expect(VIDEOS.map((v) => v.id)).toEqual(["break-even", "cashflow", "deckungsbeitrag", "marge", "roi", "conversion", "ebit-ebitda", "roas", "liquiditaet", "clv-cac", "rabatt-mehrabsatz", "amortisation-kapitalwert"]);
+    expect(new Set(VIDEOS.map((v) => v.calcId)).size).toBe(VIDEOS.length);
   });
   for (const v of VIDEOS) {
     describe(v.id, () => {

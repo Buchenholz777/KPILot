@@ -33,6 +33,9 @@ const END_PAD = 0.4;
 const ORDINALS: [RegExp, string][] = [
   [/\bdem 150\. /g, "dem hundertfünfzigsten "],
   [/\bdas 151\. /g, "das hunderteinundfünfzigste "],
+  [/\b1\. Grades\b/g, "ersten Grades"],
+  [/\b2\. Grades\b/g, "zweiten Grades"],
+  [/\b3\. Grades\b/g, "dritten Grades"],
 ];
 
 /** Englische Fachbegriffe als deutsche Lautumschrift (die Stimme ist deutsch). Reihenfolge: lange Formen zuerst. */
@@ -41,6 +44,7 @@ const TERMS: [RegExp, string][] = [
   [/Cashflow/g, "Käschfloh"],
   [/Conversion[- ]Rate/g, "Konwörschen-Räjt"],
   [/\bROI\b/g, "Er-O-I"],
+  [/\bCAC\b/g, "Zeh-A-Zeh"],
 ];
 
 /** Wandelt einen Cue-Text (wie im Bild/Untertitel) in den Sprechtext für die Synthese um. */

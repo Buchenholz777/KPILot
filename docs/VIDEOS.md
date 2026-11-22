@@ -1,6 +1,6 @@
 # KPI-Erklärvideos „In 60 Sekunden verstehen“
 
-Sechs kurze, animierte Erklärvideos im KPILot-Stil. Alle Videos werden **programmatisch und reproduzierbar** aus
+Zwölf kurze, animierte Erklärvideos im KPILot-Stil (sechs Basis-Kennzahlen und sechs Vertiefungsthemen). Alle Videos werden **programmatisch und reproduzierbar** aus
 TypeScript-Szenen erzeugt und von einer lokal erzeugten deutschen Erklärstimme (Piper, CC0) gesprochen – ohne
 kostenpflichtige Video-, Bild- oder Stimmengeneratoren.
 
@@ -12,6 +12,12 @@ kostenpflichtige Video-, Bild- oder Stimmengeneratoren.
 | Marge & Aufschlag | `/margenrechner/` | 1:06 | Einkauf 80 €, Verkauf 100 € → 20 € Rohertrag, 20 % Marge, 25 % Aufschlag |
 | ROI | `/roi-rechner/` | 1:06 | 5.000 € Gewinn ÷ 50.000 € Kapital = 10 % für den betrachteten Zeitraum (nicht annualisiert) |
 | Conversion Rate | `/conversion-rate-rechner/` | 1:06 | 25 Besuche mit Kauf ÷ 1.000 Besuche = 2,5 % (Besuche ≠ Personen) |
+| EBIT & EBITDA | `/ebitda-rechner/` | 1:06 | EBIT 20.000 € + Abschreibungen 10.000 € = EBITDA 30.000 € (ein Ergebnis, kein Kontostand) |
+| ROAS & Gewinn | `/roas-rechner/` | 1:06 | Werbeumsatz 2.000 €, Werbekosten 500 € → ROAS 4; Quote 30 % → Beitrag 600 € − 500 € = 100 €; Mindest-ROAS 1 ÷ 0,3 ≈ 3,33 |
+| Liquiditätsgrade | `/liquiditaetsrechner/` | 1:06 | liquide Mittel 10.000 €, Forderungen 15.000 €, Vorräte 20.000 €, Sonstiges 5.000 €, Schulden 20.000 € → 50 % / 125 % / 250 % |
+| CLV & CAC | `/clv-rechner/` | 1:06 | Bestellwert 50 €, 4 Käufe/Jahr, 3 Jahre, Quote 40 % → CLV 240 €; CAC 3.000 € ÷ 30 = 100 €; Beitrag 140 €, Verhältnis 2,4 |
+| Rabatt & Mehrabsatz | `/rabatt-mehrabsatz-rechner/` | 1:06 | Preis 100 €, Kosten 80 €, 10 % Rabatt → Beitrag 20 € → 10 €, +100 % Absatz (100 → 200 Stück); Gegenprobe 60 € Kosten → +33,3 % |
+| Amortisation & Kapitalwert | `/amortisationsrechner/` | 1:06 | 10.000 € Investition, 2.500 € je Jahr → 4 Jahre; Kapitalwert bei 10 % Zins (Beispielannahme) −2.075 € |
 
 ## Dateien
 
@@ -33,7 +39,7 @@ Voraussetzungen: Node ≥ 22.18 (führt TypeScript direkt aus), ffmpeg/ffprobe i
 für die Stimme python3 mit `piper-tts` und die Stimme unter `video/voices/` (siehe „Erklärstimme“).
 
 ```bash
-npm run video:render -- all                 # alle sechs: Master + Web + Vorschaubild
+npm run video:render -- all                 # alle zwölf: Master + Web + Vorschaubild + Stimme
 npm run video:render -- break-even          # ein Video
 npm run video:render -- roi --stills 12,31.5 --out /tmp/stills   # Einzelbilder zur Sichtprüfung
 npm run video:voice -- all                  # nur die Erklärstimme neu erzeugen und einsetzen
@@ -158,6 +164,57 @@ und offline erzeugt – kein Cloud- oder Bezahldienst, keine Daten verlassen den
    Definition (Ziel, Zeitraum, Basis).
 5. **Irrtum** – Variante A 1.000 × 2,5 % = 25 Käufe vs. B 400 × 5 % = 20 Käufe: doppelte Rate, weniger Käufe.
 
+### EBIT & EBITDA
+1. **Problem** – Kalle meldet 20.000 € EBIT, ein Freund 30.000 € EBITDA: „Wer hat recht?“
+2. **Intuition** – EBIT = Ergebnis vor Zinsen und Steuern; die Abschreibung (10.000 €, Maschine) ist darin schon abgezogen.
+3. **Zahlen** – Abschreibung verteilt den Maschinenpreis auf Jahre (kein Geldabfluss in diesem Jahr); Brücke EBIT 20.000 € +
+   Abschreibung 10.000 € = EBITDA 30.000 €; „beide Zahlen stimmen“.
+4. **Interpretation** – Schema (ohne Maßstab): gleiches EBITDA, unterschiedliches EBIT bei wenig/vielen Maschinen; Ersatz
+   der Maschine bleibt ein Kostenfaktor, den nur das EBIT zeigt.
+5. **Irrtum** – EBITDA ≠ Geld auf dem Konto (Ergebnis eines Zeitraums, kein Bestand).
+
+### ROAS & Gewinn
+1. **Problem** – 500 € Werbekosten → 2.000 € Werbeumsatz.
+2. **Intuition** – ROAS = Werbeumsatz ÷ Werbekosten = 4; aber vom Umsatz bleibt nur der Deckungsbeitrag (Säule 1.400 € variable
+   Kosten + 600 € Beitrag, maßstäblich).
+3. **Zahlen** – Brücke Umsatz 2.000 € → variable Kosten −1.400 € → Deckungsbeitrag 600 € → Werbekosten −500 € → 100 €;
+   Mindest-ROAS 1 ÷ 0,3 ≈ 3,33 auf einer ROAS-Skala 0–5.
+4. **Interpretation** – bei ROAS 3: 1.500 € → 450 € → −500 € = −50 €; Quote 50/30/20 % → Mindest-ROAS 2 / 3,33 / 5.
+5. **Irrtum** – hoher ROAS ≠ Gewinn; Fixkosten sind darin nicht gedeckt.
+
+### Liquiditätsgrade
+1. **Problem** – 50.000 € Umlaufvermögen, 20.000 € Schulden fällig: „Reicht das Geld?“
+2. **Intuition** – Säule aus Kasse/Bank, Forderungen, Vorräten, Sonstigem (maßstäblich) – drei Stufen von „sofort“ bis „später“.
+3. **Zahlen** – Balken gegen die 100-%-Linie: Grad 1 = 50 %, Grad 2 = 125 %, Grad 3 = 250 %.
+4. **Interpretation** – Weg zum Geld (sofort / wenn der Kunde zahlt / erst nach Verkauf); 20 Kästchen à 1.000 € Schulden,
+   10 durch Kasse und Bank gedeckt.
+5. **Irrtum** – viel Vermögen ≠ zahlungsfähig; entscheidend ist verfügbares Geld. (Keine Richtwerte: keine belastbare Quelle.)
+
+### CLV & CAC
+1. **Problem** – Kalle gibt Geld für Werbung und Vertrieb aus, ein Neukunde kommt.
+2. **Intuition** – CAC: 2.000 € + 1.000 € = 3.000 € ÷ 30 Neukunden = 100 €; CLV als Beitrag über drei Jahre.
+3. **Zahlen** – 12 Käufe à 50 € = 600 € Umsatz → 40 % Beitrag = 240 € CLV; Brücke 240 € − 100 € = 140 €; Verhältnis 2,4.
+4. **Interpretation** – Zeitpunkt: 100 € heute, bis zu 240 € über drei Jahre. Modell: 2 statt 4 Käufe pro Jahr halbiert den CLV (120 €).
+5. **Irrtum** – CLV ≠ Umsatz (600 € vs. 240 € Beitrag).
+
+### Rabatt & Mehrabsatz
+1. **Problem** – 100 €, 80 € Kosten, 10 % Rabatt.
+2. **Intuition** – zwei Säulen: Preis 100 € = 80 € + 20 € Beitrag; Preis 90 € = 80 € + 10 € Beitrag (halb so groß).
+3. **Zahlen** – Flächen (Menge × Beitrag, maßstäblich): 100 × 20 € = 2.000 € = 200 × 10 €; +100 %. Gegenprobe: 60 € Kosten →
+   100 × 40 € = 4.000 € = 133,3 × 30 € (+33,3 %).
+4. **Interpretation** – je kleiner der Beitrag, desto größer der nötige Mehrabsatz; ob die Nachfrage kommt, ist eine Annahme
+   des Nutzers (keine Nachfrageelastizität im Rechner).
+5. **Irrtum** – 10 % Rabatt brauchen 10 % mehr Absatz – es ist immer mehr.
+
+### Amortisation & Kapitalwert
+1. **Problem** – Maschine 10.000 €, Rückfluss 2.500 € je Jahr.
+2. **Intuition** – 10.000 € ÷ 2.500 € = 4 Jahre; kumulierte Säulen erreichen die Investitionslinie im vierten Jahr.
+3. **Zahlen** – Geld von morgen ist weniger wert; Barwerte bei 10 % (Beispielannahme, Zahlungen am Jahresende, kein Restwert):
+   2.273 / 2.066 / 1.878 / 1.708 € = 7.925 €; Kapitalwert 7.925 € − 10.000 € = −2.075 € (unabhängig nachgerechnet im Test).
+4. **Interpretation** – zwei Kennzahlen, zwei Fragen: Amortisation „Wann ist das Geld zurück?“ (4 Jahre), Kapitalwert „Was
+   bleibt nach Zins?“ (−2.075 €). Der Zinssatz ist eine Annahme.
+5. **Irrtum** – kurze Amortisation ≠ gute Investition (der Gewinn danach fehlt).
+
 ## Website-Integration
 
 - **Rechnerseiten** (`src/pages/[slug].astro`): Videokarte im Bereich „Kurz erklärt“ – Vorschaubild (lazy, feste
@@ -166,7 +223,7 @@ und offline erzeugt – kein Cloud- oder Bezahldienst, keine Daten verlassen den
   `<video>` mit `controls`, Poster und deutscher Untertitelspur eingefügt – **kein Autoplay beim Laden, kein
   Video-Download beim Seitenaufruf**. Am Ende erscheint „Jetzt selbst berechnen“ (Sprung zu `#rechner`, kein Neuladen).
   Ohne JavaScript öffnet der Link die MP4-Datei.
-- **Lernbereich** (`/aufgaben/kennzahlen-lernen/`): Abschnitt „Kennzahlen visuell verstehen“ mit sechs Kacheln
+- **Lernbereich** (`/aufgaben/kennzahlen-lernen/`): Abschnitt „Kennzahlen visuell verstehen“ mit zwölf Kacheln
   (Vorschaubild, Kennzahl, Nutzen, Dauer, Link zum Rechner).
 - **Verfügbarkeit**: Karte, Kachel und VideoObject erscheinen nur, wenn Web-Datei **und** Vorschaubild unter
   `public/videos/` existieren (`src/lib/videos.ts`). Ein neues Video = Eintrag in `src/data/videos.ts` + Szene +

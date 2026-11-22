@@ -5,7 +5,6 @@ import {
   opt,
   out,
   det,
-  eur,
   pct,
   num,
   toInput,
@@ -15,6 +14,9 @@ import {
   ceilQty,
 } from "../helpers";
 import type { Decimal } from "../../lib/decimal";
+
+/** Euro mit optionalem Vorzeichen (+/−). */
+const eur = (d: Decimal, signed = false) => formatValue(d, "money", undefined, signed);
 
 const preis = {
   key: "preis",
@@ -143,6 +145,113 @@ export function discountEconomics(c: Calc, i: Inputs, rabattPct?: Decimal): Calc
   return result;
 }
 
+
+const q0Pflicht = {
+  ...q0,
+  label: "Bisheriger Absatz im Zeitraum",
+  min: "positive" as const,
+  optional: false,
+  help: "Einheiten, die du bisher im gewählten Zeitraum zum Ausgangspreis verkaufst.",
+};
+const preisNeu = {
+  key: "neuerPreis",
+  label: "Neuer Preis netto je Einheit",
+  unit: "€ je Einheit",
+  min: "nonneg" as const,
+  help: "Preis nach der Änderung – darf höher oder niedriger sein als der Ausgangspreis.",
+};
+const q1 = {
+  key: "q1",
+  label: "Erwarteter Absatz zum neuen Preis",
+  unit: "Einheiten",
+  min: "nonneg" as const,
+  integer: true,
+  help: "Deine eigene Annahme für den Zeitraum. Der Rechner kennt keine Nachfragereaktion und schätzt sie nicht.",
+};
+const fixkosten = {
+  key: "F",
+  label: "Fixkosten im Zeitraum (optional)",
+  unit: "€",
+  min: "nonneg" as const,
+  optional: true,
+  help: "Nur nötig, wenn du Gewinn und Break-even-Menge sehen möchtest. Gleicher Zeitraum, gleiche Fixkosten vor und nach der Preisänderung.",
+};
+
+/** Preis-Absatz-Gewinn: Ausgangslage gegen Szenario mit eigener Absatzannahme (keine Nachfragefunktion). */
+export function priceVolumeEconomics(i: Inputs): CalcResult {
+  const p0 = val(i, "preis"),
+    vk = val(i, "v"),
+    p1 = val(i, "neuerPreis"),
+    qa = val(i, "q0"),
+    qb = val(i, "q1");
+  const F = opt(i, "F");
+  const d0 = p0.sub(vk),
+    d1 = p1.sub(vk);
+  const u0 = p0.mul(qa),
+    u1 = p1.mul(qb);
+  const db0 = d0.mul(qa),
+    db1 = d1.mul(qb);
+  const dDb = db1.sub(db0);
+  const dir = p1.lt(p0) ? "niedrigeren" : p1.gt(p0) ? "höheren" : "unveränderten";
+  const steps = [
+    `Umsatz vorher = ${eur(p0)} × ${num(qa)} = ${eur(u0)} · nachher = ${eur(p1)} × ${num(qb)} = ${eur(u1)}`,
+    `Stückdeckungsbeitrag vorher = ${eur(p0)} − ${eur(vk)} = ${eur(d0)} · nachher = ${eur(p1)} − ${eur(vk)} = ${eur(d1)}`,
+    `Deckungsbeitrag vorher = ${eur(d0)} × ${num(qa)} = ${eur(db0)} · nachher = ${eur(d1)} × ${num(qb)} = ${eur(db1)}`,
+    `Veränderung = ${eur(db1)} − ${eur(db0)} = ${eur(dDb, true)}`,
+  ];
+  const extra: Out[] = [
+    out("Umsatz vorher", u0, "money"),
+    out("Umsatz nachher", u1, "money"),
+    out("Deckungsbeitrag vorher", db0, "money", undefined, true),
+    out("Deckungsbeitrag nachher", db1, "money", undefined, true),
+    out("Neuer Verkaufspreis", p1, "money", "je Einheit"),
+  ];
+  let meaning = `Mit ${eur(p1)} statt ${eur(p0)} und der von dir angenommenen Menge von ${num(qb)} statt ${num(qa)} Einheiten ${periodName(i)} ${dDb.isNegative() ? "sinkt" : dDb.isZero() ? "bleibt" : "steigt"} der Deckungsbeitrag von ${eur(db0)} auf ${eur(db1)}${dDb.isZero() ? "" : ` (${eur(dDb, true)})`}.`;
+  // Menge, die den bisherigen Deckungsbeitrag hält (nur bei positiven Stückbeiträgen vorher und nachher)
+  if (d0.gt(0) && d1.gt(0)) {
+    const need = ceilQty(db0.div(d1));
+    const gap = need.sub(qb);
+    extra.push(out("Erforderliche neue Menge", need, "integer", "Einheiten"));
+    extra.push(det(out("Mehrabsatz zum Halten des Deckungsbeitrags", need.div(qa).sub(1).mul(100), "percent", undefined, true)));
+    steps.push(`Menge zum Halten des bisherigen Deckungsbeitrags = ${eur(db0)} / ${eur(d1)} = ${formatValue(db0.div(d1), "number")} → aufgerundet ${num(need)} Einheiten`);
+    meaning += gap.gt(0)
+      ? ` Um den bisherigen Deckungsbeitrag zu halten, wären mindestens ${num(need)} Einheiten nötig – deine Annahme liegt ${num(gap)} darunter.`
+      : ` Dein erwarteter Absatz reicht aus, um den bisherigen Deckungsbeitrag zu halten (mindestens ${num(need)} Einheiten nötig).`;
+  } else if (d1.lte(0)) {
+    steps.push(`Der neue Stückdeckungsbeitrag ist ${eur(d1)}: Mehr Absatz zu diesem Preis erhöht den Deckungsbeitrag nicht${d1.isNegative() ? " und vergrößert den Verlust" : ""}.`);
+    meaning += ` Der Preis deckt die variablen Kosten nicht (Stückdeckungsbeitrag ${eur(d1, true)}); es gibt keine Menge, die den bisherigen Deckungsbeitrag hält.`;
+  } else {
+    steps.push(`Schon vor der Änderung war der Stückdeckungsbeitrag ${eur(d0, true)}; ein „Halten“ des bisherigen Deckungsbeitrags ist nicht definiert.`);
+  }
+  // Gewinn und Break-even nur mit Fixkosten
+  if (F) {
+    const g0 = db0.sub(F),
+      g1 = db1.sub(F);
+    extra.push(out("Gewinn vorher", g0, "money", undefined, true), out("Gewinn nachher", g1, "money", undefined, true));
+    steps.push(`Gewinn vorher = ${eur(db0)} − ${eur(F)} = ${eur(g0)} · nachher = ${eur(db1)} − ${eur(F)} = ${eur(g1)}`);
+    const be = (d: Decimal) => (d.gt(0) ? ceilQty(F.div(d)) : undefined);
+    const be0 = be(d0),
+      be1 = be(d1);
+    extra.push(be0 ? out("Break-even-Menge vorher", be0, "integer", "Einheiten") : out("Break-even-Menge vorher", D(0), "integer", "nicht erreichbar"));
+    extra.push(be1 ? out("Break-even-Menge nachher", be1, "integer", "Einheiten") : out("Break-even-Menge nachher", D(0), "integer", "nicht erreichbar"));
+    meaning += ` Nach Abzug von ${eur(F)} Fixkosten ergibt das ${g1.isNegative() ? "einen Verlust" : "einen Gewinn"} von ${eur(g1.abs())} (vorher ${eur(g0, true)}).`;
+    if (!be1) steps.push("Break-even-Menge nachher: Der Preis deckt die variablen Kosten nicht – die Fixkosten werden bei keiner Menge gedeckt.");
+  }
+  const result: CalcResult = {
+    status: "ok",
+    main: out("Veränderung des Deckungsbeitrags", dDb, "money", undefined, true),
+    extra,
+    meaning,
+    steps,
+    notes: [
+      `Die Menge ${num(qb)} ist deine Annahme zum ${dir} Preis. Der Rechner kennt keine Nachfragereaktion (Preiselastizität) und schätzt sie nicht; mit der Mengenlinie in der Grafik kannst du andere Annahmen vergleichen.`,
+      "Annahme: Die variablen Kosten je Einheit und die Fixkosten bleiben gleich. Mengenrabatte, Kannibalisierung und Kapazitätsgrenzen sind nicht berücksichtigt.",
+    ],
+    tone: dDb.isNegative() ? "negative" : dDb.isZero() ? "neutral" : "positive",
+  };
+  return result;
+}
+
 const transfers: CalcDef["transfers"] = [
   {
     target: "gewinn",
@@ -207,6 +316,15 @@ const def: CalcDef = {
           };
         return discountEconomics({ p, v: val(i, "v"), p1, q0: opt(i, "q0") }, i);
       },
+    },
+    {
+      id: "preis-absatz",
+      label: "Preis & Absatz",
+      favLabel: "Preisänderung mit erwartetem Absatz bewerten",
+      question: "Lohnt sich ein anderer Preis, wenn ich mit einer bestimmten Absatzmenge rechne?",
+      fields: [preis, v, preisNeu, q0Pflicht, q1, fixkosten, periodField("Betrachtungszeitraum des Absatzes")],
+      example: { preis: "100", v: "60", neuerPreis: "90", q0: "100", q1: "130", F: "2000", zeitraum: "monat" },
+      compute: (i) => priceVolumeEconomics(i),
     },
   ],
   transfers,

@@ -108,7 +108,7 @@ Jeder Rechner und Modus zeigt direkt unter der Hauptzahl „Deine Berechnung als
 
 ## Erklärvideos
 
-Sechs animierte Erklärvideos („In 60 Sekunden verstehen“: Break-even, Cashflow, Deckungsbeitrag, Marge & Aufschlag, ROI, Conversion Rate) werden programmatisch aus TypeScript-Szenen gerendert (`video/`), zentrale Konfiguration inkl. Erzähltext in `src/data/videos.ts`. Rendern: `npm run video:render -- all` (benötigt ffmpeg und Playwright-Chromium), Prüfen: `npm run video:check`. Die Videos haben keine Tonspur; der Erzähltext steht im Bild, als Untertitel und als Transkript. Details, Storyboards und offene Punkte: [`docs/VIDEOS.md`](docs/VIDEOS.md).
+Sechs animierte Erklärvideos („In 60 Sekunden verstehen“: Break-even, Cashflow, Deckungsbeitrag, Marge & Aufschlag, ROI, Conversion Rate) werden programmatisch aus TypeScript-Szenen gerendert (`video/`), zentrale Konfiguration inkl. Erzähltext in `src/data/videos.ts`. Rendern: `npm run video:render -- all` (benötigt ffmpeg und Playwright-Chromium), Prüfen: `npm run video:check`. Die Videos haben eine lokal erzeugte deutsche Erklärstimme (Piper, `thorsten-medium`, CC0; `npm run video:voice -- all`); der Erzähltext steht zusätzlich im Bild, als Untertitel und als Transkript. Details, Storyboards und offene Punkte: [`docs/VIDEOS.md`](docs/VIDEOS.md).
 
 ## Neuen Rechner ergänzen
 

@@ -18,7 +18,7 @@ const titleId = `video-title-${v.id}`;
 ---
 
 <div class="video-card" id="erklaervideo" data-video-card data-src={videoSrc(v)} data-poster={posterSrc(v)} data-vtt={captionsSrc(v)} data-video-id={v.calcId}>
-  <a class="video-thumb" href={videoSrc(v)} data-video-open aria-haspopup="dialog" aria-label={`Video abspielen: ${v.title} (${displayDuration(v.duration)}, ohne Ton, mit Untertiteln)`}>
+  <a class="video-thumb" href={videoSrc(v)} data-video-open aria-haspopup="dialog" aria-label={`Video abspielen: ${v.title} (${displayDuration(v.duration)}, mit Erklärstimme und Untertiteln)`}>
     <img src={posterSrc(v)} width="1280" height="720" alt="" loading="lazy" decoding="async" />
     <span class="video-play" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22"><path d="M8 5.5v13l11-6.5z" fill="currentColor"></path></svg></span>
     <span class="video-dur" aria-hidden="true">{displayDuration(v.duration)}</span>
@@ -26,7 +26,7 @@ const titleId = `video-title-${v.id}`;
   <div class="video-meta">
     <h3 class="video-heading">In 60 Sekunden verstehen</h3>
     <p class="video-desc">{v.description}</p>
-    <p class="video-note">{displayDuration(v.duration)} · ohne Ton, Erzähltext im Bild und als Untertitel</p>
+    <p class="video-note">{displayDuration(v.duration)} · mit Erklärstimme, Text auch im Bild und als Untertitel</p>
     <details class="video-transcript">
       <summary>Transkript lesen</summary>
       {transcript(v).map((p) => <p>{p}</p>)}
@@ -63,7 +63,6 @@ const titleId = `video-title-${v.id}`;
       video.controls = true;
       video.preload = 'metadata';
       video.playsInline = true;
-      video.muted = true; // Videos haben keine Tonspur
       video.poster = card.dataset.poster!;
       video.setAttribute('aria-label', dlg.querySelector('h2')!.textContent ?? 'Erklärvideo');
       const src = document.createElement('source');

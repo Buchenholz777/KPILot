@@ -139,3 +139,20 @@ Gefundene und behobene Fehler: Klicks auf Weiterrechnen-Buttons gingen verloren,
 Gefundener und behobener Fehler: Das Attribut `data-calc` der Videokarte wurde vom Rechner-Skript (`querySelector("[data-calc]")`) zuerst gefunden → Skriptfehler; umbenannt in `data-video-id`.
 
 **Nicht geprüft / offen:** Hörprobe der synthetischen Stimme durch einen Menschen, Safari/iOS-Wiedergabe, Firefox, Screenreader, echte Geräte.
+
+
+## Runde 5: neue Modi und sechs weitere Erklärvideos, 22.11.2026
+
+| Prüfung | Methode | Ergebnis |
+|---|---|---|
+| Modus „Preis & Absatz“ (Rabatt-Rechner): Umsatz, Deckungsbeitrag, Gewinn vorher/nachher, Menge zum Halten, Break-even; Preis ≤ variable Kosten, Ausgangspreis unter Kosten, Absatz 0, Dezimalwerte | `tests/preis-absatz.test.ts` (von Hand gerechnete Werte) | 8 Tests bestanden |
+| Modus „Liquiditätsplan“ (Cashflow-Rechner): Fortschreibung je Periode, negativer Bestand, Zahlungsverzug mit Vergleich ohne/mit Verzug, Überziehung, Wochen/Monate, Grafik | `tests/liquiditaetsplan.test.ts` | 10 Tests bestanden |
+| Sechs neue Videos: Beispielwerte = Rechnerbeispiel, alle gezeigten Zahlen gegen den Rechner; Kapitalwert, CLV/CAC-Verhältnis, Mindest-ROAS-Staffel unabhängig nachgerechnet | `tests/videos.test.ts`, `tests/videos-rechnungen.test.ts` | bestanden |
+| Stimme: Sprechtext (u. a. „CAC“, „1. Grades“), Zeitplan; alle 12 Videos ≤ 12 % beschleunigt | `tests/voice.test.ts` | bestanden |
+| 12 Videodateien: H.264, AAC, 66,0 s, nicht still, faststart, 2,0–2,5 MB | `npm run video:check` | 12/12 bestanden |
+| Browser: Karten auf 12 Seiten, Lernbereich 12 Kacheln, Ton an, 114 Rechner-Modus-Aufrufe Desktop + 375 px | `e2e-videos`, `e2e-charts`, `e2e-smoke` | ohne Befund |
+| Gesamt | `npm test`, `npm run check`, `build`, `check:site` | 579 Tests · 0 Fehler |
+
+Sichtprüfung der neuen Szenen über Einzelbilder: behoben wurden überlaufende Beträge in Karten, Beschriftungen unter dem Erzählband, ein überdeckter Balkentext und überlappende Balken im Firmenvergleich.
+
+**Nicht geprüft / offen:** Hörprobe der synthetischen Stimme durch einen Menschen (insbesondere „ROAS“, „EBITDA“, Zahlen), Safari/iOS und Firefox auf echten Geräten, Screenreader. Nur konzipiert, nicht umgesetzt: Break-even-ROAS als eigener Rechner (der Modus „Werbewirtschaftlichkeit“ liefert Mindest-ROAS), NPV/IRR als Rechner, KPI-Zusammenhangsdiagramm, „Schrittweise verstehen“.

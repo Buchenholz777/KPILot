@@ -1,7 +1,8 @@
 # KPI-Erklärvideos „In 60 Sekunden verstehen“
 
 Sechs kurze, animierte Erklärvideos im KPILot-Stil. Alle Videos werden **programmatisch und reproduzierbar** aus
-TypeScript-Szenen erzeugt – ohne kostenpflichtige Video-, Bild- oder Stimmengeneratoren.
+TypeScript-Szenen erzeugt und von einer lokal erzeugten deutschen Erklärstimme (Piper, CC0) gesprochen – ohne
+kostenpflichtige Video-, Bild- oder Stimmengeneratoren.
 
 | Video | Rechnerseite | Dauer | Beispiel (= Rechnerbeispiel) |
 | --- | --- | --- | --- |
@@ -20,41 +21,62 @@ TypeScript-Szenen erzeugt – ohne kostenpflichtige Video-, Bild- oder Stimmenge
 | `video/engine.ts` | Motion-Engine: Zeit → SVG (1920 × 1080), Easing, Designsystem, Figur „Kalle“, Sprechblasen, Münzen, Karten, Wasserfall-/Stapeldiagramme, Titel- und Abschlusskarte, Erzählband |
 | `video/scenes/<id>.ts` | Eine Datei pro Video: die fünf Szenen als reine Funktion der Zeit |
 | `video/render.ts` | Rendert Frames in Chromium (Playwright) und kodiert per ffmpeg |
-| `public/videos/<id>-720.mp4` | Webfassung 1280 × 720, H.264 High, 30 fps, CRF 27, ohne Tonspur, `faststart` |
+| `video/voice.ts`, `video/tts.py` | Erklärstimme: Sprechtext, Zeitplan, Piper-Synthese, Tonspur, Einsetzen ins MP4 |
+| `public/videos/<id>-720.mp4` | Webfassung 1280 × 720, H.264 High, 30 fps, CRF 27, AAC-Tonspur (Erklärstimme), `faststart` |
 | `public/videos/<id>-poster.jpg` | Vorschaubild 1280 × 720 (ohne Erzählband) |
 | `/videos/<id>.vtt` | WebVTT-Untertitel, beim Build aus `cues` erzeugt (`src/pages/videos/[id].vtt.ts`) |
 | `video/out/<id>-1080.mp4` | Master 1920 × 1080, CRF 18 (nicht im Repository, `.gitignore`; jederzeit neu erzeugbar) |
 
 ## Reproduzieren
 
-Voraussetzungen: Node ≥ 22.18 (führt TypeScript direkt aus), ffmpeg/ffprobe im `PATH`, Playwright mit Chromium.
+Voraussetzungen: Node ≥ 22.18 (führt TypeScript direkt aus), ffmpeg/ffprobe im `PATH`, Playwright mit Chromium,
+für die Stimme python3 mit `piper-tts` und die Stimme unter `video/voices/` (siehe „Erklärstimme“).
 
 ```bash
 npm run video:render -- all                 # alle sechs: Master + Web + Vorschaubild
 npm run video:render -- break-even          # ein Video
 npm run video:render -- roi --stills 12,31.5 --out /tmp/stills   # Einzelbilder zur Sichtprüfung
+npm run video:voice -- all                  # nur die Erklärstimme neu erzeugen und einsetzen
 npm run video:check                          # ffprobe-Prüfung gegen die Konfiguration
 ```
 
 Ein Video dauert auf 4 Kernen ca. 2–3 Minuten. Die Ausgabe ist deterministisch (keine Zufallswerte ohne festen
 Startwert), daher erzeugt derselbe Stand dieselben Bilder.
 
-## Ton und Erzählstimme – bewusst offen
+## Erklärstimme
 
-- Geprüft wurden kostenlose, lokal laufende Sprachsynthesen: `espeak`/`espeak-ng`, `piper`, `pico2wave`, `festival`,
-  `flite`, `pyttsx3` – **keine ist in der Produktionsumgebung installiert**. `espeak-ng` wäre per Paketmanager
-  installierbar, klingt aber deutlich robotisch (laut Auftrag ausgeschlossen). `piper-tts` (neuronale Stimmen, z. B.
-  „thorsten“ für Deutsch) ist als Paket installierbar, die **Stimmmodelle liegen aber auf huggingface.co, das die
-  Netzwerkrichtlinie dieser Umgebung blockiert** (HTTP 403). Kostenpflichtige oder externe Dienste wurden nicht ohne
-  Freigabe genutzt.
-- Deshalb haben die Videos **keine Tonspur**. Der vollständige Erzähltext ist (1) **synchron im Bild** eingeblendet
-  (Erzählband unten), (2) als **WebVTT-Untertitel** im Player wählbar und (3) als **Transkript** auf der Seite lesbar.
-  Lesegeschwindigkeit höchstens 17 Zeichen/Sekunde (Test).
-- Eine Stimme lässt sich später ergänzen, ohne die Animation zu ändern (z. B. mit Piper, sobald huggingface.co
-  erreichbar ist und die Stimme nach einer Hörprobe freigegeben wurde): Sprachaufnahme oder freigegebene TTS je Cue
-  erzeugen, zu einer Tonspur zusammensetzen und mit `ffmpeg -i video.mp4 -i voice.m4a -c:v copy -c:a aac -shortest`
-  muxen. Die Cue-Zeiten in `src/data/videos.ts` sind die Taktung. Danach in der Videokarte den Hinweis „ohne Ton“
-  anpassen und `muted` im Player entfernen (`src/components/VideoCard.astro`).
+Jedes Video hat eine **moderierende deutsche Erklärstimme**, die den Erzähltext (`cues`) spricht. Sie wird lokal
+und offline erzeugt – kein Cloud- oder Bezahldienst, keine Daten verlassen den Rechner.
+
+- **Synthese**: [Piper](https://github.com/OHF-Voice/piper1-gpl) (`pip install piper-tts`, Version 1.8) mit der Stimme
+  **`de_DE-thorsten-medium`** (22 kHz) aus `rhasspy/piper-voices` auf huggingface.co. Download nach `video/voices/`
+  (nicht im Repository, ca. 63 MB):
+
+  ```bash
+  mkdir -p video/voices && cd video/voices
+  curl -LO https://huggingface.co/rhasspy/piper-voices/resolve/main/de/de_DE/thorsten/medium/de_DE-thorsten-medium.onnx
+  curl -LO https://huggingface.co/rhasspy/piper-voices/resolve/main/de/de_DE/thorsten/medium/de_DE-thorsten-medium.onnx.json
+  ```
+
+- **Lizenz**: Trainingsdaten „Thorsten-Voice“ von Thorsten Müller unter **CC0**; das Medium-Modell ist laut Model Card
+  aus einem ebenfalls CC0-lizenzierten Basismodell (rdh, nl_BE) feinjustiert. Die erzeugten Tonspuren sind damit frei
+  nutzbar. Bewusst **nicht** verwendet: `thorsten-high` (feinjustiert aus „lessac“, dessen Daten nur unter einer
+  Forschungslizenz stehen) und `thorsten-low` (16 kHz, hörbar dumpfer).
+- **Sprechtext** (`speechText` in `video/voice.ts`): Der Bildtext bleibt unverändert; für die Stimme werden englische
+  Fachbegriffe in deutsche Lautumschrift gebracht (Break-even → „Bräjk-iewen“, Cashflow → „Käschfloh“,
+  Conversion Rate → „Konwörschen-Räjt“, ROI → „Er-O-I“), Ordinalzahlen ausgeschrieben („dem 150. Stück“ →
+  „dem hundertfünfzigsten Stück“) und Gedankenstriche zu kurzen Pausen. Zahlen, Euro und Prozent liest die Stimme
+  selbst korrekt („3.000 €“ → „dreitausend Euro“, „16,7 %“ → „sechzehn Komma sieben Prozent“).
+- **Timing** (`planVoice`): Jeder Satz startet 0,1 s nach seinem Cue. Läuft ein Satz länger, darf er bis zu 1 s in
+  den nächsten Cue hineinlaufen (dafür höchstens 8 % schneller), in Ausnahmen bis 2 s; der nächste, kürzere Satz holt
+  auf. Mehr als 12 % Beschleunigung lehnt das Skript ab – dann muss der Text gekürzt werden. Stand: kein Satz über
+  8 %, größter Verzug ca. 1,4 s.
+- **Tonspur**: Sätze per `adelay` platziert, gemischt, Hochpass 70 Hz, Lautheit auf −16 LUFS (`loudnorm`), mono
+  48 kHz, AAC (Master 128 kbit/s, Web 96 kbit/s), Sprache `deu`. Das Bild wird nicht neu kodiert (`-c:v copy`).
+- **Ablauf**: `npm run video:render -- <id>` vertont automatisch, wenn die Stimme vorhanden ist (sonst Warnung, und
+  `video:check` schlägt fehl). Nur die Stimme neu erzeugen: `npm run video:voice -- all`.
+- **Barrierefreiheit**: Der Text bleibt zusätzlich synchron im Bild (Erzählband), als WebVTT-Untertitel und als
+  Transkript auf der Seite. Der Player startet nur auf Klick und mit Ton (kein Autoplay).
 - Keine Musik (keine lizenzfreie Quelle mit geklärter Lizenz in der Umgebung).
 
 ## Designsystem der Videos
@@ -159,11 +181,14 @@ Startwert), daher erzeugt derselbe Stand dieselben Bilder.
 - `tests/videos.test.ts`: Dauer 45–70 s, Cues geordnet/ohne Überlappung/≤ 17 Zeichen pro Sekunde, Dramaturgie,
   Beispielwerte = Rechnerbeispiel, **jede im Video gezeigte Zahl** (inkl. 151, 200 Stück bei 45 €, Netto-Cashflow
   5.000 €, 16,7 % Marge, 33,3 %, 5 % bei 20/400 …) wird mit dem echten Rechner nachgerechnet, WebVTT-Format.
-- `npm run video:check`: Codec, Auflösung, 30 fps, Dauer, keine Tonspur, faststart, Dateigröße, Vorschaubild.
+- `npm run video:check`: Codec, Auflösung, 30 fps, Dauer, genau eine AAC-Tonspur in Videolänge und nicht still,
+  faststart, Dateigröße, Vorschaubild.
+- `tests/voice.test.ts`: Sprechtext (Lautumschrift, Ordinalzahlen) und Zeitplan der Stimme (Verzug, Tempo, Ende).
 - Sichtprüfung über Einzelbilder (`--stills`) für jede Szene; Abnahme-Kontaktbögen im Arbeitsverlauf.
 
 ## Offene Punkte
 
-- `uploadDate` ist der Renderzeitpunkt (2026-11-20). Bei der tatsächlichen Veröffentlichung ggf. anpassen.
-- Keine Sprachspur (siehe oben). Für eine Stimme ist eine Freigabe für Aufnahme oder Dienst nötig.
-- Die Videos sind gebaut und eingebunden, aber **nicht in Produktion veröffentlicht** (Veröffentlichung nur nach Freigabe).
+- Veröffentlicht am 22.11.2026 (`uploadDate`) mit Erklärstimme.
+- Die Stimme ist synthetisch (Piper). Eine Hörprobe durch einen Menschen steht aus; Aussprache-Korrekturen gehören in
+  `speechText` (`video/voice.ts`), danach `npm run video:voice -- all`.
+- Safari/iOS, Firefox und Screenreader nicht auf echten Geräten geprüft.

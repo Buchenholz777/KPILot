@@ -1,7 +1,7 @@
 /**
  * Rendert KPI-Erklärvideos reproduzierbar: Szene (t → SVG) → Chromium (Playwright) → JPEG-Frames → ffmpeg (H.264).
  *
- *   node video/render.ts break-even            # Master 1080p (video/out/) + Web 720p + Poster (public/videos/)
+ *   node video/render.ts break-even            # Master 1080p (video/out/) + Web 720p + Poster (public/videos/) + Erklärstimme
  *   node video/render.ts all                   # alle Videos aus src/data/videos.ts
  *   node video/render.ts break-even --stills 5,12.5,30 [--out DIR]   # Einzelbilder als PNG zur Sichtprüfung
  *
@@ -15,6 +15,7 @@ import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { VIDEOS } from "../src/data/videos.ts";
 import { FPS, W, H, RENDER, frameSvg, type VideoDef } from "./engine.ts";
+import { voiceover, VOICE_MODEL } from "./voice.ts";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const OUT_MASTER = resolve(ROOT, "video/out");
@@ -106,8 +107,10 @@ async function full(video: VideoDef) {
   await page.screenshot({ path: posterPng, clip: { x: 0, y: 0, width: W, height: H } });
   await browser.close();
   await run("ffmpeg", ["-y", "-loglevel", "error", "-i", posterPng, "-vf", "scale=1280:720:flags=lanczos", "-q:v", "4", resolve(OUT_WEB, `${video.id}-poster.jpg`)]);
-  // Web: 1280×720, stärker komprimiert, ohne Tonspur
+  // Web: 1280×720, stärker komprimiert; die Tonspur (Erklärstimme) setzt voice.ts anschließend ein
   await run("ffmpeg", ["-y", "-loglevel", "error", "-i", master, "-vf", "scale=1280:720:flags=lanczos", "-c:v", "libx264", "-preset", "slow", "-tune", "animation", "-crf", "27", "-profile:v", "high", "-level", "4.0", "-pix_fmt", "yuv420p", "-movflags", "+faststart", "-an", resolve(OUT_WEB, `${video.id}-720.mp4`)]);
+  if (existsSync(VOICE_MODEL)) voiceover(def);
+  else console.warn(`${video.id}: ohne Erklärstimme gerendert – Stimme fehlt (${VOICE_MODEL}), siehe docs/VIDEOS.md`);
   console.log(`${video.id}: fertig in ${((Date.now() - t0) / 1000).toFixed(0)} s`);
 }
 

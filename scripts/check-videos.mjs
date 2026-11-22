@@ -1,10 +1,10 @@
 /**
  * Prüft die gerenderten Erklärvideos mit ffprobe gegen die zentrale Konfiguration (src/data/videos.ts):
  * Datei vorhanden, H.264 High, yuv420p, 1280×720 (Web) bzw. 1920×1080 (Master, falls vorhanden), 30 fps,
- * Dauer = Konfiguration (±0,1 s), keine Tonspur, faststart (moov vor mdat), Größe, Vorschaubild 1280×720.
+ * Dauer = Konfiguration (±0,1 s), genau eine Tonspur (AAC, mono, 48 kHz, Erklärstimme, nicht still), faststart (moov vor mdat), Größe, Vorschaubild 1280×720.
  *   node scripts/check-videos.mjs
  */
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import { existsSync, statSync, openSync, readSync, closeSync } from "node:fs";
 import { VIDEOS } from "../src/data/videos.ts";
 
@@ -35,7 +35,14 @@ function checkVideo(id, file, w, h, duration, maxMB) {
   if (s.r_frame_rate !== "30/1") fail(id, `${file}: ${s.r_frame_rate} fps`);
   const d = Number(info.format.duration);
   if (Math.abs(d - duration) > 0.1) fail(id, `${file}: Dauer ${d} s statt ${duration} s`);
-  if (a.length) fail(id, `${file}: unerwartete Tonspur`);
+  if (a.length !== 1) fail(id, `${file}: ${a.length} Tonspuren statt 1 (Erklärstimme fehlt? node video/voice.ts ${id})`);
+  else {
+    if (a[0].codec_name !== "aac") fail(id, `${file}: Audio-Codec ${a[0].codec_name}`);
+    if (Math.abs(Number(a[0].duration) - duration) > 0.15) fail(id, `${file}: Tonspur ${a[0].duration} s statt ${duration} s`);
+    const vd = spawnSync("ffmpeg", ["-hide_banner", "-i", file, "-map", "0:a:0", "-af", "volumedetect", "-f", "null", "-"], { encoding: "utf8" }).stderr;
+    const mean = Number(/mean_volume: (-?[\d.]+) dB/.exec(vd)?.[1] ?? -99);
+    if (mean < -35) fail(id, `${file}: Tonspur fast still (${mean} dB)`);
+  }
   if (!moovFirst(file)) fail(id, `${file}: nicht für Streaming optimiert (faststart)`);
   const mb = statSync(file).size / 1e6;
   if (mb > maxMB) fail(id, `${file}: ${mb.toFixed(1)} MB > ${maxMB} MB`);

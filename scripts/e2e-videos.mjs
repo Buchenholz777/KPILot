@@ -60,9 +60,10 @@ for (const [id, path] of Object.entries(PAGES)) {
   await p.waitForSelector("dialog[open] video");
   const v = await p.evaluate(() => {
     const el = document.querySelector("dialog[open] video");
-    return { autoplay: el.autoplay, controls: el.controls, tracks: el.querySelectorAll("track[kind=captions][srclang=de]").length, src: el.querySelector("source").src };
+    return { autoplay: el.autoplay, muted: el.muted, controls: el.controls, tracks: el.querySelectorAll("track[kind=captions][srclang=de]").length, src: el.querySelector("source").src };
   });
   ok(v.controls && !v.autoplay, "Player mit Steuerung, ohne Autoplay-Attribut");
+  ok(!v.muted, "Ton ist an (Erklärstimme)");
   ok(v.tracks === 1, "deutsche Untertitelspur eingebunden");
   ok(v.src.endsWith("/videos/break-even-720.mp4"), "Webfassung 720p wird verwendet");
   await p.waitForFunction(() => document.querySelector("dialog[open] video").currentTime > 0.5, null, { timeout: 8000 }).then(

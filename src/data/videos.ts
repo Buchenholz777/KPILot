@@ -6,8 +6,8 @@
  * Felder und Erklärtexte bleiben in src/calc/modules/*. Hier stehen nur die Videodaten und die Beispielwerte,
  * die in den Tests gegen den jeweiligen Rechner geprüft werden (src/data/videos.test.ts).
  *
- * Ein Video hat keine Sprachspur: Der Erzähltext ist als Texteinblendung im Bild (synchron), als WebVTT-Untertitel
- * (/videos/<id>.vtt) und als Transkript auf der Seite verfügbar. Siehe docs/VIDEOS.md.
+ * Der Erzähltext wird von einer lokal erzeugten Stimme gesprochen (video/voice.ts) und ist zusätzlich als Texteinblendung
+ * im Bild, als WebVTT-Untertitel (/videos/<id>.vtt) und als Transkript auf der Seite verfügbar. Siehe docs/VIDEOS.md.
  */
 
 export interface VideoCue {
@@ -66,19 +66,19 @@ export const VIDEOS: KpiVideo[] = [
     benefit: "Sehen, ab welchem Stück ein Angebot Gewinn macht – und warum der Break-even kein Ziel ist.",
     duration: 66,
     posterTime: 39.5,
-    uploadDate: "2026-11-20",
+    uploadDate: "2026-11-22",
     example: { variant: "standard", values: { p: "50", v: "30", F: "3000", zeitraum: "monat" }, expect: { "Mindeststückzahl zur Kostendeckung": "150", "Positiver Gewinn ab": "151", "Umsatz bei dieser Stückzahl": "7500" } },
     checks: [{ variant: "standard", values: { p: "45", v: "30", F: "3000", zeitraum: "monat" }, expect: { "Mindeststückzahl zur Kostendeckung": "200" } }],
     cues: [
       { start: 0.3, end: 3.4, text: "Break-even: Ab welcher Menge verdienst du Geld?" },
       { start: 3.5, end: 8.0, text: "Kalle verkauft sein Produkt für 50 €. Verdient er damit schon Geld?" },
       { start: 8.2, end: 13.4, text: "Dazu kommen 3.000 € Fixkosten pro Monat – egal, wie viel er verkauft." },
-      { start: 13.6, end: 20.0, text: "Von jedem Verkauf gehen 30 € für Material und Versand weg. 20 € bleiben übrig und decken die Fixkosten." },
+      { start: 13.6, end: 20.0, text: "Von jedem Verkauf gehen 30 € für Material und Versand weg. 20 € bleiben übrig." },
       { start: 20.2, end: 26.8, text: "Diese 20 € heißen Deckungsbeitrag. Die Frage lautet also: Wie oft passen 20 € in 3.000 €?" },
       { start: 27.0, end: 33.0, text: "3.000 € geteilt durch 20 € ergibt 150 Stück. Das ist die Break-even-Menge." },
       { start: 33.2, end: 40.0, text: "Mit dem 150. Stück sind die Fixkosten genau gedeckt. Erst das 151. Stück bringt Gewinn: 20 €." },
       { start: 40.2, end: 47.0, text: "Unter 150 Stück macht Kalle Verlust, darüber Gewinn. Bei 200 Stück wären es 1.000 €." },
-      { start: 47.2, end: 55.0, text: "Sinkt der Preis auf 45 €, bleiben nur 15 € pro Stück. Dann braucht Kalle 200 Stück, um die Fixkosten zu decken." },
+      { start: 47.2, end: 55.0, text: "Sinkt der Preis auf 45 €, bleiben nur 15 € pro Stück. Dann braucht Kalle schon 200 Stück." },
       { start: 55.2, end: 60.6, text: "Typischer Irrtum: Break-even heißt Ziel erreicht. Dort ist der Gewinn aber genau null." },
       { start: 60.8, end: 65.8, text: "Rechne jetzt mit deinen eigenen Zahlen – im Break-even-Rechner von KPILot." },
     ],
@@ -92,7 +92,7 @@ export const VIDEOS: KpiVideo[] = [
     benefit: "Verstehen, warum ein Unternehmen mit Gewinn trotzdem knapp bei Kasse sein kann.",
     duration: 66,
     posterTime: 31.5,
-    uploadDate: "2026-11-20",
+    uploadDate: "2026-11-22",
     example: { variant: "operativ", values: { ein: "30000", aus: "22000" }, expect: { "Operativer Cashflow": "8000" } },
     checks: [
       {
@@ -124,7 +124,7 @@ export const VIDEOS: KpiVideo[] = [
     benefit: "Erkennen, was ein Verkauf wirklich beiträgt – und warum das noch kein Gewinn ist.",
     duration: 66,
     posterTime: 25.5,
-    uploadDate: "2026-11-20",
+    uploadDate: "2026-11-22",
     example: { variant: "standard", values: { p: "50", v: "30", q: "100" }, expect: { Stückdeckungsbeitrag: "20", Deckungsbeitragsquote: "40", Gesamtdeckungsbeitrag: "2000" } },
     checks: [
       { variant: "standard", values: { p: "40", v: "30" }, expect: { Stückdeckungsbeitrag: "10" } },
@@ -154,7 +154,7 @@ export const VIDEOS: KpiVideo[] = [
     benefit: "Marge und Aufschlag sicher unterscheiden – und nicht zu knapp kalkulieren.",
     duration: 66,
     posterTime: 46,
-    uploadDate: "2026-11-20",
+    uploadDate: "2026-11-22",
     example: { variant: "standard", values: { k: "80", p: "100" }, expect: { "Differenz (Rohertrag)": "20", "Marge (Handelsspanne)": "20", Aufschlag: "25" } },
     checks: [
       { variant: "standard", values: { k: "80", p: "96" }, expect: { "Differenz (Rohertrag)": "16", Aufschlag: "20", "Marge (Handelsspanne)~1": "16.7" } },
@@ -163,14 +163,14 @@ export const VIDEOS: KpiVideo[] = [
     ],
     cues: [
       { start: 0.3, end: 3.4, text: "Marge und Aufschlag: 20 €, zwei Prozentsätze." },
-      { start: 3.5, end: 8.0, text: "Kalle kauft für 80 € ein und verkauft für 100 €. Sind das 20 % oder 25 %?" },
-      { start: 8.2, end: 14.0, text: "Beides stimmt. Es kommt darauf an, worauf man die 20 € bezieht." },
+      { start: 3.5, end: 8.6, text: "Einkauf 80 €, Verkauf 100 €: 20 % oder 25 %?" },
+      { start: 8.8, end: 14.0, text: "Beides stimmt. Es kommt darauf an, worauf man die 20 € bezieht." },
       { start: 14.2, end: 20.0, text: "Der Aufschlag rechnet vom Einkauf nach oben. Die Marge rechnet vom Verkaufspreis nach unten." },
       { start: 20.2, end: 27.0, text: "100 € minus 80 € ergibt 20 € Rohertrag pro Stück." },
       { start: 27.2, end: 33.5, text: "Marge: 20 € geteilt durch den Verkaufspreis von 100 € ergibt 20 %." },
       { start: 33.7, end: 40.0, text: "Aufschlag: 20 € geteilt durch den Einkauf von 80 € ergibt 25 %." },
       { start: 40.2, end: 47.5, text: "Bei positivem Rohertrag ist die Marge immer kleiner als der Aufschlag, weil der Verkaufspreis die größere Basis ist." },
-      { start: 47.7, end: 55.0, text: "Wer 20 % Marge will, aber nur 20 % aufschlägt, landet bei 96 € – und nur bei knapp 16,7 % Marge." },
+      { start: 47.7, end: 55.0, text: "Wer 20 % Marge will, aber 20 % aufschlägt, landet bei 96 € – nur knapp 16,7 % Marge." },
       { start: 55.2, end: 60.6, text: "Typischer Irrtum: Marge gleich Aufschlag. Wer das verwechselt, kalkuliert zu knapp." },
       { start: 60.8, end: 65.8, text: "Rechne jetzt mit deinen eigenen Zahlen – im Margenrechner von KPILot." },
     ],
@@ -184,7 +184,7 @@ export const VIDEOS: KpiVideo[] = [
     benefit: "Den ROI richtig lesen – und wissen, was die Kennzahl nicht verrät.",
     duration: 66,
     posterTime: 31,
-    uploadDate: "2026-11-20",
+    uploadDate: "2026-11-22",
     example: { variant: "standard", values: { gewinn: "5000", kapital: "50000" }, expect: { "ROI im betrachteten Zeitraum": "10" } },
     cues: [
       { start: 0.3, end: 3.4, text: "ROI: Was bringt eingesetztes Kapital?" },
@@ -209,7 +209,7 @@ export const VIDEOS: KpiVideo[] = [
     benefit: "Die Conversion Rate richtig deuten – und Besuche nicht mit Personen verwechseln.",
     duration: 66,
     posterTime: 31,
-    uploadDate: "2026-11-20",
+    uploadDate: "2026-11-22",
     example: { variant: "besuche", values: { conv: "25", total: "1000" }, expect: { "Conversion Rate": "2.5" } },
     checks: [{ variant: "besuche", values: { conv: "20", total: "400" }, expect: { "Conversion Rate": "5" } }],
     cues: [

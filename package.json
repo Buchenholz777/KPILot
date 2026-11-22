@@ -16,6 +16,7 @@
     "check:contrast": "node scripts/contrast.mjs",
     "docs": "vitest run --config vitest.docs.config.ts",
     "video:render": "node video/render.ts",
+    "video:voice": "node video/voice.ts",
     "video:check": "node scripts/check-videos.mjs",
     "deploy": "npm run build && npx wrangler pages deploy"
   },

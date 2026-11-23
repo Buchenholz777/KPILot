@@ -1,0 +1,102 @@
+{
+ "break-even-point.wav": {
+  "text": "Am break-ifen-point ist der Gewinn genau Null.",
+  "wer": 0.111
+ },
+ "break-even.wav": {
+  "text": "Das ist die Präkivenmenge.",
+  "wer": 0.5
+ },
+ "cac.wav": {
+  "text": "CAC – Kosten je neuem Kunden.",
+  "wer": 0.0
+ },
+ "cashflow.wav": {
+  "text": "Der Köschfle zählt nur echtes Geld.",
+  "wer": 0.167
+ },
+ "clv.wav": {
+  "text": "240 € CLV, 100 € CEC",
+  "wer": 0.167
+ },
+ "conversion-rate.wav": {
+  "text": "Die Kernwarrchenwelt beträgt 2,5%.",
+  "wer": 0.286
+ },
+ "de-Abschreibung.wav": {
+  "text": "Das Wort lautet Abschreibung.",
+  "wer": 0.0
+ },
+ "de-Aufschlag.wav": {
+  "text": "Das Wort lautet Aufschlag.",
+  "wer": 0.0
+ },
+ "de-Deckungsbeitrag.wav": {
+  "text": "Das Wort lautet Deckungsbeitrag.",
+  "wer": 0.0
+ },
+ "de-Fixkosten.wav": {
+  "text": "Das Wort lautet Fixkosten.",
+  "wer": 0.0
+ },
+ "de-Kapitalwert.wav": {
+  "text": "Das Wort lautet Kapitalwert.",
+  "wer": 0.0
+ },
+ "de-Liquiditätsgrade.wav": {
+  "text": "Das Wort lautet Liquiditätsgrade.",
+  "wer": 0.0
+ },
+ "de-Marge.wav": {
+  "text": "Das Wort lautet Marge.",
+  "wer": 0.0
+ },
+ "de-Rohertrag.wav": {
+  "text": "Das Wort lautet Ruhertrag.",
+  "wer": 0.25
+ },
+ "ebit.wav": {
+  "text": "EBIT ist das Ergebnis vor Zinsen und Steuern.",
+  "wer": 0.0
+ },
+ "ebitda.wav": {
+  "text": "Ich bitte, rechnet die Abschreibung wieder dazu.",
+  "wer": 0.333
+ },
+ "key-performance-indicator.wav": {
+  "text": "Ein Key Performance Indicator ist eine Kennzahl.",
+  "wer": 0.0
+ },
+ "kpi.wav": {
+  "text": "Jede KPI braucht eine klare Definition.",
+  "wer": 0.0
+ },
+ "kpilot.wav": {
+  "text": "Rechne jetzt mit deinen eigenen Zahlen im Rechner von KPI-Loot.",
+  "wer": 0.2
+ },
+ "onlineshop.wav": {
+  "text": "Kalles Onlineshop hatte 1000 Besuche.",
+  "wer": 0.333
+ },
+ "operating-cashflow.wav": {
+  "text": "Der Uprating Köschflör zeigt den Geldfluss aus dem laufenden Geschäft.",
+  "wer": 0.2
+ },
+ "return-on-investment.wav": {
+  "text": "Der Return on Investment misst den Erfolg einer Investition.",
+  "wer": 0.0
+ },
+ "revenue.wav": {
+  "text": "Der revenue ist der Umsatz.",
+  "wer": 0.0
+ },
+ "roas.wav": {
+  "text": "Ein RoAS von 4 klingt gut.",
+  "wer": 0.0
+ },
+ "roi.wav": {
+  "text": "Der ROI beträgt 10%.",
+  "wer": 0.0
+ }
+}

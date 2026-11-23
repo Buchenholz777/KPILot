@@ -52,37 +52,91 @@ Startwert), daher erzeugt derselbe Stand dieselben Bilder.
 ## Erklärstimme
 
 Jedes Video hat eine **moderierende deutsche Erklärstimme**, die den Erzähltext (`cues`) spricht. Sie wird lokal
-und offline erzeugt – kein Cloud- oder Bezahldienst, keine Daten verlassen den Rechner.
+und offline erzeugt – kein Cloud- oder Bezahldienst, keine Daten verlassen den Rechner, beim Abspielen gibt es keine
+externen Anfragen (die Tonspur steckt im MP4).
 
-- **Synthese**: [Piper](https://github.com/OHF-Voice/piper1-gpl) (`pip install piper-tts`, Version 1.8) mit der Stimme
-  **`de_DE-thorsten-medium`** (22 kHz) aus `rhasspy/piper-voices` auf huggingface.co. Download nach `video/voices/`
-  (nicht im Repository, ca. 63 MB):
+### Überblick (Stand 23.11.2026, Überarbeitung der Sprecherstimme)
 
-  ```bash
-  mkdir -p video/voices && cd video/voices
-  curl -LO https://huggingface.co/rhasspy/piper-voices/resolve/main/de/de_DE/thorsten/medium/de_DE-thorsten-medium.onnx
-  curl -LO https://huggingface.co/rhasspy/piper-voices/resolve/main/de/de_DE/thorsten/medium/de_DE-thorsten-medium.onnx.json
-  ```
+- **Engine**: [Piper](https://github.com/OHF-Voice/piper1-gpl) (`pip install piper-tts`, 1.8) mit **`de_DE-thorsten-medium`**
+  (22 kHz, Download nach `video/voices/`, nicht im Repository, ca. 63 MB). Die Stimme blieb bewusst dieselbe für alle
+  12 Videos; verbessert wurden Aussprache, Pausen, Tempo und Auswahl der Aufnahmen (siehe unten).
+- **Lizenz**: Trainingsdaten „Thorsten-Voice“ unter **CC0**, Medium-Modell aus CC0-Basismodell feinjustiert. Nicht
+  verwendet: `thorsten-high` (aus „lessac“ feinjustiert, Daten nur unter Forschungslizenz), XTTS-v2 (CPML,
+  nicht kommerziell), MMS-TTS und F5-TTS-Deutsch (CC-BY-NC). Bezahldienste (z. B. ElevenLabs, Azure, Google) wurden
+  **nicht** aktiviert; sie wären nur mit ausdrücklicher Freigabe eine Option (siehe „Grenzen“).
 
-- **Lizenz**: Trainingsdaten „Thorsten-Voice“ von Thorsten Müller unter **CC0**; das Medium-Modell ist laut Model Card
-  aus einem ebenfalls CC0-lizenzierten Basismodell (rdh, nl_BE) feinjustiert. Die erzeugten Tonspuren sind damit frei
-  nutzbar. Bewusst **nicht** verwendet: `thorsten-high` (feinjustiert aus „lessac“, dessen Daten nur unter einer
-  Forschungslizenz stehen) und `thorsten-low` (16 kHz, hörbar dumpfer).
-- **Sprechtext** (`speechText` in `video/voice.ts`): Der Bildtext bleibt unverändert; für die Stimme werden englische
-  Fachbegriffe in deutsche Lautumschrift gebracht (Break-even → „Bräjk-iewen“, Cashflow → „Käschfloh“,
-  Conversion Rate → „Konwörschen-Räjt“, ROI → „Er-O-I“), Ordinalzahlen ausgeschrieben („dem 150. Stück“ →
-  „dem hundertfünfzigsten Stück“) und Gedankenstriche zu kurzen Pausen. Zahlen, Euro und Prozent liest die Stimme
-  selbst korrekt („3.000 €“ → „dreitausend Euro“, „16,7 %“ → „sechzehn Komma sieben Prozent“).
-- **Timing** (`planVoice`): Jeder Satz startet 0,1 s nach seinem Cue. Läuft ein Satz länger, darf er bis zu 1 s in
-  den nächsten Cue hineinlaufen (dafür höchstens 8 % schneller), in Ausnahmen bis 2 s; der nächste, kürzere Satz holt
-  auf. Mehr als 12 % Beschleunigung lehnt das Skript ab – dann muss der Text gekürzt werden. Stand: kein Satz über
-  8 %, größter Verzug ca. 1,4 s.
-- **Tonspur**: Sätze per `adelay` platziert, gemischt, Hochpass 70 Hz, Lautheit auf −16 LUFS (`loudnorm`), mono
-  48 kHz, AAC (Master 128 kbit/s, Web 96 kbit/s), Sprache `deu`. Das Bild wird nicht neu kodiert (`-c:v copy`).
-- **Ablauf**: `npm run video:render -- <id>` vertont automatisch, wenn die Stimme vorhanden ist (sonst Warnung, und
-  `video:check` schlägt fehl). Nur die Stimme neu erzeugen: `npm run video:voice -- all`.
-- **Barrierefreiheit**: Der Text bleibt zusätzlich synchron im Bild (Erzählband), als WebVTT-Untertitel und als
-  Transkript auf der Seite. Der Player startet nur auf Klick und mit Ton (kein Autoplay).
+### Zentrale Konfiguration
+
+| Datei | Inhalt |
+| --- | --- |
+| `video/voice.config.json` | Stimme/Modell, Synthese (`length_scale` 0,96, `noise_scale`, `noise_w`), Pausen (Satz 0,22 s, Doppelpunkt 0,15 s, nach Rechenergebnis 0,32 s), Zeitplan (Vorlauf, Verzug, Tempo-Grenzen), Aufnahmeauswahl (Kandidaten), Export (48 kHz, −16 LUFS, Hochpass, AAC 128/96 kbit/s) |
+| `video/pronunciation.json` | **Aussprachewörterbuch**: je Begriff ein Regex (`match`), die Aussprache als IPA im Phonemvorrat der Stimme (`ipa`), die Erkennungsformen für die Prüfung (`asr`) und eine Notiz |
+| `video/speech.ts` | Sprechtext → Teile (Text, Wörterbuch-Aussprache, Pausen); Ordinalzahlen; Regeln für Pausen |
+| `video/tts.py` | Eigene Phonemisierung und Synthese (Piper-Modell direkt, ohne `espeak`-Markup), Stille-Einfügung, Aufnahmeauswahl |
+| `video/voice.ts` | Zeitplan (`planVoice`), Tonspur, Einsetzen ins MP4 |
+| `video/pronounce-test.ts`, `video/voice-eval.py` | Hörproben für Fachbegriffe und automatische Prüfung per Spracherkennung |
+
+### Ursachen der schlechten Aussprache (vorher)
+
+1. Englische Begriffe waren als **deutsche Lautumschrift** geschrieben („Bräjk-iewen“, „Käschfloh“,
+   „Konwörschen-Räjt“) und klangen daher deutsch-verfremdet statt englisch.
+2. Es gab **keine Pausensteuerung**: Alles lief in einem Zug, Zahlen und Rechenergebnisse hatten keine Atempause.
+3. Das **Sprechtempo** war für die Zeitfenster zu langsam, es wurde nachträglich per `atempo` gedehnt/gestaucht.
+4. Die Standard-Phonemisierung (espeak) liest einzelne deutsche Wörter falsch (**„Marge“ mit hartem g**, „Rohertrag“
+   ohne Glottisverschluss, „Irrtum“ mit schwer verständlichem r).
+5. Die **Stimme selbst** (Piper medium, VITS, 22 kHz) ist eine kleine, lokale Stimme. Ihre Natürlichkeit ist
+   begrenzt; das lässt sich mit Einstellungen verbessern, aber nicht auf das Niveau großer Cloud-Stimmen heben.
+
+### Umsetzung der Aussprache
+
+- **Englische Fachbegriffe** werden nicht mehr als deutsche Schreibweise, sondern als **englische IPA** direkt in den
+  Satz eingebettet (Break-even `brˈeɪk ˈiːvən`, Cashflow `kˈæʃflˌoʊ`, Conversion Rate `kɑnvˈɜːʒən ɹˈeɪt`,
+  Return on Investment, Key Performance Indicator, Operating Cashflow, Revenue, EBIT, EBITDA). Der Phonemvorrat
+  der deutschen Stimme enthält englische Laute (`eɪ`, `oʊ`, `æ`, `ɜ`, `ɹ` …), die Stimme bleibt dieselbe.
+- **Akronyme**: ROI als Buchstaben (`ɛʁ oː iː`, deutsch üblich), ROAS als Wort („Ro-as“), CLV/CAC englische
+  Buchstaben, KPILot als „KPI-Lot“.
+- **Deutsche Korrekturen**: Marge, Margen(rechner), Rohertrag, Irrtum.
+- **Auswahl der Aufnahme**: Das Modell erzeugt bei jedem Lauf leicht andere Aussprache (zufälliges Rauschen).
+  Darum werden je Satz bis zu 4 Aufnahmen (bei Sätzen mit Wörterbuch-Begriff bis zu 8) erzeugt, mit lokaler
+  Spracherkennung (faster-whisper „medium“, `KPILOT_ASR_MODEL`) geprüft und die am besten erkannte, bei Gleichstand
+  die kürzeste gewählt. Ohne Erkennungsmodell wird die erste Aufnahme verwendet. Das Ergebnis ist **nicht
+  bitgleich reproduzierbar**, aber gleichbleibend in der Qualität; die Berichte stehen unter `video/out/voice/<id>/report.json`.
+- **Pausen**: Stille wird zwischen Sätzen, nach Doppelpunkten und länger nach Rechenergebnissen („… ergibt 150 Stück.“)
+  eingefügt. Sehr kurze Abschnitte (< 3 Wörter) werden mit dem Nachbarn verbunden, weil die Stimme Mini-Äußerungen
+  unnatürlich dehnt.
+- **Ordinalzahlen** werden ausgeschrieben („dem 150. Stück“ → „dem hundertfünfzigsten Stück“, „1. Grades“ → „ersten Grades“).
+- **Timing** (`planVoice`): Jeder Satz startet 0,1 s nach seinem Cue; ein langer Satz darf bis 1 s (Ausnahme 2 s) in den
+  nächsten Cue laufen, höchstens 8 % (Ausnahme 12 %) schneller. Alle 12 Videos halten das ein (größte Beschleunigung ×1,08).
+  Das Bild wird nicht neu kodiert (`-c:v copy`).
+- **Textänderungen** (fachlich unverändert, nur sprechbarer; Untertitel/VTT/Transkript kommen aus denselben Cues und
+  bleiben synchron): ROI „Risiko und Zeitpunkt fehlen“; Liquidität „Grad 1, nur Kasse und Bank: 10.000 € durch
+  20.000 € ergibt 50 %.“ (ebenso Grad 2/3); CLV/CAC „CAC: Kosten je Neukunde. 3.000 € für 30 Neukunden ergeben
+  100 €.“, „240 € Wert, 100 € Kosten: 140 € bleiben. Verhältnis: 2,4.“, „100 € zahlt Kalle sofort, 240 € kommen erst
+  über drei Jahre.“, „… Modell mit festen Annahmen“; Amortisation „… sind 4 Jahre“, „Kalle kauft eine Maschine für
+  10.000 € – sie bringt 2.500 € im Jahr.“
+
+### Qualitätssicherung der Stimme
+
+- **Automatisch** (Spracherkennung als Näherung an eine Hörkontrolle): Alle 132 Sätze wurden erkannt und mit dem Text
+  verglichen: mittlere Wortfehlerrate **7,7 %** (68 von 132 Sätzen exakt, 7 über 25 %). Das sind überwiegend Eigenheiten der
+  Erkennung (Zahlen „5 und 40“, „Euro“ vs. „€“, Eigennamen), kein Beweis für Fehler – aber auch kein Beweis für gute Aussprache.
+- **Technisch**: `npm run video:check` (genau eine AAC-Spur, Dauer, nicht still), Zeitplan-Prüfung in `planVoice`,
+  Tests in `tests/voice.test.ts` (Wörterbuch, Pausen, Phonemvorrat, Abdeckung aller Fachbegriffe in allen Cues).
+- **Hörproben** für kritische Begriffe: `docs/audio/aussprache/*.mp3` (je ein Trägersatz, MP3 64 kbit/s), Erkennungsergebnis in
+  `erkannt.json`. Neu erzeugen: `KPILOT_ASR_MODEL=<Ordner> node video/pronounce-test.ts`.
+- **Die automatische Prüfung ersetzt kein Anhören.** Ob die Stimme wie ein Muttersprachler klingt und die Satzmelodie
+  natürlich ist, kann sie nicht beurteilen; das steht aus (siehe „Offene Punkte“).
+
+### Weitere Befehle
+
+- Alles neu vertonen: `KPILOT_ASR_MODEL=<faster-whisper-Ordner> npm run video:voice -- all` (ca. 8 Minuten je Video);
+  ohne `KPILOT_ASR_MODEL` etwa 30 Sekunden gesamt, dann ohne Aufnahmeauswahl.
+- Nur bestimmte Sätze neu sprechen (nach einer Wörterbuch-Änderung): `KPILOT_REDO='Irrtum|ROAS' npm run video:voice -- all`.
+- Das Erkennungsmodell (`Systran/faster-whisper-medium`, huggingface.co) und `pip install faster-whisper` sind nur
+  für die Erzeugung nötig, nicht für die Website.
+- **Tonspur**: Sätze per `adelay` platziert, Hochpass 70 Hz, −16 LUFS, mono 48 kHz, AAC (Master 128, Web 96 kbit/s), Sprache `deu`.
+- **Barrierefreiheit**: Der Text bleibt zusätzlich synchron im Bild, als WebVTT und als Transkript. Der Player startet
+  nur auf Klick und mit Ton.
 - Keine Musik (keine lizenzfreie Quelle mit geklärter Lizenz in der Umgebung).
 
 ## Designsystem der Videos
@@ -246,6 +300,12 @@ und offline erzeugt – kein Cloud- oder Bezahldienst, keine Daten verlassen den
 ## Offene Punkte
 
 - Veröffentlicht am 22.11.2026 (`uploadDate`) mit Erklärstimme.
-- Die Stimme ist synthetisch (Piper). Eine Hörprobe durch einen Menschen steht aus; Aussprache-Korrekturen gehören in
-  `speechText` (`video/voice.ts`), danach `npm run video:voice -- all`.
+- Die Stimme ist synthetisch (Piper). **Eine Hörprobe durch einen Menschen steht aus.** Aussprache-Korrekturen gehören
+  in `video/pronunciation.json`, danach `KPILOT_REDO=<Begriff> npm run video:voice -- all`.
+- **Bekannte Ausspracheprobleme** (nach automatischer Prüfung): „Break-even“ wird von der Spracherkennung nur teilweise
+  erkannt (die Stimme liefert das englische /r/ in „Break“ nicht stabil, das ɹ/r bleibt je Aufnahme unterschiedlich);
+  „Cashflow“ endet im Deutschen eher auf „-flo“ als „-floʊ“; „Conversion Rate“ wird oft als „Inversion …“ erkannt;
+  ROAS/CLV/CAC sind verständlich, aber nicht muttersprachlich; „Margenrechner“ ist als seltenes Kompositum unsicher.
+  Die Piper-Stimme ist für englische Laute nicht trainiert; für Muttersprachler-Niveau bräuchte es eine mehrsprachige
+  oder Cloud-Stimme (kostenpflichtig, nicht aktiviert) oder eine Aufnahme durch einen Sprecher.
 - Safari/iOS, Firefox und Screenreader nicht auf echten Geräten geprüft.

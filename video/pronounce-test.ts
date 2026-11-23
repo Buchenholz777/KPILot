@@ -3,7 +3,7 @@
  *
  *   node video/pronounce-test.ts [ausgabeverzeichnis]      # Standard: docs/audio/aussprache
  *
- * Je Eintrag: ein Trägersatz in deutscher Umgebung (so klingt der Begriff im Video) und der Begriff einzeln.
+* Je Eintrag: ein Trägersatz in deutscher Umgebung (so klingt der Begriff im Video) und der Begriff einzeln.
  * Dazu eine Gesamtdatei „alle.wav“ (alle Sätze mit Pausen). Mit video/voice-eval.py lassen sich die Proben
  * automatisch erkennen (Spracherkennung) – das ersetzt kein Anhören.
  */

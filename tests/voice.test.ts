@@ -29,7 +29,7 @@ describe("Erklärstimme: Sprechtext", () => {
     const p = speechParts("3.000 € geteilt durch 20 € ergibt 150 Stück. Das ist die Menge.");
     const pause = p.find((x) => "pause" in x) as { pause: number };
     expect(pause.pause).toBe(CONFIG.pauses.afterResult);
-    const q = speechParts("Kalle verkauft. Das ist gut.").find((x) => "pause" in x) as { pause: number };
+    const q = speechParts("Kalle verkauft sein Produkt heute. Das ist wirklich gut.").find((x) => "pause" in x) as { pause: number };
     expect(q.pause).toBe(CONFIG.pauses.sentence);
   });
 

@@ -2,16 +2,16 @@
   "_comment": "Zentrale Konfiguration der Erklärstimme (Synthese, Pausen, Tempo, Lautheit, Export). Aussprache: video/pronunciation.json.",
   "model": "de_DE-thorsten-medium",
   "synthesis": {
-    "length_scale": 1.0,
+    "length_scale": 0.96,
     "noise_scale": 0.5,
     "noise_w": 0.333,
     "volume": 1.0
   },
   "pauses": {
     "_comment": "Stille in Sekunden zwischen gesprochenen Abschnitten (wird als Stille eingefügt, nicht als Satzzeichen simuliert).",
-    "sentence": 0.28,
-    "colon": 0.2,
-    "afterResult": 0.42,
+    "sentence": 0.22,
+    "colon": 0.15,
+    "afterResult": 0.32,
     "afterTerm": 0.0
   },
   "timing": {
@@ -21,7 +21,7 @@
     "softLag": 1,
     "softTempo": 1.08,
     "maxTempo": 1.12,
-    "endPad": 0.4
+    "endPad": 0.2
   },
   "export": {
     "sampleRate": 48000,

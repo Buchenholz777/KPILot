@@ -106,7 +106,7 @@ def main():
         if asr and it.get("expect"):
             heard = recognize(audio)
             score = edit(norm_tokens(it["expect"], aliases), norm_tokens(heard, aliases))
-            if best is None or score < best[0] - 1e-9: best = (score, audio, heard)
+            if best is None or score < best[0] - 1e-9 or (abs(score - best[0]) < 1e-9 and len(audio) < len(best[1])): best = (score, audio, heard)
             if score == 0: break
         else:
             best = (0.0, audio, "")

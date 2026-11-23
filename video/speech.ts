@@ -46,7 +46,15 @@ const RESULT_END = /\d[\d.,]*(\s?(€|%|Stück|Jahre|Jahren|Cent|Euro))?[.!?]$/;
 /** Teilt Text an Satzenden und Doppelpunkten auf und fügt die konfigurierten Pausen ein. */
 function withPauses(text: string, last: boolean): Part[] {
   const out: Part[] = [];
-  const pieces = text.split(/(?<=[.!?:])\s+(?=\S)/);
+  // Sehr kurze Abschnitte (< 3 Wörter) werden mit dem Nachbarn verbunden: Die Stimme dehnt solche Mini-Äußerungen unnatürlich.
+  const raw = text.split(/(?<=[.!?:])\s+(?=\S)/);
+  const pieces: string[] = [];
+  const words = (x: string) => x.split(/\s+/).length;
+  for (const r of raw) {
+    const prev = pieces[pieces.length - 1];
+    if (prev !== undefined && (words(r) < 3 || words(prev) < 3)) pieces[pieces.length - 1] = `${prev} ${r}`;
+    else pieces.push(r);
+  }
   pieces.forEach((piece, i) => {
     const t = piece.trim();
     if (t) out.push({ text: t });

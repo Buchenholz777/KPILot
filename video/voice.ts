@@ -1,59 +1,39 @@
 /**
- * Erzählstimme für die KPI-Erklärvideos: Cue-Texte → Sprechtext → Piper (lokal, offline) → Tonspur → MP4.
+ * Erzählstimme für die KPI-Erklärvideos: Cue-Texte → Sprechteile (speech.ts) → Piper (lokal, offline, tts.py) → Tonspur → MP4.
  *
  *   node video/voice.ts break-even        # Tonspur erzeugen und in Master (video/out/) + Web (public/videos/) einsetzen
  *   node video/voice.ts all
  *
+ * Konfiguration zentral: video/voice.config.json (Stimme, Tempo, Pausen, Lautheit, Export), video/pronunciation.json (Aussprache).
  * Jeder Cue wird einzeln gesprochen und an seiner Startzeit platziert (planVoice: kurzer Verzug erlaubt, höchstens
  * 12 % schneller; sonst bricht das Skript ab, damit der Text gekürzt wird). Das Bild wird nicht neu kodiert (-c:v copy).
  *
- * Voraussetzungen: ffmpeg, python3 mit piper-tts, Stimme de_DE-thorsten-medium (CC0, siehe docs/VIDEOS.md), Pfad per
- * KPILOT_VOICE oder unter video/voices/.
+ * Voraussetzungen: ffmpeg, python3 mit piper-tts, Stimme (CC0, siehe docs/VIDEOS.md), Pfad per KPILOT_VOICE oder unter video/voices/.
  */
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, renameSync, readFileSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { VIDEOS, type KpiVideo } from "../src/data/videos.ts";
+import { CONFIG, DICTIONARY, expectText, speechParts, speechText, type Part } from "./speech.ts";
 
+export { speechText, speechParts };
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-export const VOICE_MODEL = process.env.KPILOT_VOICE ?? resolve(ROOT, "video/voices/de_DE-thorsten-medium.onnx");
-/** Höchste Beschleunigung eines Satzes (1,12 = 12 % schneller); darüber klingt die Stimme gehetzt. */
-const MAX_TEMPO = 1.12;
-/** Sprechbeginn nach Cue-Start, Atempause zwischen zwei Sätzen, größter Verzug hinter dem Bild (Ausnahme), Ruhe am Ende (s). */
-const LEAD = 0.1;
-const GAP = 0.3;
-const MAX_LAG = 2;
-/** Ziel: höchstens 1 s hinter dem Bild, dafür bis zu 8 % schneller sprechen. */
-const SOFT_LAG = 1;
-const SOFT_TEMPO = 1.08;
-const END_PAD = 0.4;
+export const VOICE_MODEL = process.env.KPILOT_VOICE ?? resolve(ROOT, `video/voices/${CONFIG.model}.onnx`);
+const MAX_TEMPO = CONFIG.timing.maxTempo;
+const LEAD = CONFIG.timing.lead;
+const GAP = CONFIG.timing.gap;
+const MAX_LAG = CONFIG.timing.maxLag;
+const SOFT_LAG = CONFIG.timing.softLag;
+const SOFT_TEMPO = CONFIG.timing.softTempo;
+const END_PAD = CONFIG.timing.endPad;
 
-/** Ordinalzahlen, die die Stimme sonst als Kardinalzahl plus Satzende liest. */
-const ORDINALS: [RegExp, string][] = [
-  [/\bdem 150\. /g, "dem hundertfünfzigsten "],
-  [/\bdas 151\. /g, "das hunderteinundfünfzigste "],
-  [/\b1\. Grades\b/g, "ersten Grades"],
-  [/\b2\. Grades\b/g, "zweiten Grades"],
-  [/\b3\. Grades\b/g, "dritten Grades"],
-];
-
-/** Englische Fachbegriffe als deutsche Lautumschrift (die Stimme ist deutsch). Reihenfolge: lange Formen zuerst. */
-const TERMS: [RegExp, string][] = [
-  [/Break-even/g, "Bräjk-iewen"],
-  [/Cashflow/g, "Käschfloh"],
-  [/Conversion[- ]Rate/g, "Konwörschen-Räjt"],
-  [/\bROI\b/g, "Er-O-I"],
-  [/\bCAC\b/g, "Zeh-A-Zeh"],
-];
-
-/** Wandelt einen Cue-Text (wie im Bild/Untertitel) in den Sprechtext für die Synthese um. */
-export function speechText(text: string): string {
-  let s = text;
-  for (const [re, rep] of ORDINALS) s = s.replace(re, rep);
-  for (const [re, rep] of TERMS) s = s.replace(re, rep);
-  // Gedankenstrich als kurze Pause, Nachkommastellen bleiben („16,7“ → „sechzehn Komma sieben“).
-  return s.replace(/\s+–\s+/g, ", ").replace(/ /g, " ");
+/** Synthetisiert Sprechteile zu WAV-Dateien (ein Python-Aufruf, Stimme wird nur einmal geladen). */
+export function synthesize(items: { out: string; parts: Part[] }[], model = VOICE_MODEL, synth = CONFIG.synthesis, report?: string) {
+  const asr = process.env.KPILOT_ASR_MODEL;
+  const withExpect = items.map((it) => ({ ...it, expect: expectText(it.parts), candidates: it.parts.some((p) => "ipa" in p) ? CONFIG.selection.termCandidates : CONFIG.selection.candidates }));
+  const aliases = DICTIONARY.map((e) => ({ id: e.id, rx: e.asr }));
+  sh("python3", [resolve(ROOT, "video/tts.py")], JSON.stringify({ model, config: synth, items: withExpect, candidates: asr ? CONFIG.selection.candidates : 1, asr_model: asr, aliases, report }));
 }
 
 function sh(cmd: string, args: string[], input?: string) {
@@ -106,25 +86,30 @@ export function planVoice(v: Pick<KpiVideo, "id" | "duration" | "cues">, seconds
   });
 }
 
+const E = CONFIG.export;
+
 export function voiceover(v: KpiVideo) {
   if (!existsSync(VOICE_MODEL)) throw new Error(`Stimme fehlt: ${VOICE_MODEL} (siehe docs/VIDEOS.md)`);
   const dir = resolve(ROOT, "video/out/voice", v.id);
   mkdirSync(dir, { recursive: true });
-  const items = v.cues.map((c, i) => ({ text: speechText(c.text), out: resolve(dir, `cue-${String(i).padStart(2, "0")}.wav`) }));
-  sh("python3", [resolve(ROOT, "video/tts.py")], JSON.stringify({ model: VOICE_MODEL, length_scale: 1.0, items }));
-  const plan = planVoice(v, items.map((it) => wavSeconds(it.out)));
+  const all = v.cues.map((c, i) => ({ parts: speechParts(c.text), out: resolve(dir, `cue-${String(i).padStart(2, "0")}.wav`), text: c.text }));
+  // KPILOT_REDO=<Regex auf den Cue-Text>: nur passende Sätze neu sprechen, die übrigen Aufnahmen wiederverwenden (z. B. nach einer Wörterbuch-Änderung).
+  const redo = process.env.KPILOT_REDO ? new RegExp(process.env.KPILOT_REDO) : null;
+  const items = redo && all.every((it) => existsSync(it.out)) ? all.filter((it) => redo.test(it.text)) : all;
+  if (items.length) synthesize(items, undefined, undefined, resolve(dir, "report.json"));
+  const plan = planVoice(v, all.map((it) => wavSeconds(it.out)));
 
   // Tonspur: jeden Satz an seine Startzeit legen, mischen, auf Videolänge bringen, Lautheit normalisieren (−16 LUFS).
   const track = resolve(dir, "voice.wav");
-  const inputs = items.flatMap((it) => ["-i", it.out]);
+  const inputs = all.flatMap((it) => ["-i", it.out]);
   const chains = plan.map((p, i) => `[${i}:a]${p.tempo > 1 ? `atempo=${p.tempo},` : ""}adelay=${Math.round(p.start * 1000)}:all=1[a${i}]`);
-  const mix = `${plan.map((_, i) => `[a${i}]`).join("")}amix=inputs=${plan.length}:normalize=0,highpass=f=70,loudnorm=I=-16:TP=-1.5:LRA=11,aresample=48000,apad,atrim=0:${v.duration}[out]`;
-  sh("ffmpeg", ["-y", "-loglevel", "error", ...inputs, "-filter_complex", [...chains, mix].join(";"), "-map", "[out]", "-ac", "1", "-ar", "48000", track]);
+  const mix = `${plan.map((_, i) => `[a${i}]`).join("")}amix=inputs=${plan.length}:normalize=0,highpass=f=${E.highpassHz},loudnorm=I=${E.loudnormI}:TP=${E.loudnormTP}:LRA=${E.loudnormLRA},aresample=${E.sampleRate},apad,atrim=0:${v.duration}[out]`;
+  sh("ffmpeg", ["-y", "-loglevel", "error", ...inputs, "-filter_complex", [...chains, mix].join(";"), "-map", "[out]", "-ac", "1", "-ar", String(E.sampleRate), track]);
 
   // In Master und Web-Version einsetzen (Bild unverändert kopiert).
   const targets: [string, string][] = [
-    [resolve(ROOT, "video/out", `${v.id}-1080.mp4`), "128k"],
-    [resolve(ROOT, "public/videos", `${v.id}-720.mp4`), "96k"],
+    [resolve(ROOT, "video/out", `${v.id}-1080.mp4`), E.masterBitrate],
+    [resolve(ROOT, "public/videos", `${v.id}-720.mp4`), E.webBitrate],
   ];
   for (const [file, bitrate] of targets) {
     if (!existsSync(file)) {
@@ -132,7 +117,7 @@ export function voiceover(v: KpiVideo) {
       continue;
     }
     const tmp = file.replace(/\.mp4$/, ".tmp.mp4");
-    sh("ffmpeg", ["-y", "-loglevel", "error", "-i", file, "-i", track, "-map", "0:v:0", "-map", "1:a:0", "-c:v", "copy", "-c:a", "aac", "-b:a", bitrate, "-ac", "1", "-ar", "48000", "-metadata:s:a:0", "language=deu", "-t", String(v.duration), "-movflags", "+faststart", tmp]);
+    sh("ffmpeg", ["-y", "-loglevel", "error", "-i", file, "-i", track, "-map", "0:v:0", "-map", "1:a:0", "-c:v", "copy", "-c:a", "aac", "-b:a", bitrate, "-ac", "1", "-ar", String(E.sampleRate), "-metadata:s:a:0", "language=deu", "-t", String(v.duration), "-movflags", "+faststart", tmp]);
     renameSync(tmp, file);
   }
   const sped = plan.filter((p) => p.tempo > 1);

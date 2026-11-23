@@ -156,3 +156,12 @@ Gefundener und behobener Fehler: Das Attribut `data-calc` der Videokarte wurde v
 Sichtprüfung der neuen Szenen über Einzelbilder: behoben wurden überlaufende Beträge in Karten, Beschriftungen unter dem Erzählband, ein überdeckter Balkentext und überlappende Balken im Firmenvergleich.
 
 **Nicht geprüft / offen:** Hörprobe der synthetischen Stimme durch einen Menschen (insbesondere „ROAS“, „EBITDA“, Zahlen), Safari/iOS und Firefox auf echten Geräten, Screenreader. Nur konzipiert, nicht umgesetzt: Break-even-ROAS als eigener Rechner (der Modus „Werbewirtschaftlichkeit“ liefert Mindest-ROAS), NPV/IRR als Rechner, KPI-Zusammenhangsdiagramm, „Schrittweise verstehen“.
+
+
+## Runde 6: Überarbeitung der Erklärstimme, 23.11.2026
+
+- **Ziel**: natürlichere deutsche Vertonung, englische Fachbegriffe englisch, kontrollierte Pausen, alle 12 Videos neu vertont, Bild unverändert.
+- **Umgesetzt**: zentrale Konfiguration (`video/voice.config.json`) und Aussprachewörterbuch mit englischer IPA (`video/pronunciation.json`), eigene Phonemsynthese (`video/tts.py`), Pausenregeln, Aufnahmeauswahl per lokaler Spracherkennung, Zeitplan-Feinabstimmung, 9 leichte Textkürzungen, Hörproben unter `docs/audio/aussprache/`.
+- **Messung (automatisch)**: 132 Sätze, mittlere Wortfehlerrate 7,7 % (Spracherkennung als Näherung); `video:check` und 584 Tests grün; Tonspur genau eine AAC-Spur, Dauer 66,0 s, Lautheit −16 LUFS.
+- **Nicht geprüft**: menschliches Anhören (Natürlichkeit, Satzmelodie, Betonung), Wiedergabe auf echten Geräten (Safari/iOS/Firefox).
+- **Bekannte Restprobleme**: siehe `docs/VIDEOS.md`, „Offene Punkte“ (Break-even, Cashflow, Conversion Rate).

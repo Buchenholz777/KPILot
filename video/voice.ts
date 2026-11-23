@@ -92,13 +92,16 @@ export function voiceover(v: KpiVideo) {
   if (!existsSync(VOICE_MODEL)) throw new Error(`Stimme fehlt: ${VOICE_MODEL} (siehe docs/VIDEOS.md)`);
   const dir = resolve(ROOT, "video/out/voice", v.id);
   mkdirSync(dir, { recursive: true });
-  const items = v.cues.map((c, i) => ({ parts: speechParts(c.text), out: resolve(dir, `cue-${String(i).padStart(2, "0")}.wav`) }));
-  synthesize(items, undefined, undefined, resolve(dir, "report.json"));
-  const plan = planVoice(v, items.map((it) => wavSeconds(it.out)));
+  const all = v.cues.map((c, i) => ({ parts: speechParts(c.text), out: resolve(dir, `cue-${String(i).padStart(2, "0")}.wav`), text: c.text }));
+  // KPILOT_REDO=<Regex auf den Cue-Text>: nur passende Sätze neu sprechen, die übrigen Aufnahmen wiederverwenden (z. B. nach einer Wörterbuch-Änderung).
+  const redo = process.env.KPILOT_REDO ? new RegExp(process.env.KPILOT_REDO) : null;
+  const items = redo && all.every((it) => existsSync(it.out)) ? all.filter((it) => redo.test(it.text)) : all;
+  if (items.length) synthesize(items, undefined, undefined, resolve(dir, "report.json"));
+  const plan = planVoice(v, all.map((it) => wavSeconds(it.out)));
 
   // Tonspur: jeden Satz an seine Startzeit legen, mischen, auf Videolänge bringen, Lautheit normalisieren (−16 LUFS).
   const track = resolve(dir, "voice.wav");
-  const inputs = items.flatMap((it) => ["-i", it.out]);
+  const inputs = all.flatMap((it) => ["-i", it.out]);
   const chains = plan.map((p, i) => `[${i}:a]${p.tempo > 1 ? `atempo=${p.tempo},` : ""}adelay=${Math.round(p.start * 1000)}:all=1[a${i}]`);
   const mix = `${plan.map((_, i) => `[a${i}]`).join("")}amix=inputs=${plan.length}:normalize=0,highpass=f=${E.highpassHz},loudnorm=I=${E.loudnormI}:TP=${E.loudnormTP}:LRA=${E.loudnormLRA},aresample=${E.sampleRate},apad,atrim=0:${v.duration}[out]`;
   sh("ffmpeg", ["-y", "-loglevel", "error", ...inputs, "-filter_complex", [...chains, mix].join(";"), "-map", "[out]", "-ac", "1", "-ar", String(E.sampleRate), track]);

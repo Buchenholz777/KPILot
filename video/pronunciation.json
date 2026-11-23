@@ -74,8 +74,8 @@
     {
       "id": "roas",
       "match": "ROAS",
-      "ipa": "ʁˈoːas",
-      "note": "Akronym als Wort",
+      "ipa": "rˈoːˌas",
+      "note": "Akronym als Wort, deutsch-englisch „Ro-as“; mit ʁ/ɹ oder englischem Diphthong erkannte die Spracherkennung 0/6",
       "asr": "roas|ro as|rowas|roass"
     },
     {
@@ -147,6 +147,13 @@
       "ipa": "rˈoːʔɛɾtrˌɑːk",
       "asr": "rohertrag|roh ertrag",
       "note": "deutsch, Glottisverschluss vor „Ertrag“"
+    },
+    {
+      "id": "irrtum",
+      "match": "\\bIrrtum\\b",
+      "ipa": "ˈɪrtuːm",
+      "asr": "irrtum|irrtums",
+      "note": "deutsch; Standard-Phonemisierung (ɾ) wurde in 3/6 Proben als „Erdung“ verstanden, mit r 5/6"
     }
   ]
 }

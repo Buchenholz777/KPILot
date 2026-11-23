@@ -75,7 +75,7 @@ def main():
         if isinstance(a, tuple): a = a[0]
         return np.clip(a, -1, 1).astype(np.float32)
 
-    report = {}
+    report = json.load(open(job["report"])) if job.get("report") and os.path.exists(job["report"]) else {}
     for it in job["items"]:
       best = None
       for attempt in range((it.get("candidates") or cand) if asr else 1):

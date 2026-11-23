@@ -1,0 +1,107 @@
+{
+  "_comment": "Zentrales Aussprachewörterbuch. match = Regex auf den Cue-Text (Groß-/Kleinschreibung beachten), ipa = Aussprache im Phonemvorrat der Stimme (IPA, ˈ = Hauptbetonung, ˌ = Nebenbetonung). Einträge werden von oben nach unten angewendet (lange Formen zuerst). Die Tests stehen in tests/voice.test.ts, die Hörproben in video/pronounce-test.ts.",
+  "entries": [
+    {
+      "id": "return-on-investment",
+      "match": "Return[ -]on[ -]Investment",
+      "ipa": "ɹɪtˈɜːn ɑːn ɪnvˈɛstmənt",
+      "note": "englisch"
+    },
+    {
+      "id": "key-performance-indicator",
+      "match": "Key[ -]Performance[ -]Indicator",
+      "ipa": "kˈiː pɚfˈɔːɹməns ˈɪndɪkˌeɪtɚ",
+      "note": "englisch"
+    },
+    {
+      "id": "operating-cashflow",
+      "match": "Operating[ -]Cashflow",
+      "ipa": "ˈɑːpɚɹˌeɪtɪŋ kˈæʃflˌoʊ",
+      "note": "englisch"
+    },
+    {
+      "id": "break-even-point",
+      "match": "Break-even-Point",
+      "ipa": "bɹˈeɪk ˈiːvən pˈɔɪnt",
+      "note": "englisch"
+    },
+    {
+      "id": "break-even",
+      "match": "Break-even",
+      "ipa": "bɹˈeɪk ˈiːvən",
+      "note": "englisch"
+    },
+    {
+      "id": "cashflow",
+      "match": "Cashflow",
+      "ipa": "kˈæʃflˌoʊ",
+      "note": "englisch"
+    },
+    {
+      "id": "conversion-rate",
+      "match": "Conversion[ -]Rate",
+      "ipa": "kənvˈɜːʒən ɹˈeɪt",
+      "note": "englisch"
+    },
+    {
+      "id": "revenue",
+      "match": "Revenue",
+      "ipa": "ɹˈɛvənjˌuː",
+      "note": "englisch"
+    },
+    {
+      "id": "ebitda",
+      "match": "EBITDA",
+      "ipa": "ˈiːbɪtdˌɑː",
+      "note": "englisch, wie im Finanzjargon üblich"
+    },
+    {
+      "id": "ebit",
+      "match": "EBIT",
+      "ipa": "ˈiːbɪt",
+      "note": "englisch"
+    },
+    {
+      "id": "roas",
+      "match": "ROAS",
+      "ipa": "ɹˈoʊæs",
+      "note": "Akronym als Wort"
+    },
+    {
+      "id": "roi",
+      "match": "ROI",
+      "ipa": "ˌɑːɹ ˌoʊ ˈaɪ",
+      "note": "Buchstaben englisch"
+    },
+    {
+      "id": "clv",
+      "match": "CLV",
+      "ipa": "sˌiː ɛl vˈiː",
+      "note": "Buchstaben englisch"
+    },
+    {
+      "id": "cac",
+      "match": "CAC",
+      "ipa": "sˌiː ˌeɪ sˈiː",
+      "note": "Buchstaben englisch"
+    },
+    {
+      "id": "kpilot",
+      "match": "KPILot",
+      "ipa": "kˌaː pˌeː ˈiː lˈoːt",
+      "note": "Markenname, deutsch (KPI-Lot)"
+    },
+    {
+      "id": "kpi",
+      "match": "KPI",
+      "ipa": "kˌeɪ pˌiː ˈaɪ",
+      "note": "Buchstaben englisch"
+    },
+    {
+      "id": "onlineshop",
+      "match": "Onlineshop",
+      "ipa": "ˈɔnlaɪnʃˌɔp",
+      "note": "eingedeutscht"
+    }
+  ]
+}

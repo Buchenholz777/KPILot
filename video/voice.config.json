@@ -31,5 +31,10 @@
     "highpassHz": 70,
     "masterBitrate": "128k",
     "webBitrate": "96k"
+  },
+  "selection": {
+    "_comment": "Je Satz werden mehrere Aufnahmen erzeugt und die per lokaler Spracherkennung (faster-whisper, Ordner in KPILOT_ASR_MODEL) am besten erkannte gewählt. Ohne Erkennungsmodell wird die erste Aufnahme genutzt.",
+    "candidates": 4,
+    "termCandidates": 8
   }
 }

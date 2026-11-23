@@ -1,107 +1,152 @@
 {
-  "_comment": "Zentrales Aussprachewörterbuch. match = Regex auf den Cue-Text (Groß-/Kleinschreibung beachten), ipa = Aussprache im Phonemvorrat der Stimme (IPA, ˈ = Hauptbetonung, ˌ = Nebenbetonung). Einträge werden von oben nach unten angewendet (lange Formen zuerst). Die Tests stehen in tests/voice.test.ts, die Hörproben in video/pronounce-test.ts.",
+  "_comment": "Zentrales Aussprachewörterbuch. match = Regex auf den Cue-Text (Groß-/Kleinschreibung beachten), ipa = Aussprache im Phonemvorrat der Stimme (IPA, ˈ = Hauptbetonung, ˌ = Nebenbetonung). Einträge werden von oben nach unten angewendet (lange Formen zuerst). Die Tests stehen in tests/voice.test.ts, die Hörproben in video/pronounce-test.ts. asr = Regex (Kleinschreibung) für die Erkennungsformen der Spracherkennung, die als „richtig gesprochen“ zählen (Auswahl der besten Aufnahme je Satz).",
   "entries": [
     {
       "id": "return-on-investment",
       "match": "Return[ -]on[ -]Investment",
       "ipa": "ɹɪtˈɜːn ɑːn ɪnvˈɛstmənt",
-      "note": "englisch"
+      "note": "englisch",
+      "asr": "return ?on ?investment"
     },
     {
       "id": "key-performance-indicator",
       "match": "Key[ -]Performance[ -]Indicator",
       "ipa": "kˈiː pɚfˈɔːɹməns ˈɪndɪkˌeɪtɚ",
-      "note": "englisch"
+      "note": "englisch",
+      "asr": "key ?performance ?indicator"
     },
     {
       "id": "operating-cashflow",
       "match": "Operating[ -]Cashflow",
       "ipa": "ˈɑːpɚɹˌeɪtɪŋ kˈæʃflˌoʊ",
-      "note": "englisch"
+      "note": "englisch",
+      "asr": "operating ?cash ?flow|operating ?cashflow"
     },
     {
       "id": "break-even-point",
       "match": "Break-even-Point",
-      "ipa": "bɹˈeɪk ˈiːvən pˈɔɪnt",
-      "note": "englisch"
+      "ipa": "brˈeɪk ˈiːvən pˈɔɪnt",
+      "note": "englisch",
+      "asr": "break ?even ?point"
     },
     {
       "id": "break-even",
       "match": "Break-even",
-      "ipa": "bɹˈeɪk ˈiːvən",
-      "note": "englisch"
+      "ipa": "brˈeɪk ˈiːvən",
+      "note": "englisch",
+      "asr": "break ?even|breakeven|brake even"
     },
     {
       "id": "cashflow",
       "match": "Cashflow",
       "ipa": "kˈæʃflˌoʊ",
-      "note": "englisch"
+      "note": "englisch",
+      "asr": "cash ?flow"
     },
     {
       "id": "conversion-rate",
       "match": "Conversion[ -]Rate",
-      "ipa": "kənvˈɜːʒən ɹˈeɪt",
-      "note": "englisch"
+      "ipa": "kɑnvˈɜːʒən ɹˈeɪt",
+      "note": "englisch",
+      "asr": "conversion ?rate"
     },
     {
       "id": "revenue",
       "match": "Revenue",
       "ipa": "ɹˈɛvənjˌuː",
-      "note": "englisch"
+      "note": "englisch",
+      "asr": "revenue"
     },
     {
       "id": "ebitda",
       "match": "EBITDA",
-      "ipa": "ˈiːbɪtdˌɑː",
-      "note": "englisch, wie im Finanzjargon üblich"
+      "ipa": "iːbˈɪtdɑː",
+      "note": "englisch, wie im Finanzjargon üblich",
+      "asr": "ebitda|ebit ?da|e ?bit ?d ?a"
     },
     {
       "id": "ebit",
       "match": "EBIT",
       "ipa": "ˈiːbɪt",
-      "note": "englisch"
+      "note": "englisch",
+      "asr": "ebit|e bit|e bid"
     },
     {
       "id": "roas",
       "match": "ROAS",
-      "ipa": "ɹˈoʊæs",
-      "note": "Akronym als Wort"
+      "ipa": "ʁˈoːas",
+      "note": "Akronym als Wort",
+      "asr": "roas|ro as|rowas|roass"
     },
     {
       "id": "roi",
       "match": "ROI",
-      "ipa": "ˌɑːɹ ˌoʊ ˈaɪ",
-      "note": "Buchstaben englisch"
+      "ipa": "ˌɛʁ ˌoː ˈiː",
+      "note": "Buchstaben englisch",
+      "asr": "roi|r ?o ?[ie]|er o i"
     },
     {
       "id": "clv",
       "match": "CLV",
       "ipa": "sˌiː ɛl vˈiː",
-      "note": "Buchstaben englisch"
+      "note": "Buchstaben englisch",
+      "asr": "clv|c ?l ?v|cl v"
     },
     {
       "id": "cac",
       "match": "CAC",
       "ipa": "sˌiː ˌeɪ sˈiː",
-      "note": "Buchstaben englisch"
+      "note": "Buchstaben englisch",
+      "asr": "cac|c ?a ?c|czc"
     },
     {
       "id": "kpilot",
       "match": "KPILot",
       "ipa": "kˌaː pˌeː ˈiː lˈoːt",
-      "note": "Markenname, deutsch (KPI-Lot)"
+      "note": "Markenname, deutsch (KPI-Lot)",
+      "asr": "kpi ?lot|kpilot|kpi ?loot"
     },
     {
       "id": "kpi",
       "match": "KPI",
       "ipa": "kˌeɪ pˌiː ˈaɪ",
-      "note": "Buchstaben englisch"
+      "note": "Buchstaben englisch",
+      "asr": "kpi|k ?p ?i"
     },
     {
       "id": "onlineshop",
       "match": "Onlineshop",
       "ipa": "ˈɔnlaɪnʃˌɔp",
-      "note": "eingedeutscht"
+      "note": "eingedeutscht",
+      "asr": "online ?shop"
+    },
+    {
+      "id": "margenrechner",
+      "match": "Margenrechner",
+      "ipa": "mˈaɾʒənrˌɛçnɜ",
+      "asr": "ma\\w+ ?r\\w*(ner|nern)|margenrechner|margin ?r\\w+",
+      "note": "deutsch; Standard-Phonemisierung sagt „Magge“ mit hartem g; ʁ klingt bei dieser Stimme schlechter als r/ɾ"
+    },
+    {
+      "id": "margen",
+      "match": "Margen",
+      "ipa": "mˈaɾʒən",
+      "asr": "margen|marien|marschen",
+      "note": "deutsch"
+    },
+    {
+      "id": "marge",
+      "match": "\\bMarge\\b",
+      "ipa": "mˈaɾʒə",
+      "asr": "marge|marsche|marche|marke",
+      "note": "deutsch"
+    },
+    {
+      "id": "rohertrag",
+      "match": "Rohertrag",
+      "ipa": "rˈoːʔɛɾtrˌɑːk",
+      "asr": "rohertrag|roh ertrag",
+      "note": "deutsch, Glottisverschluss vor „Ertrag“"
     }
   ]
 }

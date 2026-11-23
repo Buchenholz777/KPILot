@@ -15,7 +15,7 @@ import { existsSync, mkdirSync, renameSync, readFileSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { VIDEOS, type KpiVideo } from "../src/data/videos.ts";
-import { CONFIG, speechParts, speechText, type Part } from "./speech.ts";
+import { CONFIG, DICTIONARY, expectText, speechParts, speechText, type Part } from "./speech.ts";
 
 export { speechText, speechParts };
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -29,8 +29,11 @@ const SOFT_TEMPO = CONFIG.timing.softTempo;
 const END_PAD = CONFIG.timing.endPad;
 
 /** Synthetisiert Sprechteile zu WAV-Dateien (ein Python-Aufruf, Stimme wird nur einmal geladen). */
-export function synthesize(items: { out: string; parts: Part[] }[], model = VOICE_MODEL, synth = CONFIG.synthesis) {
-  sh("python3", [resolve(ROOT, "video/tts.py")], JSON.stringify({ model, config: synth, items }));
+export function synthesize(items: { out: string; parts: Part[] }[], model = VOICE_MODEL, synth = CONFIG.synthesis, report?: string) {
+  const asr = process.env.KPILOT_ASR_MODEL;
+  const withExpect = items.map((it) => ({ ...it, expect: expectText(it.parts), candidates: it.parts.some((p) => "ipa" in p) ? CONFIG.selection.termCandidates : CONFIG.selection.candidates }));
+  const aliases = DICTIONARY.map((e) => ({ id: e.id, rx: e.asr }));
+  sh("python3", [resolve(ROOT, "video/tts.py")], JSON.stringify({ model, config: synth, items: withExpect, candidates: asr ? CONFIG.selection.candidates : 1, asr_model: asr, aliases, report }));
 }
 
 function sh(cmd: string, args: string[], input?: string) {
@@ -90,7 +93,7 @@ export function voiceover(v: KpiVideo) {
   const dir = resolve(ROOT, "video/out/voice", v.id);
   mkdirSync(dir, { recursive: true });
   const items = v.cues.map((c, i) => ({ parts: speechParts(c.text), out: resolve(dir, `cue-${String(i).padStart(2, "0")}.wav`) }));
-  synthesize(items);
+  synthesize(items, undefined, undefined, resolve(dir, "report.json"));
   const plan = planVoice(v, items.map((it) => wavSeconds(it.out)));
 
   // Tonspur: jeden Satz an seine Startzeit legen, mischen, auf Videolänge bringen, Lautheit normalisieren (−16 LUFS).
